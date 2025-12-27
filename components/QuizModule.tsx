@@ -319,9 +319,17 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
           >
             Повторить тест
           </button>
+          
+          <button 
+            onClick={() => setScreen('history')}
+            className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-blue-100 font-bold active:scale-[0.98] active:bg-white/10 transition-all"
+          >
+            История тестирования
+          </button>
+
           <button 
             onClick={() => onExitToApp ? onExitToApp() : onClose()}
-            className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-blue-100 font-bold active:bg-white/10 active:scale-[0.98] transition-all"
+            className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-blue-100 font-bold active:bg-white/10 active:scale-[0.98] transition-all opacity-60"
           >
             В главное меню
           </button>
@@ -334,7 +342,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
     <div className="flex flex-col h-full animate-in slide-in-from-left duration-300">
       <header className="p-6 pt-10 border-b border-white/10 flex justify-between items-center bg-[#0c1e3a]">
         <div className="flex flex-col">
-          <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-1">Архив попыток</span>
+          <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-1">История тестирования</span>
           <h3 className="text-white font-bold text-sm truncate max-w-[200px]">{moduleTitle}</h3>
         </div>
         <button onClick={() => setScreen('menu')} className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-xs uppercase">Назад</button>
