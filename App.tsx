@@ -240,7 +240,10 @@ const App: React.FC = () => {
       {selectedModule && (
         <ModuleDetail 
           module={selectedModule} 
-          onClose={() => setSelectedModule(null)} 
+          onClose={() => {
+            setSelectedModule(null);
+            calculateProgress(); // Update progress immediately when closing a module
+          }} 
         />
       )}
     </div>
