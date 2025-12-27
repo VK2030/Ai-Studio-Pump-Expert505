@@ -4,8 +4,12 @@ import { AppSection, ModuleData } from './types';
 import { MODULES } from './constants';
 import GlassButton from './components/GlassButton';
 import ModuleDetail from './components/ModuleDetail';
+import LoginOverlay from './components/LoginOverlay';
 
 const App: React.FC = () => {
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(() => {
+    return sessionStorage.getItem('app_authorized') === 'true';
+  });
   const [activeTab, setActiveTab] = useState<AppSection>('home');
   const [selectedModule, setSelectedModule] = useState<ModuleData | null>(null);
   const [moduleProgress, setModuleProgress] = useState<Record<string, number>>({});
@@ -35,23 +39,29 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    calculateProgress();
-    const handleStorageChange = () => calculateProgress();
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+    if (isAuthorized) {
+      calculateProgress();
+      const handleStorageChange = () => calculateProgress();
+      window.addEventListener('storage', handleStorageChange);
+      return () => window.removeEventListener('storage', handleStorageChange);
+    }
+  }, [isAuthorized]);
 
   const totalCourseProgress = useMemo(() => {
     const sum = MODULES.reduce((acc, module) => acc + (moduleProgress[module.id] || 0), 0);
     return Math.round(sum / MODULES.length);
   }, [moduleProgress]);
 
+  const handleAuthorize = () => {
+    setIsAuthorized(true);
+    sessionStorage.setItem('app_authorized', 'true');
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'home':
         return (
           <div className="flex-1 flex flex-col px-4 pb-2 gap-3 justify-between overflow-hidden">
-            {/* Grid Menu - Flexible and tight */}
             <div className="grid grid-cols-2 gap-3 flex-[3] min-h-0">
               {MODULES.map((m) => (
                 <GlassButton 
@@ -65,7 +75,6 @@ const App: React.FC = () => {
               ))}
             </div>
 
-            {/* Overall Course Progress Bar - Compact version */}
             <div className="p-4 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md relative overflow-hidden group mb-2 flex-shrink-0">
               <div className="flex justify-between items-center mb-2">
                 <div className="flex flex-col">
@@ -137,7 +146,6 @@ const App: React.FC = () => {
   return (
     <div className="relative h-screen max-w-md mx-auto bg-gradient-to-b from-[#0a1b3a] to-[#081221] shadow-2xl flex flex-col overflow-hidden">
       
-      {/* App Header - More compact */}
       <header className="px-6 py-4 pt-10 flex-shrink-0">
         <div className="flex flex-col">
           <span className="text-blue-400 text-[9px] font-black uppercase tracking-[0.3em]">Обучение</span>
@@ -145,12 +153,10 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Content Area - No scroll intended on home */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {renderContent()}
       </main>
 
-      {/* Bottom Navigation - Fixed height */}
       <nav className="h-20 bg-[#0c1e3a]/80 backdrop-blur-2xl border-t border-white/10 flex items-center justify-around px-2 z-40 flex-shrink-0">
         <NavButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} label="Главная" 
           icon={(active) => (
@@ -185,6 +191,8 @@ const App: React.FC = () => {
       {selectedModule && (
         <ModuleDetail module={selectedModule} onClose={() => { setSelectedModule(null); calculateProgress(); }} />
       )}
+
+      {!isAuthorized && <LoginOverlay onAuthorized={handleAuthorize} />}
     </div>
   );
 };
