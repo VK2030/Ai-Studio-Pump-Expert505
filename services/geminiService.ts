@@ -1,7 +1,8 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Strictly follow guideline: Always use const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const getEducationalResponse = async (moduleTitle: string, question: string) => {
   const model = 'gemini-3-flash-preview';
@@ -22,6 +23,7 @@ export const getEducationalResponse = async (moduleTitle: string, question: stri
         temperature: 0.7,
       },
     });
+    // Property .text returns the string output.
     return response.text;
   } catch (error) {
     console.error("Gemini Error:", error);

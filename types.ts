@@ -7,6 +7,7 @@ export interface ModuleData {
   subtitle: string;
   description: string;
   icon: string;
+  progress?: number;
 }
 
 export interface ChatMessage {

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { AppSection, ModuleData } from './types';
 import { MODULES } from './constants';
 import GlassButton from './components/GlassButton';
@@ -8,6 +8,61 @@ import ModuleDetail from './components/ModuleDetail';
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AppSection>('home');
   const [selectedModule, setSelectedModule] = useState<ModuleData | null>(null);
+  const [moduleProgress, setModuleProgress] = useState<Record<string, number>>({});
+
+  // Function to calculate progress from localStorage history
+  const calculateProgress = () => {
+    const savedHistory = localStorage.getItem('quizHistory');
+    
+    const latestProgress: Record<string, number> = {};
+    
+    // Default all modules to 0
+    MODULES.forEach(m => latestProgress[m.id] = 0);
+
+    if (savedHistory) {
+      try {
+        const history = JSON.parse(savedHistory);
+        // We iterate through history and pick the first entry found for each moduleId
+        // because history is saved in descending order (latest first)
+        MODULES.forEach(module => {
+          const lastEntry = history.find((h: any) => h.moduleId === module.id);
+          if (lastEntry && lastEntry.score) {
+            // score format is "X/Y"
+            const [correct, total] = lastEntry.score.split('/').map(Number);
+            if (!isNaN(correct) && !isNaN(total) && total > 0) {
+              latestProgress[module.id] = Math.round((correct / total) * 100);
+            }
+          }
+        });
+      } catch (e) {
+        console.error("Failed to parse history", e);
+      }
+    }
+    
+    setModuleProgress(latestProgress);
+  };
+
+  // Update progress on mount and when localStorage changes
+  useEffect(() => {
+    calculateProgress();
+    
+    // Listen for custom events and storage events
+    const handleStorageChange = () => calculateProgress();
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Calculate overall course progress as the average of the last successful session of each module
+  const totalCourseProgress = useMemo(() => {
+    // We sum all the latest percentages (even if 0) and divide by the total number of modules
+    const values = Object.values(moduleProgress);
+    if (values.length === 0) return 0;
+    
+    // Ensure we account for all modules defined in constants
+    const sum = MODULES.reduce((acc, module) => acc + (moduleProgress[module.id] || 0), 0);
+    return Math.round(sum / MODULES.length);
+  }, [moduleProgress]);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -15,17 +70,20 @@ const App: React.FC = () => {
         return (
           <div className="flex flex-col p-4 pb-24 gap-6">
             {/* Hero Image Section */}
-            <div className="relative w-full h-56 rounded-[32px] overflow-hidden border border-white/10 shadow-2xl">
+            <div className="relative w-full h-56 rounded-[32px] overflow-hidden border border-white/10 shadow-2xl bg-[#0a1b3a]">
               <img 
-                src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80&w=1000" 
-                className="w-full h-full object-cover brightness-50"
-                alt="Схема установки УЭЦН"
+                src="https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&q=80&w=1000" 
+                className="w-full h-full object-cover brightness-[0.4]"
+                alt="Техническая схема УЭЦН"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=1000';
+                }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#081221] via-transparent to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#081221] via-transparent to-black/30"></div>
               
-              <div className="absolute bottom-6 left-6">
-                <h2 className="text-white font-bold text-2xl mb-1">Схема установки УЭЦН</h2>
-                <p className="text-blue-100/70 text-sm">Устройство и принцип работы комплекса</p>
+              <div className="absolute bottom-6 left-6 right-6">
+                <h2 className="text-white font-bold text-2xl mb-1 drop-shadow-md">Схема установки УЭЦН</h2>
+                <p className="text-blue-200/80 text-sm font-medium">Геологический разрез и ствол скважины</p>
               </div>
             </div>
 
@@ -37,20 +95,28 @@ const App: React.FC = () => {
                   title={m.title}
                   subtitle={m.subtitle}
                   iconType={m.icon}
+                  progress={moduleProgress[m.id] || 0}
                   onClick={() => setSelectedModule(m)}
                 />
               ))}
             </div>
 
-            {/* Progress Bar */}
-            <div className="p-6 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-sm">
+            {/* Overall Course Progress Bar */}
+            <div className="p-6 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md relative overflow-hidden group">
+              <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               <div className="flex justify-between items-center mb-4">
-                <span className="text-white/90 font-medium">Прогресс курса: 15%</span>
+                <div className="flex flex-col">
+                  <span className="text-[10px] uppercase tracking-widest text-blue-400 font-black mb-1">Общий прогресс курса</span>
+                  <span className="text-white/90 font-bold text-lg">Успешное выполнение: {totalCourseProgress}%</span>
+                </div>
+                <div className="w-12 h-12 rounded-full border-2 border-blue-500/30 flex items-center justify-center text-[10px] font-black text-blue-400">
+                   {totalCourseProgress}%
+                </div>
               </div>
               <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.4)]" 
-                  style={{ width: '15%' }}
+                  className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full shadow-[0_0_15px_rgba(249,115,22,0.5)] transition-all duration-1000 ease-out" 
+                  style={{ width: `${totalCourseProgress}%` }}
                 ></div>
               </div>
             </div>
@@ -81,15 +147,17 @@ const App: React.FC = () => {
             <div className="space-y-4">
               <div className="p-5 rounded-2xl bg-white/5 border border-white/10 flex justify-between items-center">
                 <span className="text-white/80">Пройдено модулей</span>
-                <span className="font-bold text-blue-400">2/12</span>
+                <span className="font-bold text-blue-400">
+                  {Object.values(moduleProgress).filter(p => p > 0).length}/{MODULES.length}
+                </span>
               </div>
               <div className="p-5 rounded-2xl bg-white/5 border border-white/10 flex justify-between items-center">
-                <span className="text-white/80">Баллы конкурса</span>
-                <span className="font-bold text-orange-500">450 XP</span>
+                <span className="text-white/80">Средний результат</span>
+                <span className="font-bold text-orange-500">{totalCourseProgress}%</span>
               </div>
               <div className="p-5 rounded-2xl bg-white/5 border border-white/10 flex justify-between items-center">
-                <span className="text-white/80">Место в рейтинге</span>
-                <span className="font-bold text-yellow-500">#42</span>
+                <span className="text-white/80">Баллы (XP)</span>
+                <span className="font-bold text-yellow-500">{totalCourseProgress * 10}</span>
               </div>
             </div>
           </div>
@@ -115,21 +183,7 @@ const App: React.FC = () => {
       {/* App Header */}
       <header className="flex items-center justify-between px-6 py-6 pt-10">
         <div className="flex flex-col">
-          <span className="text-[10px] uppercase tracking-[0.2em] text-blue-400/80 font-bold mb-0.5">Личный кабинет</span>
-          <h1 className="text-white text-lg font-bold leading-tight">Проф. Технолог</h1>
-        </div>
-        <div className="flex gap-3">
-          <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-blue-100/60 hover:text-white active:scale-95 transition-all">
-            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-          </button>
-          <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-blue-100/60 hover:text-white active:scale-95 transition-all">
-            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-          </button>
+          <h1 className="text-white text-lg font-bold leading-tight uppercase tracking-wider">Обучение: Технолог</h1>
         </div>
       </header>
 

@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { QUIZ_QUESTIONS, QuizQuestion } from '../constants';
+import React, { useState, useEffect } from 'react';
+import { QUIZ_QUESTIONS, QuizQuestion, MODULES } from '../constants';
 
 interface QuizModuleProps {
+  moduleId?: string;
   onClose: () => void;
   onExitToApp?: () => void;
 }
@@ -11,6 +12,7 @@ interface QuizHistoryEntry {
   date: string;
   session: number;
   score: string;
+  moduleId?: string;
   incorrectAnswers: {
     question: string;
     userAnswer: string;
@@ -18,7 +20,7 @@ interface QuizHistoryEntry {
   }[];
 }
 
-const QuizModule: React.FC<QuizModuleProps> = ({ onClose, onExitToApp }) => {
+const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp }) => {
   const [screen, setScreen] = useState<'menu' | 'quiz' | 'results' | 'history'>('menu');
   const [sessionQuestions, setSessionQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
@@ -29,14 +31,18 @@ const QuizModule: React.FC<QuizModuleProps> = ({ onClose, onExitToApp }) => {
   const [incorrectAnswers, setIncorrectAnswers] = useState<QuizHistoryEntry['incorrectAnswers']>([]);
   const [history, setHistory] = useState<QuizHistoryEntry[]>([]);
 
+  // Get current module info
+  const currentModule = MODULES.find(m => m.id === moduleId);
+  const moduleTitle = currentModule?.title || 'Тестирование';
+
   // Load history and session from localStorage on mount
   useEffect(() => {
     const savedHistory = localStorage.getItem('quizHistory');
     if (savedHistory) setHistory(JSON.parse(savedHistory));
     
-    const savedSession = localStorage.getItem('quizSessionNum');
+    const savedSession = localStorage.getItem(`quizSessionNum_${moduleId || 'global'}`);
     if (savedSession) setCurrentSession(parseInt(savedSession, 10));
-  }, []);
+  }, [moduleId]);
 
   const shuffleArray = <T,>(array: T[]): T[] => {
     const arr = [...array];
@@ -48,8 +54,12 @@ const QuizModule: React.FC<QuizModuleProps> = ({ onClose, onExitToApp }) => {
   };
 
   const startQuiz = () => {
-    // Pick 10 random questions
-    const selected = shuffleArray(QUIZ_QUESTIONS).slice(0, 10);
+    // Get questions specific to the module
+    const questionsForModule = (moduleId && QUIZ_QUESTIONS[moduleId]) || [];
+    
+    // Pick up to 10 questions or use all if less than 10
+    const selected = shuffleArray(questionsForModule).slice(0, Math.min(10, questionsForModule.length));
+    
     setSessionQuestions(selected);
     setCurrentQuestionIdx(0);
     setCorrectAnswersCount(0);
@@ -95,9 +105,13 @@ const QuizModule: React.FC<QuizModuleProps> = ({ onClose, onExitToApp }) => {
 
   const finishQuiz = () => {
     const newEntry: QuizHistoryEntry = {
-      date: new Date().toLocaleString('ru-RU'),
+      date: new Date().toLocaleString('ru-RU', { 
+        day: '2-digit', month: '2-digit', year: 'numeric', 
+        hour: '2-digit', minute: '2-digit' 
+      }),
       session: currentSession,
       score: `${correctAnswersCount}/${sessionQuestions.length}`,
+      moduleId: moduleId,
       incorrectAnswers: incorrectAnswers
     };
     
@@ -107,52 +121,55 @@ const QuizModule: React.FC<QuizModuleProps> = ({ onClose, onExitToApp }) => {
     
     const nextSession = currentSession + 1;
     setCurrentSession(nextSession);
-    localStorage.setItem('quizSessionNum', nextSession.toString());
+    localStorage.setItem(`quizSessionNum_${moduleId || 'global'}`, nextSession.toString());
     
+    window.dispatchEvent(new Event('storage'));
     setScreen('results');
   };
 
-  const clearHistory = () => {
-    setHistory([]);
-    localStorage.removeItem('quizHistory');
+  const clearModuleHistory = () => {
+    const filteredHistory = history.filter(h => h.moduleId !== moduleId);
+    setHistory(filteredHistory);
+    localStorage.setItem('quizHistory', JSON.stringify(filteredHistory));
     setCurrentSession(1);
-    localStorage.setItem('quizSessionNum', '1');
+    localStorage.setItem(`quizSessionNum_${moduleId || 'global'}`, '1');
+    window.dispatchEvent(new Event('storage'));
   };
+
+  // Filtered history for rendering
+  const moduleHistory = history.filter(h => h.moduleId === moduleId);
 
   const renderMenu = () => (
     <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-in fade-in duration-500">
-      <div className="w-24 h-24 bg-blue-500/20 rounded-full flex items-center justify-center mb-8 border border-blue-400/30">
-        <svg viewBox="0 0 24 24" className="w-12 h-12 text-blue-400" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <div className="w-20 h-20 bg-blue-500/20 rounded-3xl flex items-center justify-center mb-8 border border-blue-400/30 rotate-3">
+        <svg viewBox="0 0 24 24" className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M12 2v20M2 12h20" />
           <path d="M12 2a10 10 0 100 20 10 10 0 000-20z" />
         </svg>
       </div>
-      <h2 className="text-3xl font-bold text-white mb-4">Тестирование</h2>
-      <p className="text-blue-100/60 mb-8 max-w-[280px]">
-        Проверьте свои знания по эксплуатации УЭЦН и выводу скважин на режим.
+      <h2 className="text-2xl font-black text-white mb-2 uppercase tracking-tight">{moduleTitle}</h2>
+      <p className="text-blue-100/40 mb-10 text-sm leading-relaxed max-w-[280px]">
+        Проверьте уровень своей подготовки и разберите ошибки прошлых сессий.
       </p>
-      <div className="text-sm text-blue-300 font-bold mb-10 uppercase tracking-widest">
-        Текущая сессия: {currentSession}
-      </div>
       
-      <div className="w-full space-y-4">
+      <div className="w-full space-y-3">
         <button 
           onClick={startQuiz}
-          className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl text-white font-bold text-lg active:scale-95 transition-all shadow-xl shadow-blue-900/20"
+          className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl text-white font-bold text-lg active:scale-[0.98] transition-all shadow-lg shadow-blue-900/40"
         >
           Начать тест
         </button>
         <button 
           onClick={() => setScreen('history')}
-          className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-blue-100 font-medium active:scale-95 transition-all"
+          className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-blue-100 font-bold active:scale-[0.98] active:bg-white/10 transition-all"
         >
-          История тестов
+          История попыток
         </button>
         <button 
           onClick={onClose}
-          className="w-full py-2 text-white/40 text-xs uppercase font-bold tracking-widest"
+          className="w-full py-4 text-white/30 font-bold active:scale-95 transition-all text-sm uppercase tracking-widest mt-4"
         >
-          Вернуться к описанию
+          Вернуться назад
         </button>
       </div>
     </div>
@@ -164,24 +181,24 @@ const QuizModule: React.FC<QuizModuleProps> = ({ onClose, onExitToApp }) => {
 
     return (
       <div className="flex flex-col h-full animate-in slide-in-from-right duration-300">
-        {/* Header with progress */}
-        <div className="p-6 border-b border-white/10 bg-white/5">
+        <div className="p-6 pt-10 border-b border-white/10 bg-[#0c1e3a]">
           <div className="flex justify-between items-center mb-4">
-            <span className="text-blue-400 text-xs font-bold uppercase tracking-tighter">Вопрос {currentQuestionIdx + 1} / {sessionQuestions.length}</span>
-            <span className="text-white/40 text-xs">Сессия {currentSession}</span>
+            <span className="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em]">Вопрос {currentQuestionIdx + 1} / {sessionQuestions.length}</span>
+            <div className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] text-white/40 font-bold uppercase">
+               {moduleTitle}
+            </div>
           </div>
-          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${progress}%` }}></div>
+          <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-500 transition-all duration-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" style={{ width: `${progress}%` }}></div>
           </div>
         </div>
 
-        {/* Question area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-8">
-          <div className="p-6 rounded-3xl bg-white/5 border border-white/10 shadow-inner">
-             <p className="text-white text-lg leading-snug font-medium">{q?.text}</p>
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="p-7 rounded-[2.5rem] bg-white/5 border border-white/10 shadow-inner">
+             <p className="text-white text-lg leading-snug font-semibold">{q?.text}</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 pb-8">
+          <div className="grid grid-cols-1 gap-3">
             {shuffledOptions.map((opt, i) => {
               const isSelected = selectedOption === i;
               const isCorrect = opt === q.options[q.correct];
@@ -199,10 +216,10 @@ const QuizModule: React.FC<QuizModuleProps> = ({ onClose, onExitToApp }) => {
 
               return (
                 <button key={i} onClick={() => handleOptionSelect(i)} className={btnClass} disabled={selectedOption !== null}>
-                  <div className={`w-6 h-6 rounded-full border flex items-center justify-center flex-shrink-0 text-[10px] font-bold ${isSelected ? 'border-white bg-white/20' : 'border-white/20'}`}>
+                  <div className={`w-7 h-7 rounded-xl border flex items-center justify-center flex-shrink-0 text-[10px] font-black ${isSelected ? 'border-white bg-white/20' : 'border-white/20'}`}>
                     {String.fromCharCode(65 + i)}
                   </div>
-                  <span className="flex-1">{opt}</span>
+                  <span className="flex-1 text-sm font-medium leading-tight">{opt}</span>
                 </button>
               );
             })}
@@ -212,89 +229,113 @@ const QuizModule: React.FC<QuizModuleProps> = ({ onClose, onExitToApp }) => {
     );
   };
 
-  const renderResults = () => (
-    <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-in zoom-in duration-300">
-      <div className="relative w-40 h-40 mb-8">
-        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-          <circle cx="50" cy="50" r="45" className="stroke-white/10 fill-none" strokeWidth="8" />
-          <circle cx="50" cy="50" r="45" className="stroke-blue-500 fill-none" strokeWidth="8" strokeDasharray={`${(correctAnswersCount / 10) * 283} 283`} strokeLinecap="round" />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-4xl font-black text-white">{correctAnswersCount * 10}%</span>
-          <span className="text-[10px] text-blue-300 uppercase font-bold tracking-widest">Результат</span>
+  const renderResults = () => {
+    const total = sessionQuestions.length;
+    const percentage = total > 0 ? (correctAnswersCount / total) * 100 : 0;
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-in zoom-in duration-300">
+        <div className="relative w-48 h-48 mb-8">
+          <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+            <circle cx="50" cy="50" r="44" className="stroke-white/5 fill-none" strokeWidth="6" />
+            <circle cx="50" cy="50" r="44" className="stroke-blue-500 fill-none" strokeWidth="8" strokeDasharray={`${total > 0 ? (correctAnswersCount / total) * 276 : 0} 276`} strokeLinecap="round" />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-5xl font-black text-white tracking-tighter">{Math.round(percentage)}%</span>
+            <span className="text-[10px] text-blue-400 uppercase font-black tracking-[0.2em] mt-1">Уровень</span>
+          </div>
+        </div>
+
+        <h2 className="text-2xl font-bold text-white mb-2">Сессия #{currentSession - 1}</h2>
+        <p className="text-blue-100/40 mb-10 font-medium">Верных ответов: <span className="text-white">{correctAnswersCount}</span> из {total}</p>
+
+        <div className="w-full space-y-3">
+          <button 
+            onClick={startQuiz}
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl text-white font-bold active:scale-[0.98] transition-all"
+          >
+            Повторить тест
+          </button>
+          <button 
+            onClick={() => onExitToApp ? onExitToApp() : onClose()}
+            className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-blue-100 font-bold active:bg-white/10 active:scale-[0.98] transition-all"
+          >
+            В главное меню
+          </button>
         </div>
       </div>
-
-      <h2 className="text-2xl font-bold text-white mb-2">Сессия {currentSession - 1} завершена!</h2>
-      <p className="text-blue-100/60 mb-10">Правильных ответов: {correctAnswersCount} из 10</p>
-
-      <div className="w-full space-y-4">
-        <button 
-          onClick={startQuiz}
-          className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl text-white font-bold active:scale-95 transition-all"
-        >
-          Пройти еще раз
-        </button>
-        <button 
-          onClick={() => onExitToApp ? onExitToApp() : onClose()}
-          className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-blue-100 font-bold active:bg-white/10 active:scale-95 transition-all shadow-lg"
-        >
-          Главное меню
-        </button>
-        <button 
-          onClick={() => setScreen('menu')}
-          className="w-full py-3 text-white/30 text-xs uppercase font-medium tracking-widest"
-        >
-          Меню тестирования
-        </button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderHistory = () => (
     <div className="flex flex-col h-full animate-in slide-in-from-left duration-300">
-      <header className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
-        <h3 className="text-white font-bold">История тестов</h3>
-        <button onClick={() => setScreen('menu')} className="text-blue-400 font-bold text-sm">Назад</button>
+      <header className="p-6 pt-10 border-b border-white/10 flex justify-between items-center bg-[#0c1e3a]">
+        <div className="flex flex-col">
+          <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-1">Архив попыток</span>
+          <h3 className="text-white font-bold text-sm truncate max-w-[200px]">{moduleTitle}</h3>
+        </div>
+        <button onClick={() => setScreen('menu')} className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-xs uppercase">Назад</button>
       </header>
       
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {history.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-white/30 italic">
-            История пуста
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-24">
+        {moduleHistory.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-white/20 italic text-sm">
+             <svg viewBox="0 0 24 24" className="w-12 h-12 mb-4 opacity-10" fill="none" stroke="currentColor" strokeWidth="1">
+                <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+             </svg>
+             Попыток еще не было
           </div>
         ) : (
-          history.map((entry, idx) => (
-            <div key={idx} className="p-5 rounded-2xl bg-white/5 border border-white/10">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-white font-bold">Сессия {entry.session}</span>
-                <span className="text-blue-400 font-black">{entry.score}</span>
-              </div>
-              <div className="text-[10px] text-white/40 mb-4">{entry.date}</div>
-              
-              {entry.incorrectAnswers.length > 0 && (
-                <div className="space-y-4 border-t border-white/5 pt-4">
-                  <span className="text-[10px] uppercase font-bold text-red-400/80">Ошибки:</span>
-                  {entry.incorrectAnswers.map((err, i) => (
-                    <div key={i} className="text-xs space-y-1">
-                      <p className="text-white/80 font-medium">Q: {err.question}</p>
-                      <p className="text-red-400">Ваш: {err.userAnswer}</p>
-                      <p className="text-green-400">Верно: {err.correctAnswer}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))
+          moduleHistory.map((entry, idx) => {
+             const [correct] = entry.score.split('/').map(Number);
+             const isSuccess = correct >= 8;
+             
+             return (
+               <div key={idx} className="p-5 rounded-2xl bg-white/5 border border-white/10 relative overflow-hidden group">
+                 {isSuccess && <div className="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-full blur-2xl"></div>}
+                 
+                 <div className="flex justify-between items-start mb-3">
+                   <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">Сессия {entry.session}</span>
+                      <span className="text-[10px] text-white/50 font-bold">{entry.date}</span>
+                   </div>
+                   <div className="flex flex-col items-end">
+                      <span className={`text-xl font-black ${isSuccess ? 'text-green-400' : 'text-blue-400'}`}>{entry.score}</span>
+                      <span className={`text-[8px] font-black uppercase tracking-tighter ${isSuccess ? 'text-green-500/50' : 'text-blue-500/50'}`}>
+                         {isSuccess ? 'Успешно' : 'Нужна практика'}
+                      </span>
+                   </div>
+                 </div>
+                 
+                 {entry.incorrectAnswers.length > 0 && (
+                   <div className="mt-4 pt-4 border-t border-white/5 space-y-4">
+                     <span className="text-[9px] uppercase font-black text-red-400/60 tracking-widest">Разбор ошибок ({entry.incorrectAnswers.length}):</span>
+                     {entry.incorrectAnswers.map((err, i) => (
+                       <div key={i} className="text-[11px] space-y-1 bg-black/20 p-3 rounded-xl border border-white/5">
+                         <p className="text-white/80 font-bold leading-tight">«{err.question}»</p>
+                         <div className="flex gap-2 mt-2">
+                            <span className="text-red-400/80 font-bold uppercase text-[8px] px-1.5 py-0.5 bg-red-500/10 rounded">Ошибка</span>
+                            <span className="text-white/40">{err.userAnswer}</span>
+                         </div>
+                         <div className="flex gap-2">
+                            <span className="text-green-400 font-bold uppercase text-[8px] px-1.5 py-0.5 bg-green-500/10 rounded">Верно</span>
+                            <span className="text-green-300/80">{err.correctAnswer}</span>
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 )}
+               </div>
+             );
+          })
         )}
       </div>
 
-      <div className="p-6">
+      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#081221] via-[#081221]/90 to-transparent">
         <button 
-          onClick={clearHistory}
-          className="w-full py-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm font-bold active:bg-red-500 active:text-white transition-all"
+          onClick={clearModuleHistory}
+          className="w-full py-3 bg-red-500/5 border border-red-500/10 text-red-500/50 rounded-xl text-[10px] font-black uppercase tracking-widest active:bg-red-500 active:text-white transition-all"
         >
-          Очистить историю
+          Удалить историю этого модуля
         </button>
       </div>
     </div>
