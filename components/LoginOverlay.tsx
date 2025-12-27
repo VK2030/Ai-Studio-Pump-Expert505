@@ -46,7 +46,7 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#081221]/60 backdrop-blur-2xl animate-in fade-in duration-500">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#081221]/20 backdrop-blur-xl animate-in fade-in duration-500">
       <div 
         className={`w-full max-w-[280px] p-8 flex flex-col items-center transition-transform duration-300 ${isError ? 'animate-shake' : ''}`}
         onClick={() => inputRef.current?.focus()}
