@@ -139,15 +139,66 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
   // Filtered history for rendering
   const moduleHistory = history.filter(h => h.moduleId === moduleId);
 
+  const renderModuleIcon = () => {
+    const iconType = currentModule?.icon;
+    
+    const containerClass = "w-24 h-24 relative mb-10 flex items-center justify-center rounded-3xl bg-blue-500/10 border border-blue-400/30 overflow-hidden group shadow-2xl shadow-blue-500/20";
+    const iconClass = "w-12 h-12 text-blue-400 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3";
+
+    switch (iconType) {
+      case 'calc':
+        return (
+          <div className={containerClass}>
+            <div className="absolute inset-0 bg-blue-400/5 blur-xl group-hover:bg-blue-400/10 transition-colors"></div>
+            <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5">
+               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+               <path d="M12 8v4M12 16h.01" />
+            </svg>
+          </div>
+        );
+      case 'pump':
+        return (
+          <div className={containerClass}>
+            <div className="absolute inset-0 bg-blue-400/5 blur-xl"></div>
+            <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M4 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM21 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM10 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM4 14v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1M4 11V9a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v2M12 6v12" />
+            </svg>
+          </div>
+        );
+      case 'search':
+        return (
+          <div className={containerClass}>
+            <div className="absolute inset-0 bg-blue-400/5 blur-xl"></div>
+            <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+          </div>
+        );
+      case 'corrosion':
+        return (
+          <div className={containerClass}>
+            <div className="absolute inset-0 bg-red-400/5 blur-xl"></div>
+            <svg viewBox="0 0 24 24" className={`${iconClass} text-red-400`} fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M6 18h12M6 6h12M6 12h12M6 6a3 3 0 0 0-3 3v6a3 3 0 0 0 3 3M18 6a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3" />
+            </svg>
+          </div>
+        );
+      default:
+        return (
+          <div className={containerClass}>
+            <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M12 2v20M2 12h20" />
+            </svg>
+          </div>
+        );
+    }
+  };
+
   const renderMenu = () => (
     <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-in fade-in duration-500">
-      <div className="w-20 h-20 bg-blue-500/20 rounded-3xl flex items-center justify-center mb-8 border border-blue-400/30 rotate-3">
-        <svg viewBox="0 0 24 24" className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M12 2v20M2 12h20" />
-          <path d="M12 2a10 10 0 100 20 10 10 0 000-20z" />
-        </svg>
-      </div>
-      <h2 className="text-2xl font-black text-white mb-2 uppercase tracking-tight">{moduleTitle}</h2>
+      {renderModuleIcon()}
+      <h2 className="text-3xl font-black text-white mb-2 uppercase tracking-tight leading-none drop-shadow-lg">{moduleTitle}</h2>
       <p className="text-blue-100/40 mb-10 text-sm leading-relaxed max-w-[280px]">
         Проверьте уровень своей подготовки и разберите ошибки прошлых сессий.
       </p>
@@ -163,14 +214,20 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
           onClick={() => setScreen('history')}
           className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-blue-100 font-bold active:scale-[0.98] active:bg-white/10 transition-all"
         >
-          История попыток
+          История тестирования
         </button>
-        <button 
-          onClick={onClose}
-          className="w-full py-4 text-white/30 font-bold active:scale-95 transition-all text-sm uppercase tracking-widest mt-4"
-        >
-          Вернуться назад
-        </button>
+        
+        <div className="pt-4">
+          <button 
+            onClick={onClose}
+            className="w-full py-4 flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-2xl text-white/40 font-bold text-xs uppercase tracking-[0.15em] active:bg-white/10 active:text-white transition-all active:scale-[0.98]"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Вернуться назад
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -193,7 +250,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 pb-24">
           <div className="p-7 rounded-[2.5rem] bg-white/5 border border-white/10 shadow-inner">
              <p className="text-white text-lg leading-snug font-semibold">{q?.text}</p>
           </div>
@@ -224,6 +281,13 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
               );
             })}
           </div>
+
+          <button 
+            onClick={() => setScreen('menu')}
+            className="w-full py-4 mt-4 bg-white/5 border border-white/10 rounded-2xl text-white/40 font-bold uppercase text-xs tracking-widest active:bg-white/10 active:scale-[0.98] transition-all"
+          >
+            Выйти
+          </button>
         </div>
       </div>
     );

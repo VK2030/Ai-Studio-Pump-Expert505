@@ -181,9 +181,10 @@ const App: React.FC = () => {
     <div className="relative min-h-screen max-w-md mx-auto bg-gradient-to-b from-[#0a1b3a] to-[#081221] shadow-2xl flex flex-col overflow-hidden">
       
       {/* App Header */}
-      <header className="flex items-center justify-between px-6 py-6 pt-10">
+      <header className="px-6 py-6 pt-12">
         <div className="flex flex-col">
-          <h1 className="text-white text-lg font-bold leading-tight uppercase tracking-wider">Обучение: Технолог</h1>
+          <span className="text-blue-400 text-[10px] font-black uppercase tracking-[0.3em] mb-1">Обучение</span>
+          <h1 className="text-white text-3xl font-black uppercase tracking-tighter leading-none">Лучший технолог</h1>
         </div>
       </header>
 
