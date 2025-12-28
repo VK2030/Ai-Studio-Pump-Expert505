@@ -119,7 +119,8 @@ const App: React.FC = () => {
             <div className="space-y-3">
               <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex justify-between items-center">
                 <span className="text-sm text-white/80">Модули</span>
-                <span className="font-bold text-blue-400">{Object.values(moduleProgress).filter(p => p > 0).length}/{MODULES.length}</span>
+                {/* Fix: Operator '>' cannot be applied to types 'unknown' and 'number'. Cast to number. */}
+                <span className="font-bold text-blue-400">{Object.values(moduleProgress).filter((p: unknown) => (p as number) > 0).length}/{MODULES.length}</span>
               </div>
               <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex justify-between items-center">
                 <span className="text-sm text-white/80">Результат</span>

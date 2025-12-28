@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { QUIZ_QUESTIONS, QuizQuestion, MODULES } from '../constants';
+import { QUIZ_QUESTIONS, MODULES } from '../constants';
+import { QuizQuestion } from '../types';
 
 interface QuizModuleProps {
   moduleId?: string;
@@ -26,8 +27,9 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
   const [currentSession, setCurrentSession] = useState(1);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
+  const [isAnswerConfirmed, setIsAnswerConfirmed] = useState(false);
   const [incorrectAnswers, setIncorrectAnswers] = useState<QuizHistoryEntry['incorrectAnswers']>([]);
   const [history, setHistory] = useState<QuizHistoryEntry[]>([]);
 
@@ -54,10 +56,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
   };
 
   const startQuiz = () => {
-    // Get questions specific to the module
     const questionsForModule = (moduleId && QUIZ_QUESTIONS[moduleId]) || [];
-    
-    // Pick up to 10 questions or use all if less than 10
     const selected = shuffleArray(questionsForModule).slice(0, Math.min(10, questionsForModule.length));
     
     setSessionQuestions(selected);
@@ -70,26 +69,42 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
   useEffect(() => {
     if (screen === 'quiz' && sessionQuestions.length > 0) {
       setShuffledOptions(shuffleArray(sessionQuestions[currentQuestionIdx].options));
-      setSelectedOption(null);
+      setSelectedOptions([]);
+      setIsAnswerConfirmed(false);
     }
   }, [currentQuestionIdx, sessionQuestions, screen]);
 
-  const handleOptionSelect = (idx: number) => {
-    if (selectedOption !== null) return;
+  const toggleOption = (idx: number) => {
+    if (isAnswerConfirmed) return;
     
-    setSelectedOption(idx);
-    const q = sessionQuestions[currentQuestionIdx];
-    const isCorrect = shuffledOptions[idx] === q.options[q.correct];
+    setSelectedOptions(prev => 
+      prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+    );
+  };
 
-    if (isCorrect) {
+  const confirmAnswer = () => {
+    if (selectedOptions.length === 0 || isAnswerConfirmed) return;
+    
+    setIsAnswerConfirmed(true);
+    const q = sessionQuestions[currentQuestionIdx];
+    
+    // Check if the set of selected options matches the set of correct options
+    const correctOptionTexts = q.correct.map(idx => q.options[idx]);
+    const selectedOptionTexts = selectedOptions.map(idx => shuffledOptions[idx]);
+    
+    const isFullyCorrect = 
+      correctOptionTexts.length === selectedOptionTexts.length && 
+      correctOptionTexts.every(text => selectedOptionTexts.includes(text));
+
+    if (isFullyCorrect) {
       setCorrectAnswersCount(prev => prev + 1);
     } else {
       setIncorrectAnswers(prev => [
         ...prev,
         {
           question: q.text,
-          userAnswer: shuffledOptions[idx],
-          correctAnswer: q.options[q.correct]
+          userAnswer: selectedOptionTexts.join(', '),
+          correctAnswer: correctOptionTexts.join(', ')
         }
       ]);
     }
@@ -100,7 +115,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
       } else {
         finishQuiz();
       }
-    }, 1200);
+    }, 1500);
   };
 
   const finishQuiz = () => {
@@ -136,12 +151,10 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
     window.dispatchEvent(new Event('storage'));
   };
 
-  // Filtered history for rendering
   const moduleHistory = history.filter(h => h.moduleId === moduleId);
 
   const renderModuleIcon = () => {
     const iconType = currentModule?.icon;
-    
     const containerClass = "w-24 h-24 relative mb-10 flex items-center justify-center rounded-3xl bg-blue-500/10 border border-blue-400/30 overflow-hidden group shadow-2xl shadow-blue-500/20";
     const iconClass = "w-12 h-12 text-blue-400 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3";
 
@@ -200,7 +213,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
       {renderModuleIcon()}
       <h2 className="text-3xl font-black text-white mb-2 uppercase tracking-tight leading-none drop-shadow-lg">{moduleTitle}</h2>
       <p className="text-blue-100/40 mb-10 text-sm leading-relaxed max-w-[280px]">
-        Проверьте уровень своей подготовки и разберите ошибки прошлых сессий.
+        Проверьте уровень своей подготовки. Теперь поддерживается выбор нескольких вариантов ответа.
       </p>
       
       <div className="w-full space-y-3">
@@ -250,43 +263,82 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 pb-24">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 pb-32">
           <div className="p-7 rounded-[2.5rem] bg-white/5 border border-white/10 shadow-inner">
              <p className="text-white text-lg leading-snug font-semibold">{q?.text}</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3">
-            {shuffledOptions.map((opt, i) => {
-              const isSelected = selectedOption === i;
-              const isCorrect = opt === q.options[q.correct];
-              
-              let btnClass = "w-full p-5 rounded-2xl text-left transition-all duration-200 border flex items-center gap-4 ";
-              if (selectedOption === null) {
-                btnClass += "bg-white/5 border-white/10 text-white/80 active:bg-blue-500/20 active:border-blue-400/40";
-              } else if (isSelected) {
-                btnClass += isCorrect ? "bg-green-500 border-green-400 text-white shadow-lg shadow-green-900/30 scale-[1.02]" : "bg-red-500 border-red-400 text-white shadow-lg shadow-red-900/30 scale-[0.98]";
-              } else if (isCorrect) {
-                btnClass += "bg-green-500/20 border-green-500/40 text-green-300";
-              } else {
-                btnClass += "bg-white/5 border-white/5 text-white/20 opacity-50";
-              }
+          <div className="space-y-3">
+            <p className="text-blue-400/80 text-[10px] uppercase font-black tracking-widest pl-2">
+              Может быть несколько вариантов ответа
+            </p>
+            <div className="grid grid-cols-1 gap-3">
+              {shuffledOptions.map((opt, i) => {
+                const isSelected = selectedOptions.includes(i);
+                const qCorrectTexts = q.correct.map(idx => q.options[idx]);
+                const isCorrect = qCorrectTexts.includes(opt);
+                
+                let btnClass = "w-full p-5 rounded-2xl text-left transition-all duration-200 border flex items-center gap-4 ";
+                
+                if (!isAnswerConfirmed) {
+                  btnClass += isSelected 
+                    ? "bg-blue-500/20 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)] text-white" 
+                    : "bg-white/5 border-white/10 text-white/80 active:bg-white/10";
+                } else {
+                  // Feedback after confirmation
+                  if (isSelected) {
+                    btnClass += isCorrect 
+                      ? "bg-green-500 border-green-400 text-white shadow-lg shadow-green-900/30" 
+                      : "bg-red-500 border-red-400 text-white shadow-lg shadow-red-900/30";
+                  } else if (isCorrect) {
+                    btnClass += "bg-green-500/10 border-green-500/40 text-green-300";
+                  } else {
+                    btnClass += "bg-white/5 border-white/5 text-white/20 opacity-50";
+                  }
+                }
 
-              return (
-                <button key={i} onClick={() => handleOptionSelect(i)} className={btnClass} disabled={selectedOption !== null}>
-                  <div className={`w-7 h-7 rounded-xl border flex items-center justify-center flex-shrink-0 text-[10px] font-black ${isSelected ? 'border-white bg-white/20' : 'border-white/20'}`}>
-                    {String.fromCharCode(65 + i)}
-                  </div>
-                  <span className="flex-1 text-sm font-medium leading-tight">{opt}</span>
-                </button>
-              );
-            })}
+                return (
+                  <button key={i} onClick={() => toggleOption(i)} className={btnClass} disabled={isAnswerConfirmed}>
+                    <div className={`w-7 h-7 rounded-xl border flex items-center justify-center flex-shrink-0 text-[10px] font-black transition-colors 
+                      ${isSelected ? 'border-white bg-white/20' : 'border-white/20'}`}>
+                      {isSelected ? (
+                        <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="3">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      ) : (
+                        String.fromCharCode(65 + i)
+                      )}
+                    </div>
+                    <span className="flex-1 text-sm font-medium leading-tight">{opt}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
+        </div>
 
+        {/* Footer actions */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#081221] via-[#081221] to-transparent flex flex-col gap-2">
+          {!isAnswerConfirmed ? (
+            <button 
+              onClick={confirmAnswer}
+              disabled={selectedOptions.length === 0}
+              className={`w-full py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl
+                ${selectedOptions.length > 0 
+                  ? 'bg-blue-600 text-white shadow-blue-900/40 active:scale-[0.98]' 
+                  : 'bg-white/5 text-white/20 border border-white/10 cursor-not-allowed'}`}
+            >
+              Принять ответ
+            </button>
+          ) : (
+             <div className="w-full h-14"></div> // Spacer during feedback
+          )}
+          
           <button 
             onClick={() => setScreen('menu')}
-            className="w-full py-4 mt-4 bg-white/5 border border-white/10 rounded-2xl text-white/40 font-bold uppercase text-xs tracking-widest active:bg-white/10 active:scale-[0.98] transition-all"
+            className="w-full py-2 bg-transparent text-white/30 font-bold uppercase text-[10px] tracking-widest active:text-white/60 transition-all"
           >
-            Выйти
+            Прервать тест
           </button>
         </div>
       </div>
@@ -384,13 +436,15 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
                      {entry.incorrectAnswers.map((err, i) => (
                        <div key={i} className="text-[11px] space-y-1 bg-black/20 p-3 rounded-xl border border-white/5">
                          <p className="text-white/80 font-bold leading-tight">«{err.question}»</p>
-                         <div className="flex gap-2 mt-2">
-                            <span className="text-red-400/80 font-bold uppercase text-[8px] px-1.5 py-0.5 bg-red-500/10 rounded">Ошибка</span>
-                            <span className="text-white/40">{err.userAnswer}</span>
-                         </div>
-                         <div className="flex gap-2">
-                            <span className="text-green-400 font-bold uppercase text-[8px] px-1.5 py-0.5 bg-green-500/10 rounded">Верно</span>
-                            <span className="text-green-300/80">{err.correctAnswer}</span>
+                         <div className="flex flex-col gap-1 mt-2">
+                            <div className="flex gap-2">
+                               <span className="text-red-400/80 font-bold uppercase text-[7px] px-1 py-0.5 bg-red-500/10 rounded self-start">Ваш выбор</span>
+                               <span className="text-white/40">{err.userAnswer || '(пусто)'}</span>
+                            </div>
+                            <div className="flex gap-2">
+                               <span className="text-green-400 font-bold uppercase text-[7px] px-1 py-0.5 bg-green-500/10 rounded self-start">Верно</span>
+                               <span className="text-green-300/80">{err.correctAnswer}</span>
+                            </div>
                          </div>
                        </div>
                      ))}
