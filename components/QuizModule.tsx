@@ -251,38 +251,38 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
 
     return (
       <div className="flex flex-col h-full animate-in slide-in-from-right duration-300">
-        <div className="p-6 pt-10 border-b border-white/10 bg-[#0c1e3a]">
-          <div className="flex justify-between items-center mb-4">
+        <div className="p-4 pt-8 border-b border-white/10 bg-[#0c1e3a]">
+          <div className="flex justify-between items-center mb-2">
             <span className="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em]">Вопрос {currentQuestionIdx + 1} / {sessionQuestions.length}</span>
-            <div className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] text-white/40 font-bold uppercase">
+            <div className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[9px] text-white/40 font-bold uppercase">
                {moduleTitle}
             </div>
           </div>
-          <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+          <div className="w-full h-[2px] bg-white/10 rounded-full overflow-hidden">
             <div className="h-full bg-blue-500 transition-all duration-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" style={{ width: `${progress}%` }}></div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 pb-32">
-          <div className="p-7 rounded-[2.5rem] bg-white/5 border border-white/10 shadow-inner">
-             <p className="text-white text-lg leading-snug font-semibold">{q?.text}</p>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
+          <div className="p-5 rounded-2xl bg-white/5 border border-white/10 shadow-inner">
+             <p className="text-white text-base leading-snug font-semibold">{q?.text}</p>
           </div>
 
-          <div className="space-y-3">
-            <p className="text-blue-400/80 text-[10px] uppercase font-black tracking-widest pl-2">
+          <div className="space-y-2">
+            <p className="text-blue-400/80 text-[9px] uppercase font-black tracking-widest pl-2">
               Может быть несколько вариантов ответа
             </p>
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-2">
               {shuffledOptions.map((opt, i) => {
                 const isSelected = selectedOptions.includes(i);
                 const qCorrectTexts = q.correct.map(idx => q.options[idx]);
                 const isCorrect = qCorrectTexts.includes(opt);
                 
-                let btnClass = "w-full p-5 rounded-2xl text-left transition-all duration-200 border flex items-center gap-4 ";
+                let btnClass = "w-full p-3.5 rounded-xl text-left transition-all duration-200 border flex items-center gap-3 ";
                 
                 if (!isAnswerConfirmed) {
                   btnClass += isSelected 
-                    ? "bg-blue-500/20 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)] text-white" 
+                    ? "bg-blue-500/20 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.1)] text-white" 
                     : "bg-white/5 border-white/10 text-white/80 active:bg-white/10";
                 } else {
                   // Feedback after confirmation
@@ -299,10 +299,10 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
 
                 return (
                   <button key={i} onClick={() => toggleOption(i)} className={btnClass} disabled={isAnswerConfirmed}>
-                    <div className={`w-7 h-7 rounded-xl border flex items-center justify-center flex-shrink-0 text-[10px] font-black transition-colors 
+                    <div className={`w-6 h-6 rounded-lg border flex items-center justify-center flex-shrink-0 text-[10px] font-black transition-colors 
                       ${isSelected ? 'border-white bg-white/20' : 'border-white/20'}`}>
                       {isSelected ? (
-                        <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="3">
+                        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="3">
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
                       ) : (
@@ -318,12 +318,12 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
         </div>
 
         {/* Footer actions */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#081221] via-[#081221] to-transparent flex flex-col gap-2">
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#081221] via-[#081221] to-transparent flex flex-col gap-1.5">
           {!isAnswerConfirmed ? (
             <button 
               onClick={confirmAnswer}
               disabled={selectedOptions.length === 0}
-              className={`w-full py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl
+              className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl
                 ${selectedOptions.length > 0 
                   ? 'bg-blue-600 text-white shadow-blue-900/40 active:scale-[0.98]' 
                   : 'bg-white/5 text-white/20 border border-white/10 cursor-not-allowed'}`}
@@ -336,7 +336,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
           
           <button 
             onClick={() => setScreen('menu')}
-            className="w-full py-2 bg-transparent text-white/30 font-bold uppercase text-[10px] tracking-widest active:text-white/60 transition-all"
+            className="w-full py-2 bg-transparent text-white/30 font-bold uppercase text-[9px] tracking-widest active:text-white/60 transition-all"
           >
             Прервать тест
           </button>
