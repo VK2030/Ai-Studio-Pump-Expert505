@@ -196,14 +196,14 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
 
   const renderModuleIcon = () => {
     const iconType = currentModule?.icon;
-    const containerClass = "w-24 h-24 relative mb-10 flex items-center justify-center rounded-3xl bg-blue-500/10 border border-blue-400/30 overflow-hidden group shadow-2xl shadow-blue-500/20";
-    const iconClass = "w-12 h-12 text-blue-400 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3";
+    const containerClass = "w-24 h-24 relative mb-10 flex items-center justify-center rounded-3xl bg-white/5 border border-indigo-500/20 overflow-hidden group shadow-2xl shadow-indigo-500/10";
+    const iconClass = "w-12 h-12 text-indigo-400 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3";
 
     switch (iconType) {
       case 'calc':
         return (
           <div className={containerClass}>
-            <div className="absolute inset-0 bg-blue-400/5 blur-xl group-hover:bg-blue-400/10 transition-colors"></div>
+            <div className="absolute inset-0 bg-indigo-400/5 blur-xl group-hover:bg-indigo-400/10 transition-colors"></div>
             <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5">
                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                <path d="M12 8v4M12 16h.01" />
@@ -213,7 +213,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
       case 'pump':
         return (
           <div className={containerClass}>
-            <div className="absolute inset-0 bg-blue-400/5 blur-xl"></div>
+            <div className="absolute inset-0 bg-indigo-400/5 blur-xl"></div>
             <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M4 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM21 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM10 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM4 14v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1M4 11V9a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v2M12 6v12" />
             </svg>
@@ -222,7 +222,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
       case 'search':
         return (
           <div className={containerClass}>
-            <div className="absolute inset-0 bg-blue-400/5 blur-xl"></div>
+            <div className="absolute inset-0 bg-indigo-400/5 blur-xl"></div>
             <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5">
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.3-4.3" />
@@ -253,20 +253,20 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
     <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-in fade-in duration-500">
       {renderModuleIcon()}
       <h2 className="text-3xl font-black text-white mb-2 uppercase tracking-tight leading-none drop-shadow-lg">{moduleTitle}</h2>
-      <p className="text-blue-100/40 mb-10 text-sm leading-relaxed max-w-[280px]">
-        Проверьте уровень своей подготовки. {isTimerEnabled ? 'Теперь поддерживается выбор нескольких вариантов ответа и таймер 30 секунд.' : 'Поддерживается выбор нескольких вариантов ответа.'}
+      <p className="text-white/40 mb-10 text-sm leading-relaxed max-w-[280px]">
+        Проверьте уровень своей подготовки. Может быть несколько вариантов ответа.
       </p>
       
       <div className="w-full space-y-3">
         <button 
           onClick={startQuiz}
-          className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl text-white font-bold text-lg active:scale-[0.98] transition-all shadow-lg shadow-blue-900/40"
+          className="w-full py-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 rounded-2xl text-white font-bold text-lg active:scale-[0.98] transition-all shadow-xl shadow-black/20 border border-indigo-500/30"
         >
           Начать тест
         </button>
         <button 
           onClick={() => setScreen('history')}
-          className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-blue-100 font-bold active:scale-[0.98] active:bg-white/10 transition-all"
+          className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-indigo-100 font-bold active:scale-[0.98] active:bg-white/10 transition-all"
         >
           История тестирования
         </button>
@@ -304,7 +304,6 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
                </button>
                <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">Вопрос {currentQuestionIdx + 1} / {sessionQuestions.length}</span>
                
-               {/* Отображаем таймер только если он включен в настройках */}
                {isTimerEnabled && (
                 <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border ${isCriticalTime ? 'bg-red-500/20 border-red-500/50 text-red-400' : 'bg-white/10 border-white/30 text-white'} transition-colors duration-300`}>
                   <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -320,7 +319,6 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
             </div>
           </div>
           
-          {/* Main Progress Bar - Changed to bg-white as requested */}
           <div className="w-full h-[2px] bg-white/10 rounded-full overflow-hidden mb-1">
             <div 
               className="h-full bg-white transition-all duration-500 shadow-[0_0_10px_rgba(255,255,255,0.4)]" 
@@ -328,11 +326,10 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
             ></div>
           </div>
           
-          {/* Time Limit Bar - Отображаем только если включен */}
           {isTimerEnabled && (
             <div className="w-full h-[2px] bg-white/5 rounded-full overflow-hidden">
               <div 
-                className={`h-full transition-all duration-1000 linear ${isCriticalTime ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-orange-500'}`} 
+                className={`h-full transition-all duration-1000 linear ${isCriticalTime ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-indigo-500'}`} 
                 style={{ width: `${timeProgress}%` }}
               ></div>
             </div>
@@ -358,7 +355,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
                 
                 if (!isAnswerConfirmed) {
                   btnClass += isSelected 
-                    ? "bg-blue-500/20 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.1)] text-white" 
+                    ? "bg-indigo-500/20 border-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.1)] text-white" 
                     : "bg-white/5 border-white/10 text-white/80 active:bg-white/10";
                 } else {
                   if (isSelected) {
@@ -390,7 +387,6 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
           </div>
         </div>
 
-        {/* Footer actions */}
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#081221] via-[#081221] to-transparent flex flex-col gap-1.5">
           {!isAnswerConfirmed ? (
             <button 
@@ -398,7 +394,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
               disabled={selectedOptions.length === 0}
               className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl
                 ${selectedOptions.length > 0 
-                  ? 'bg-blue-600 text-white shadow-blue-900/40 active:scale-[0.98]' 
+                  ? 'bg-slate-800 border border-indigo-500/50 text-white shadow-indigo-950/40 active:scale-[0.98]' 
                   : 'bg-white/5 text-white/20 border border-white/10 cursor-not-allowed'}`}
             >
               Принять ответ
@@ -428,35 +424,35 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
         <div className="relative w-48 h-48 mb-8">
           <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
             <circle cx="50" cy="50" r="44" className="stroke-white/5 fill-none" strokeWidth="6" />
-            <circle cx="50" cy="50" r="44" className="stroke-blue-500 fill-none" strokeWidth="8" strokeDasharray={`${total > 0 ? (correctAnswersCount / total) * 276 : 0} 276`} strokeLinecap="round" />
+            <circle cx="50" cy="50" r="44" className="stroke-indigo-500 fill-none" strokeWidth="8" strokeDasharray={`${total > 0 ? (correctAnswersCount / total) * 276 : 0} 276`} strokeLinecap="round" />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-5xl font-black text-white tracking-tighter">{Math.round(percentage)}%</span>
-            <span className="text-[10px] text-blue-400 uppercase font-black tracking-[0.2em] mt-1">Уровень</span>
+            <span className="text-[10px] text-indigo-400 uppercase font-black tracking-[0.2em] mt-1">Уровень</span>
           </div>
         </div>
 
         <h2 className="text-2xl font-bold text-white mb-2">Сессия #{currentSession - 1}</h2>
-        <p className="text-blue-100/40 mb-10 font-medium">Верных ответов: <span className="text-white">{correctAnswersCount}</span> из {total}</p>
+        <p className="text-white/40 mb-10 font-medium">Верных ответов: <span className="text-white">{correctAnswersCount}</span> из {total}</p>
 
         <div className="w-full space-y-3">
           <button 
             onClick={startQuiz}
-            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl text-white font-bold active:scale-[0.98] transition-all"
+            className="w-full py-4 bg-slate-800 border border-indigo-500/50 rounded-2xl text-white font-bold active:scale-[0.98] transition-all"
           >
             Повторить тест
           </button>
           
           <button 
             onClick={() => setScreen('history')}
-            className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-blue-100 font-bold active:scale-[0.98] active:bg-white/10 transition-all"
+            className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-indigo-100 font-bold active:scale-[0.98] active:bg-white/10 transition-all"
           >
             История тестирования
           </button>
 
           <button 
             onClick={() => onExitToApp ? onExitToApp() : onClose()}
-            className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-blue-100 font-bold active:bg-white/10 active:scale-[0.98] transition-all opacity-60"
+            className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-white/40 font-bold active:bg-white/10 active:scale-[0.98] transition-all opacity-60"
           >
             В главное меню
           </button>
@@ -490,7 +486,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
              
              return (
                <div key={idx} className="p-5 rounded-2xl bg-white/5 border border-white/10 relative overflow-hidden group">
-                 {isSuccess && <div className="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-full blur-2xl"></div>}
+                 {isSuccess && <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/10 rounded-full blur-2xl"></div>}
                  
                  <div className="flex justify-between items-start mb-3">
                    <div className="flex flex-col">
@@ -498,8 +494,8 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
                       <span className="text-[10px] text-white/50 font-bold">{entry.date}</span>
                    </div>
                    <div className="flex flex-col items-end">
-                      <span className={`text-xl font-black ${isSuccess ? 'text-green-400' : 'text-blue-400'}`}>{entry.score}</span>
-                      <span className={`text-[8px] font-black uppercase tracking-tighter ${isSuccess ? 'text-green-500/50' : 'text-blue-500/50'}`}>
+                      <span className={`text-xl font-black ${isSuccess ? 'text-green-400' : 'text-indigo-400'}`}>{entry.score}</span>
+                      <span className={`text-[8px] font-black uppercase tracking-tighter ${isSuccess ? 'text-green-500/50' : 'text-indigo-500/50'}`}>
                          {isSuccess ? 'Успешно' : 'Нужна практика'}
                       </span>
                    </div>

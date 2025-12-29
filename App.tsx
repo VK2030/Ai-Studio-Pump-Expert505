@@ -14,7 +14,6 @@ const App: React.FC = () => {
   const [selectedModule, setSelectedModule] = useState<ModuleData | null>(null);
   const [moduleProgress, setModuleProgress] = useState<Record<string, number>>({});
   
-  // Состояние таймера
   const [isTimerEnabled, setIsTimerEnabled] = useState<boolean>(() => {
     const saved = localStorage.getItem('app_timer_enabled');
     return saved === null ? true : saved === 'true';
@@ -90,16 +89,16 @@ const App: React.FC = () => {
             <div className="p-4 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md relative overflow-hidden group mb-2 flex-shrink-0">
               <div className="flex justify-between items-center mb-2">
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase tracking-widest text-blue-400 font-black">Общий прогресс</span>
+                  <span className="text-[9px] uppercase tracking-widest text-indigo-400 font-black">Общий прогресс</span>
                   <span className="text-white/90 font-bold text-sm">Выполнено: {totalCourseProgress}%</span>
                 </div>
-                <div className="w-8 h-8 rounded-full border border-blue-500/30 flex items-center justify-center text-[9px] font-black text-blue-400">
+                <div className="w-8 h-8 rounded-full border border-indigo-500/30 flex items-center justify-center text-[9px] font-black text-indigo-400">
                    {totalCourseProgress}%
                 </div>
               </div>
               <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.4)] transition-all duration-1000" 
+                  className="h-full bg-gradient-to-r from-slate-400 to-indigo-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.2)] transition-all duration-1000" 
                   style={{ width: `${totalCourseProgress}%` }}
                 ></div>
               </div>
@@ -113,7 +112,7 @@ const App: React.FC = () => {
               <path d="M12 15l-2 5L9 9l11-1-5 2 5 11z" />
             </svg>
             <h2 className="text-xl font-bold mb-1">Рейтинг</h2>
-            <p className="text-blue-100/50 text-center text-sm">Скоро здесь появятся лидеры</p>
+            <p className="text-white/30 text-center text-sm">Скоро здесь появятся лидеры</p>
           </div>
         );
       case 'profile':
@@ -124,7 +123,7 @@ const App: React.FC = () => {
               <button 
                 onClick={toggleTimer}
                 className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
-                  ${isTimerEnabled ? 'bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.4)]' : 'bg-white/10'}`}
+                  ${isTimerEnabled ? 'bg-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.3)]' : 'bg-white/10'}`}
               >
                 <div 
                   className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
@@ -137,13 +136,13 @@ const App: React.FC = () => {
       case 'tasks':
          return (
           <div className="flex flex-col p-6 items-center justify-center h-full text-white">
-            <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4 border border-blue-500/20">
-               <svg viewBox="0 0 24 24" className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 border border-indigo-500/20">
+               <svg viewBox="0 0 24 24" className="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                </svg>
             </div>
             <h2 className="text-xl font-bold mb-1">Задания</h2>
-            <p className="text-blue-100/50 text-center text-sm">Будут доступны позже</p>
+            <p className="text-white/30 text-center text-sm">Будут доступны позже</p>
           </div>
         );
     }
@@ -158,7 +157,7 @@ const App: React.FC = () => {
             <h1 className="text-white text-2xl font-black uppercase tracking-tighter leading-none">Настройки</h1>
           ) : (
             <>
-              <span className="text-blue-400 text-[9px] font-black uppercase tracking-[0.3em]">Обучение</span>
+              <span className="text-indigo-400 text-[9px] font-black uppercase tracking-[0.3em]">Обучение</span>
               <h1 className="text-white text-2xl font-black uppercase tracking-tighter leading-none">Лучший технолог</h1>
             </>
           )}
