@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { QUIZ_QUESTIONS, MODULES } from '../constants';
 import { QuizQuestion } from '../types';
 
@@ -32,6 +32,16 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
   const [isAnswerConfirmed, setIsAnswerConfirmed] = useState(false);
   const [incorrectAnswers, setIncorrectAnswers] = useState<QuizHistoryEntry['incorrectAnswers']>([]);
   const [history, setHistory] = useState<QuizHistoryEntry[]>([]);
+  
+  // Timer states
+  const [timeLeft, setTimeLeft] = useState(30);
+  const timerRef = useRef<any | null>(null);
+  
+  // Считываем настройку таймера
+  const isTimerEnabled = (() => {
+    const saved = localStorage.getItem('app_timer_enabled');
+    return saved === null ? true : saved === 'true';
+  })();
 
   // Get current module info
   const currentModule = MODULES.find(m => m.id === moduleId);
@@ -44,6 +54,10 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
     
     const savedSession = localStorage.getItem(`quizSessionNum_${moduleId || 'global'}`);
     if (savedSession) setCurrentSession(parseInt(savedSession, 10));
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, [moduleId]);
 
   const shuffleArray = <T,>(array: T[]): T[] => {
@@ -66,6 +80,31 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
     setScreen('quiz');
   };
 
+  // Timer logic - Зависит от isTimerEnabled
+  useEffect(() => {
+    if (screen === 'quiz' && !isAnswerConfirmed && isTimerEnabled) {
+      setTimeLeft(30);
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            if (timerRef.current) clearInterval(timerRef.current);
+            handleTimeOut();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [currentQuestionIdx, screen, isAnswerConfirmed, isTimerEnabled]);
+
+  const handleTimeOut = () => {
+    confirmAnswer(true); // Force incorrect due to timeout
+  };
+
   useEffect(() => {
     if (screen === 'quiz' && sessionQuestions.length > 0) {
       setShuffledOptions(shuffleArray(sessionQuestions[currentQuestionIdx].options));
@@ -82,17 +121,19 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
     );
   };
 
-  const confirmAnswer = () => {
-    if (selectedOptions.length === 0 || isAnswerConfirmed) return;
+  const confirmAnswer = (isTimeout = false) => {
+    if (isAnswerConfirmed) return;
+    if (!isTimeout && selectedOptions.length === 0) return;
     
+    if (timerRef.current) clearInterval(timerRef.current);
     setIsAnswerConfirmed(true);
-    const q = sessionQuestions[currentQuestionIdx];
     
-    // Check if the set of selected options matches the set of correct options
+    const q = sessionQuestions[currentQuestionIdx];
     const correctOptionTexts = q.correct.map(idx => q.options[idx]);
     const selectedOptionTexts = selectedOptions.map(idx => shuffledOptions[idx]);
     
     const isFullyCorrect = 
+      !isTimeout &&
       correctOptionTexts.length === selectedOptionTexts.length && 
       correctOptionTexts.every(text => selectedOptionTexts.includes(text));
 
@@ -103,7 +144,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
         ...prev,
         {
           question: q.text,
-          userAnswer: selectedOptionTexts.join(', '),
+          userAnswer: isTimeout ? "Время истекло" : (selectedOptionTexts.join(', ') || "Нет ответа"),
           correctAnswer: correctOptionTexts.join(', ')
         }
       ]);
@@ -213,7 +254,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
       {renderModuleIcon()}
       <h2 className="text-3xl font-black text-white mb-2 uppercase tracking-tight leading-none drop-shadow-lg">{moduleTitle}</h2>
       <p className="text-blue-100/40 mb-10 text-sm leading-relaxed max-w-[280px]">
-        Проверьте уровень своей подготовки. Теперь поддерживается выбор нескольких вариантов ответа.
+        Проверьте уровень своей подготовки. {isTimerEnabled ? 'Теперь поддерживается выбор нескольких вариантов ответа и таймер 30 секунд.' : 'Поддерживается выбор нескольких вариантов ответа.'}
       </p>
       
       <div className="w-full space-y-3">
@@ -248,19 +289,54 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
   const renderQuiz = () => {
     const q = sessionQuestions[currentQuestionIdx];
     const progress = ((currentQuestionIdx + 1) / sessionQuestions.length) * 100;
+    const timeProgress = (timeLeft / 30) * 100;
+    const isCriticalTime = timeLeft <= 10;
 
     return (
       <div className="flex flex-col h-full animate-in slide-in-from-right duration-300">
-        <div className="p-4 pt-8 border-b border-white/10 bg-[#0c1e3a]">
+        <div className="p-4 pt-8 border-b border-white/10 bg-[#0c1e3a] relative overflow-hidden">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em]">Вопрос {currentQuestionIdx + 1} / {sessionQuestions.length}</span>
+            <div className="flex items-center gap-2">
+               <button onClick={() => setScreen('menu')} className="p-1 -ml-1 text-white/70 active:text-white transition-colors">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+               </button>
+               <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">Вопрос {currentQuestionIdx + 1} / {sessionQuestions.length}</span>
+               
+               {/* Отображаем таймер только если он включен в настройках */}
+               {isTimerEnabled && (
+                <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border ${isCriticalTime ? 'bg-red-500/20 border-red-500/50 text-red-400' : 'bg-white/10 border-white/30 text-white'} transition-colors duration-300`}>
+                  <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  <span className="text-[10px] font-black">{timeLeft}с</span>
+                </div>
+               )}
+            </div>
             <div className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[9px] text-white/40 font-bold uppercase">
                {moduleTitle}
             </div>
           </div>
-          <div className="w-full h-[2px] bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-500 transition-all duration-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" style={{ width: `${progress}%` }}></div>
+          
+          {/* Main Progress Bar - Changed to bg-white as requested */}
+          <div className="w-full h-[2px] bg-white/10 rounded-full overflow-hidden mb-1">
+            <div 
+              className="h-full bg-white transition-all duration-500 shadow-[0_0_10px_rgba(255,255,255,0.4)]" 
+              style={{ width: `${progress}%` }}
+            ></div>
           </div>
+          
+          {/* Time Limit Bar - Отображаем только если включен */}
+          {isTimerEnabled && (
+            <div className="w-full h-[2px] bg-white/5 rounded-full overflow-hidden">
+              <div 
+                className={`h-full transition-all duration-1000 linear ${isCriticalTime ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-orange-500'}`} 
+                style={{ width: `${timeProgress}%` }}
+              ></div>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
@@ -269,7 +345,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
           </div>
 
           <div className="space-y-2">
-            <p className="text-blue-400/80 text-[9px] uppercase font-black tracking-widest pl-2">
+            <p className="text-white/40 text-[9px] uppercase font-black tracking-widest pl-2">
               Может быть несколько вариантов ответа
             </p>
             <div className="grid grid-cols-1 gap-2">
@@ -285,13 +361,10 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
                     ? "bg-blue-500/20 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.1)] text-white" 
                     : "bg-white/5 border-white/10 text-white/80 active:bg-white/10";
                 } else {
-                  // Feedback after confirmation
                   if (isSelected) {
                     btnClass += isCorrect 
                       ? "bg-green-500 border-green-400 text-white shadow-lg shadow-green-900/30" 
                       : "bg-red-500 border-red-400 text-white shadow-lg shadow-red-900/30";
-                  } else if (isCorrect) {
-                    btnClass += "bg-green-500/10 border-green-500/40 text-green-300";
                   } else {
                     btnClass += "bg-white/5 border-white/5 text-white/20 opacity-50";
                   }
@@ -321,7 +394,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#081221] via-[#081221] to-transparent flex flex-col gap-1.5">
           {!isAnswerConfirmed ? (
             <button 
-              onClick={confirmAnswer}
+              onClick={() => confirmAnswer()}
               disabled={selectedOptions.length === 0}
               className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl
                 ${selectedOptions.length > 0 
@@ -331,7 +404,9 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
               Принять ответ
             </button>
           ) : (
-             <div className="w-full h-14"></div> // Spacer during feedback
+             <div className="w-full h-14 flex items-center justify-center">
+                <span className="text-white/40 text-[10px] uppercase font-black tracking-widest animate-pulse">Переход к следующему вопросу...</span>
+             </div>
           )}
           
           <button 
@@ -394,7 +469,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
     <div className="flex flex-col h-full animate-in slide-in-from-left duration-300">
       <header className="p-6 pt-10 border-b border-white/10 flex justify-between items-center bg-[#0c1e3a]">
         <div className="flex flex-col">
-          <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-1">История тестирования</span>
+          <span className="text-[10px] text-white font-black uppercase tracking-widest mb-1">История тестирования</span>
           <h3 className="text-white font-bold text-sm truncate max-w-[200px]">{moduleTitle}</h3>
         </div>
         <button onClick={() => setScreen('menu')} className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-xs uppercase">Назад</button>
