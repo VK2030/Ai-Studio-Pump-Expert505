@@ -297,16 +297,11 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
         <div className="p-4 pt-8 border-b border-white/10 bg-[#0c1e3a] relative overflow-hidden">
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-2">
-               <button onClick={() => setScreen('menu')} className="p-1 -ml-1 text-white/70 active:text-white transition-colors">
-                  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-               </button>
                <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">Вопрос {currentQuestionIdx + 1} / {sessionQuestions.length}</span>
                
                {isTimerEnabled && (
                 <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border ${isCriticalTime ? 'bg-red-500/20 border-red-500/50 text-red-400' : 'bg-white/10 border-white/30 text-white'} transition-colors duration-300`}>
-                  <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <circle cx="12" cy="12" r="10" />
                     <polyline points="12 6 12 12 16 14" />
                   </svg>
