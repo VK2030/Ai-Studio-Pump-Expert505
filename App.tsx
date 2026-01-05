@@ -257,7 +257,7 @@ const App: React.FC = () => {
             </div>
 
             <div className="p-6 rounded-[2rem] bg-white/5 border border-white/10 flex justify-between items-center backdrop-blur-md">
-              <span className="text-base font-semibold text-white/90">Подсвечивать верность</span>
+              <span className="text-base font-semibold text-white/90">Подсвечивать корректность</span>
               <button 
                 onClick={toggleHighlight}
                 className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
