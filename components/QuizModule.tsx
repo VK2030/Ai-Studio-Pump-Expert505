@@ -37,9 +37,14 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
   const [timeLeft, setTimeLeft] = useState(30);
   const timerRef = useRef<any | null>(null);
   
-  // Считываем настройку таймера
+  // Считываем настройки
   const isTimerEnabled = (() => {
     const saved = localStorage.getItem('app_timer_enabled');
+    return saved === null ? true : saved === 'true';
+  })();
+
+  const isHighlightEnabled = (() => {
+    const saved = localStorage.getItem('app_highlight_enabled');
     return saved === null ? true : saved === 'true';
   })();
 
@@ -80,7 +85,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
     setScreen('quiz');
   };
 
-  // Timer logic - Зависит от isTimerEnabled
+  // Timer logic
   useEffect(() => {
     if (screen === 'quiz' && !isAnswerConfirmed && isTimerEnabled) {
       setTimeLeft(30);
@@ -350,15 +355,25 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
                 
                 if (!isAnswerConfirmed) {
                   btnClass += isSelected 
-                    ? "bg-indigo-500/20 border-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.1)] text-white" 
+                    ? "bg-indigo-500/20 border-white shadow-[0_0_15px_rgba(255,255,255,0.1)] text-white" 
                     : "bg-white/5 border-white/10 text-white/80 active:bg-white/10";
                 } else {
-                  if (isSelected) {
-                    btnClass += isCorrect 
-                      ? "bg-green-500 border-green-400 text-white shadow-lg shadow-green-900/30" 
-                      : "bg-red-500 border-red-400 text-white shadow-lg shadow-red-900/30";
+                  // Answer confirmed state
+                  if (isHighlightEnabled) {
+                    if (isSelected) {
+                      btnClass += isCorrect 
+                        ? "bg-green-500 border-green-400 text-white shadow-lg shadow-green-900/30" 
+                        : "bg-red-500 border-red-400 text-white shadow-lg shadow-red-900/30";
+                    } else {
+                      btnClass += "bg-white/5 border-white/5 text-white/20 opacity-50";
+                    }
                   } else {
-                    btnClass += "bg-white/5 border-white/5 text-white/20 opacity-50";
+                    // Highlight disabled - show neutral locked selection
+                    if (isSelected) {
+                      btnClass += "bg-indigo-500/20 border-indigo-400/50 text-white opacity-80 shadow-[0_0_10px_rgba(99,102,241,0.1)]";
+                    } else {
+                      btnClass += "bg-white/5 border-white/5 text-white/10 opacity-30";
+                    }
                   }
                 }
 
@@ -389,7 +404,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, onClose, onExitToApp 
               disabled={selectedOptions.length === 0}
               className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl
                 ${selectedOptions.length > 0 
-                  ? 'bg-slate-800 border border-indigo-500/50 text-white shadow-indigo-950/40 active:scale-[0.98]' 
+                  ? 'bg-slate-800 border border-white text-white shadow-lg shadow-white/10 active:scale-[0.98]' 
                   : 'bg-white/5 text-white/20 border border-white/10 cursor-not-allowed'}`}
             >
               Принять ответ

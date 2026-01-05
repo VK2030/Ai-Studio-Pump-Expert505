@@ -19,9 +19,18 @@ interface QuizHistoryEntry {
 }
 
 const App: React.FC = () => {
+  const [isLoginRequired, setIsLoginRequired] = useState<boolean>(() => {
+    const saved = localStorage.getItem('app_login_required');
+    return saved === null ? true : saved === 'true';
+  });
+
   const [isAuthorized, setIsAuthorized] = useState<boolean>(() => {
+    const savedReq = localStorage.getItem('app_login_required');
+    const req = savedReq === null ? true : savedReq === 'true';
+    if (!req) return true;
     return sessionStorage.getItem('app_authorized') === 'true';
   });
+
   const [activeTab, setActiveTab] = useState<AppSection>('home');
   const [selectedModule, setSelectedModule] = useState<ModuleData | null>(null);
   const [moduleProgress, setModuleProgress] = useState<Record<string, number>>({});
@@ -29,6 +38,11 @@ const App: React.FC = () => {
   
   const [isTimerEnabled, setIsTimerEnabled] = useState<boolean>(() => {
     const saved = localStorage.getItem('app_timer_enabled');
+    return saved === null ? true : saved === 'true';
+  });
+
+  const [isHighlightEnabled, setIsHighlightEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('app_highlight_enabled');
     return saved === null ? true : saved === 'true';
   });
 
@@ -82,6 +96,21 @@ const App: React.FC = () => {
     const newValue = !isTimerEnabled;
     setIsTimerEnabled(newValue);
     localStorage.setItem('app_timer_enabled', String(newValue));
+  };
+
+  const toggleHighlight = () => {
+    const newValue = !isHighlightEnabled;
+    setIsHighlightEnabled(newValue);
+    localStorage.setItem('app_highlight_enabled', String(newValue));
+  };
+
+  const toggleLoginRequirement = () => {
+    const newValue = !isLoginRequired;
+    setIsLoginRequired(newValue);
+    localStorage.setItem('app_login_required', String(newValue));
+    if (!newValue) {
+      setIsAuthorized(true);
+    }
   };
 
   const clearGlobalHistory = () => {
@@ -212,7 +241,7 @@ const App: React.FC = () => {
         );
       case 'profile':
         return (
-          <div className="flex flex-col p-6 text-white h-full overflow-hidden">
+          <div className="flex flex-col p-6 text-white h-full overflow-hidden space-y-4">
             <div className="p-6 rounded-[2rem] bg-white/5 border border-white/10 flex justify-between items-center backdrop-blur-md">
               <span className="text-base font-semibold text-white/90">Таймер ответа 30 сек.</span>
               <button 
@@ -223,6 +252,34 @@ const App: React.FC = () => {
                 <div 
                   className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
                     ${isTimerEnabled ? 'left-7' : 'left-1'}`}
+                />
+              </button>
+            </div>
+
+            <div className="p-6 rounded-[2rem] bg-white/5 border border-white/10 flex justify-between items-center backdrop-blur-md">
+              <span className="text-base font-semibold text-white/90">Подсвечивать верность</span>
+              <button 
+                onClick={toggleHighlight}
+                className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
+                  ${isHighlightEnabled ? 'bg-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.3)]' : 'bg-white/10'}`}
+              >
+                <div 
+                  className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
+                    ${isHighlightEnabled ? 'left-7' : 'left-1'}`}
+                />
+              </button>
+            </div>
+
+            <div className="p-6 rounded-[2rem] bg-white/5 border border-white/10 flex justify-between items-center backdrop-blur-md">
+              <span className="text-base font-semibold text-white/90">Вход по паролю</span>
+              <button 
+                onClick={toggleLoginRequirement}
+                className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
+                  ${isLoginRequired ? 'bg-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.3)]' : 'bg-white/10'}`}
+              >
+                <div 
+                  className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
+                    ${isLoginRequired ? 'left-7' : 'left-1'}`}
                 />
               </button>
             </div>
