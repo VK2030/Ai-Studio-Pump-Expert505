@@ -162,14 +162,36 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
 
   const renderModuleIcon = () => {
     const iconType = currentModule?.icon;
-    const containerClass = `w-24 h-24 relative mb-10 flex items-center justify-center rounded-3xl border overflow-hidden group shadow-2xl ${isDark ? 'bg-white/5 border-indigo-500/20 shadow-indigo-500/10' : 'bg-white border-indigo-100 shadow-indigo-200/50'}`;
-    const iconClass = "w-12 h-12 text-indigo-500 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3";
+    const containerClass = `w-24 h-24 relative mb-10 flex items-center justify-center rounded-3xl border overflow-hidden group shadow-2xl ${isDark ? 'bg-white/5 border-slate-500/20 shadow-slate-500/10' : 'bg-white border-slate-100 shadow-slate-200/50'}`;
+    const iconClass = "w-12 h-12 text-slate-600 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3";
 
     switch (iconType) {
-      case 'calc': return ( <div className={containerClass}> <div className="absolute inset-0 bg-indigo-400/5 blur-xl group-hover:bg-indigo-400/10 transition-colors"></div> <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /> <path d="M12 8v4M12 16h.01" /> </svg> </div> );
-      case 'pump': return ( <div className={containerClass}> <div className="absolute inset-0 bg-indigo-400/5 blur-xl"></div> <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> <path d="M4 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM21 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM10 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM4 14v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1M4 11V9a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v2M12 6v12" /> </svg> </div> );
-      case 'search': return ( <div className={containerClass}> <div className="absolute inset-0 bg-indigo-400/5 blur-xl"></div> <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> <circle cx="11" cy="11" r="8" /> <path d="m21 21-4.3-4.3" /> </svg> </div> );
-      case 'corrosion': return ( <div className={containerClass}> <div className="absolute inset-0 bg-red-400/5 blur-xl"></div> <svg viewBox="0 0 24 24" className={`${iconClass} text-red-500`} fill="none" stroke="currentColor" strokeWidth="1.5"> <path d="M6 18h12M6 6h12M6 12h12M6 6a3 3 0 0 0-3 3v6a3 3 0 0 0 3 3M18 6a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3" /> </svg> </div> );
+      case 'calc': return ( 
+        <div className={containerClass}> 
+          <div className="absolute inset-0 bg-slate-400/5 blur-xl group-hover:bg-slate-400/10 transition-colors"></div> 
+          <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> 
+            <rect x="3" y="5" width="18" height="11" rx="1" />
+            <path d="M2 18h20" />
+            <circle cx="8" cy="10.5" r="2.2" />
+            <path d="M8 8.3v4.4M5.8 10.5h4.4" />
+            <path d="M6.5 9l3 3M9.5 9l-3 3" />
+            <path d="M13 14v-2M15.5 14v-4M18 14v-6" />
+            <path d="M12.5 10l3.5-3.5 3 2" />
+          </svg> 
+        </div> 
+      );
+      case 'pump': return ( <div className={containerClass}> <div className="absolute inset-0 bg-slate-400/5 blur-xl"></div> <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> <path d="M4 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM21 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM10 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM4 14v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1M4 11V9a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v2M12 6v12" /> </svg> </div> );
+      case 'search': return ( <div className={containerClass}> <div className="absolute inset-0 bg-slate-400/5 blur-xl"></div> <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> <circle cx="11" cy="11" r="8" /> <path d="m21 21-4.3-4.3" /> </svg> </div> );
+      case 'corrosion': return ( 
+        <div className={containerClass}> 
+          <div className="absolute inset-0 bg-slate-400/5 blur-xl"></div> 
+          <svg viewBox="0 0 24 24" className={`${iconClass} text-slate-700`} fill="none" stroke="currentColor" strokeWidth="1.5"> 
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg> 
+        </div> 
+      );
       default: return ( <div className={containerClass}> <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> <path d="M12 2v20M2 12h20" /> </svg> </div> );
     }
   };
