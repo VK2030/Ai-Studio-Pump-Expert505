@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { AppSection, ModuleData } from './types';
 import { MODULES } from './constants';

@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface GlassButtonProps {
@@ -63,14 +62,13 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, subtitle, iconType, pr
   return (
     <button 
       onClick={onClick}
-      className={`group relative flex flex-col items-start p-4 pb-10 rounded-[1.5rem] border overflow-hidden transition-all duration-300
-                 backdrop-blur-xl h-full w-full active:scale-[0.97]
-                 ${isDark 
-                    ? 'bg-white/5 border-white/10 shadow-lg hover:bg-white/[0.08] hover:border-white' 
-                    : 'bg-white border-slate-200 shadow-md hover:shadow-lg hover:border-indigo-200'}`}
+      className={`flex flex-col items-start p-4 pb-10 rounded-3xl border backdrop-blur-md relative overflow-hidden group w-full h-full transition-all duration-300 active:scale-95
+        ${isDark 
+          ? 'bg-white/5 border-white/10 hover:bg-white/[0.08]' 
+          : 'bg-white border-slate-200 shadow-sm hover:bg-slate-50'}`}
     >
       <div className={`absolute top-0 left-0 w-full h-full pointer-events-none
-        ${isDark ? 'bg-gradient-to-br from-white/5 to-transparent' : 'bg-gradient-to-br from-indigo-50/20 to-transparent'}`}></div>
+        ${isDark ? 'bg-gradient-to-br from-white/5 to-transparent' : 'bg-gradient-to-br from-indigo-50/10 to-transparent'}`}></div>
       
       {renderIcon()}
       
@@ -79,6 +77,9 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, subtitle, iconType, pr
           ${isDark ? 'text-white/90' : 'text-slate-900'}`}>
           {title}
         </h3>
+        <p className={`text-[9px] mt-1 leading-tight line-clamp-2 ${isDark ? 'text-white/30' : 'text-slate-400'}`}>
+          {subtitle}
+        </p>
       </div>
       
       <div className="absolute bottom-3 left-4 right-4 z-10">
@@ -86,7 +87,7 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, subtitle, iconType, pr
           <span className="text-[8px] uppercase font-black text-indigo-500/60 tracking-wider">Прогресс</span>
           <span className={`text-[9px] font-black ${isDark ? 'text-white/40' : 'text-slate-400'}`}>{progress}%</span>
         </div>
-        <div className={`w-full h-1 rounded-full overflow-hidden border ${isDark ? 'bg-white/5 border-white/5' : 'bg-slate-100 border-slate-100'}`}>
+        <div className={`w-full h-1 rounded-full overflow-hidden ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
           <div 
             className="h-full bg-gradient-to-r from-slate-500 to-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.3)] transition-all duration-1000" 
             style={{ width: `${progress}%` }}

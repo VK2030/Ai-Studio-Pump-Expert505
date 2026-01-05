@@ -238,13 +238,18 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
                 const isCorrect = qCorrectTexts.includes(opt);
                 let btnClass = "w-full p-3.5 rounded-xl text-left transition-all duration-200 border flex items-center gap-3 ";
                 if (!isAnswerConfirmed) {
-                  btnClass += isSelected ? (isDark ? "bg-indigo-500/20 border-white shadow-[0_0_15px_rgba(255,255,255,0.1)] text-white" : "bg-indigo-50 border-indigo-600 shadow-sm text-indigo-900") : (isDark ? "bg-white/5 border-white/10 text-white/80 active:bg-white/10" : "bg-white border-slate-200 text-slate-700 hover:border-indigo-300");
+                  // Стиль при выборе: графитовый фон, белая рамка, белый текст
+                  btnClass += isSelected 
+                    ? "bg-[#383838] border-white text-white shadow-lg scale-[1.01]" 
+                    : (isDark 
+                        ? "bg-white/5 border-white/10 text-white/80 active:bg-white/10" 
+                        : "bg-white border-slate-200 text-slate-700 hover:border-indigo-300");
                 } else {
                   if (isHighlightEnabled) {
                     if (isSelected) btnClass += isCorrect ? "bg-green-500 border-green-400 text-white shadow-lg" : "bg-red-500 border-red-400 text-white shadow-lg";
                     else btnClass += (isDark ? "bg-white/5 border-white/5 text-white/20 opacity-50" : "bg-slate-50 border-slate-100 text-slate-300 opacity-50");
                   } else {
-                    if (isSelected) btnClass += (isDark ? "bg-indigo-500/20 border-white text-white opacity-80" : "bg-indigo-50 border-indigo-400 text-indigo-900");
+                    if (isSelected) btnClass += "bg-[#383838] border-white text-white opacity-90";
                     else btnClass += (isDark ? "bg-white/5 border-white/5 text-white/10 opacity-30" : "bg-slate-50 border-slate-50 text-slate-200 opacity-30");
                   }
                 }
