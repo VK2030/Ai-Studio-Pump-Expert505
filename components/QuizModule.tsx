@@ -188,7 +188,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
       <div className="w-full space-y-3">
         <AnimatedContent distance={30} delay={0.5} direction="vertical">
           <button onClick={startQuiz} className={`w-full py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-all shadow-xl border
-            ${isDark ? 'bg-slate-500 hover:bg-slate-600 text-white border-white/10 shadow-black/20' : 'bg-slate-500 hover:bg-slate-700 text-white border-slate-400 shadow-slate-200'}`}>Начать тест</button>
+            ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200'}`}>Начать тест</button>
         </AnimatedContent>
         <AnimatedContent distance={30} delay={0.6} direction="vertical">
           <button onClick={() => setScreen('history')} className={`w-full py-4 rounded-2xl font-bold active:scale-[0.98] transition-all border
@@ -280,7 +280,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
           {!isAnswerConfirmed ? (
             <AnimatedContent key={`confirm-${currentQuestionIdx}`} distance={30} delay={0.6} direction="vertical">
               <button onClick={() => confirmAnswer()} disabled={selectedOptions.length === 0} className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl
-                  ${selectedOptions.length > 0 ? (isDark ? 'bg-slate-500 hover:bg-slate-600 text-white border-white/10 shadow-black/20' : 'bg-slate-500 hover:bg-slate-700 text-white border-slate-400 shadow-slate-200') : (isDark ? 'bg-white/5 text-white/20 border-white/20' : 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed')}`}>Принять ответ</button>
+                  ${selectedOptions.length > 0 ? (isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200') : (isDark ? 'bg-white/5 text-white/20 border-white/20' : 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed')}`}>Принять ответ</button>
             </AnimatedContent>
           ) : ( <div className="w-full h-14 flex items-center justify-center"><span className={`text-[10px] uppercase font-black tracking-widest animate-pulse ${isDark ? 'text-white/40' : 'text-slate-400'}`}>Переход к следующему вопросу...</span></div> )}
           <button onClick={() => setScreen('menu')} className={`w-full py-2 bg-transparent font-bold uppercase text-[9px] tracking-widest transition-all ${isDark ? 'text-white/30 active:text-white/60' : 'text-slate-400 active:text-slate-900'}`}>Прервать тест</button>
@@ -312,7 +312,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
         </AnimatedContent>
         <div className="w-full space-y-3">
           <AnimatedContent distance={30} delay={0.4} direction="vertical">
-            <button onClick={startQuiz} className={`w-full py-4 rounded-2xl text-white font-bold active:scale-[0.98] transition-all border ${isDark ? 'bg-slate-500 hover:bg-slate-600 text-white border-white/10 shadow-black/20' : 'bg-slate-500 hover:bg-slate-700 text-white border-slate-400 shadow-slate-200'}`}>Повторить тест</button>
+            <button onClick={startQuiz} className={`w-full py-4 rounded-2xl text-white font-bold active:scale-[0.98] transition-all border ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200'}`}>Повторить тест</button>
           </AnimatedContent>
           <AnimatedContent distance={30} delay={0.5} direction="vertical">
             <button onClick={() => setScreen('history')} className={`w-full py-4 rounded-2xl font-bold active:scale-[0.98] transition-all border ${isDark ? 'bg-white/5 border-white/10 text-indigo-100' : 'bg-white border-slate-200 text-slate-700'}`}>История тестирования</button>
