@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { QUIZ_QUESTIONS, MODULES } from '../constants';
 import { QuizQuestion } from '../types';
 import AnimatedContent from './AnimatedContent';
@@ -35,6 +36,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
   const [isAnswerConfirmed, setIsAnswerConfirmed] = useState(false);
   const [incorrectAnswers, setIncorrectAnswers] = useState<QuizHistoryEntry['incorrectAnswers']>([]);
   const [history, setHistory] = useState<QuizHistoryEntry[]>([]);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   
   const [timeLeft, setTimeLeft] = useState(30);
   const timerRef = useRef<any | null>(null);
@@ -84,7 +86,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
   };
 
   useEffect(() => {
-    if (screen === 'quiz' && !isAnswerConfirmed && isTimerEnabled) {
+    if (screen === 'quiz' && !isAnswerConfirmed && isTimerEnabled && !showExitConfirm) {
       setTimeLeft(30);
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => {
@@ -98,7 +100,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
       }, 1000);
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [currentQuestionIdx, screen, isAnswerConfirmed, isTimerEnabled]);
+  }, [currentQuestionIdx, screen, isAnswerConfirmed, isTimerEnabled, showExitConfirm]);
 
   const handleTimeOut = () => { confirmAnswer(true); };
 
@@ -160,15 +162,20 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
 
   const moduleHistory = history.filter(h => h.moduleId === moduleId);
 
+  const handleAbortTest = () => {
+    setShowExitConfirm(false);
+    setScreen('menu');
+  };
+
   const renderModuleIcon = () => {
     const iconType = currentModule?.icon;
     const containerClass = `w-24 h-24 relative mb-10 flex items-center justify-center rounded-3xl border overflow-hidden group shadow-2xl ${isDark ? 'bg-white/5 border-slate-500/20 shadow-slate-500/10' : 'bg-white border-slate-100 shadow-slate-200/50'}`;
-    const iconClass = "w-12 h-12 text-slate-600 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3";
+    const iconClass = `w-12 h-12 ${isDark ? 'text-slate-100' : 'text-slate-600'} transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3`;
 
     switch (iconType) {
       case 'calc': return ( 
         <div className={containerClass}> 
-          <div className="absolute inset-0 bg-slate-400/5 blur-xl group-hover:bg-slate-400/10 transition-colors"></div> 
+          <div className={`absolute inset-0 ${isDark ? 'bg-indigo-500/10' : 'bg-slate-400/5'} blur-xl group-hover:bg-opacity-20 transition-colors`}></div> 
           <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> 
             <rect x="3" y="5" width="18" height="11" rx="1" />
             <path d="M2 18h20" />
@@ -180,12 +187,12 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
           </svg> 
         </div> 
       );
-      case 'pump': return ( <div className={containerClass}> <div className="absolute inset-0 bg-slate-400/5 blur-xl"></div> <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> <path d="M4 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM21 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM10 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM4 14v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1M4 11V9a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v2M12 6v12" /> </svg> </div> );
-      case 'search': return ( <div className={containerClass}> <div className="absolute inset-0 bg-slate-400/5 blur-xl"></div> <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> <circle cx="11" cy="11" r="8" /> <path d="m21 21-4.3-4.3" /> </svg> </div> );
+      case 'pump': return ( <div className={containerClass}> <div className={`absolute inset-0 ${isDark ? 'bg-indigo-500/10' : 'bg-slate-400/5'} blur-xl`}></div> <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> <path d="M4 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM21 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM10 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM4 14v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1M4 11V9a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v2M12 6v12" /> </svg> </div> );
+      case 'search': return ( <div className={containerClass}> <div className={`absolute inset-0 ${isDark ? 'bg-indigo-500/10' : 'bg-slate-400/5'} blur-xl`}></div> <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> <circle cx="11" cy="11" r="8" /> <path d="m21 21-4.3-4.3" /> </svg> </div> );
       case 'corrosion': return ( 
         <div className={containerClass}> 
-          <div className="absolute inset-0 bg-slate-400/5 blur-xl"></div> 
-          <svg viewBox="0 0 24 24" className={`${iconClass} text-slate-700`} fill="none" stroke="currentColor" strokeWidth="1.5"> 
+          <div className={`absolute inset-0 ${isDark ? 'bg-indigo-500/20' : 'bg-slate-400/5'} blur-xl`}></div> 
+          <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> 
             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             <line x1="12" y1="9" x2="12" y2="13" />
             <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -232,33 +239,30 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
   const renderQuiz = () => {
     const q = sessionQuestions[currentQuestionIdx];
     const progress = ((currentQuestionIdx + 1) / sessionQuestions.length) * 100;
-    const timeProgress = (timeLeft / 30) * 100;
     const isCriticalTime = timeLeft <= 10;
+    
     return (
       <div className="flex flex-col h-full overflow-hidden">
-        <AnimatedContent distance={-20} duration={0.4} direction="vertical">
-          <div className={`p-4 pt-8 border-b relative overflow-hidden ${isDark ? 'bg-[#0c1e3a] border-white/10' : 'bg-white border-slate-200'}`}>
-            <div className="flex justify-between items-center mb-2">
-              <div className="flex items-center gap-2">
-                 <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-white' : 'text-slate-900'}`}>Вопрос {currentQuestionIdx + 1} / {sessionQuestions.length}</span>
-                 {isTimerEnabled && (
-                  <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-colors duration-300
-                    ${isCriticalTime ? 'bg-red-500/20 border-red-500/50 text-red-500' : (isDark ? 'bg-white/10 border-white/30 text-white' : 'bg-slate-100 border-slate-200 text-slate-600')}`}>
-                    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                    <span className="text-[10px] font-black">{timeLeft}с</span>
-                  </div>
-                 )}
-              </div>
-              <div className={`px-2 py-0.5 rounded-md border text-[9px] font-bold uppercase ${isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>{moduleTitle}</div>
+        <header className={`p-4 pt-8 border-b relative overflow-hidden flex-shrink-0 ${isDark ? 'bg-[#0c1e3a] border-white/10' : 'bg-white border-slate-200'}`}>
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center gap-2">
+               <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-white' : 'text-slate-900'}`}>Вопрос {currentQuestionIdx + 1} / {sessionQuestions.length}</span>
+               {isTimerEnabled && (
+                <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-colors duration-300
+                  ${isCriticalTime ? 'bg-red-500/20 border-red-500/50 text-red-500' : (isDark ? 'bg-white/10 border-white/30 text-white' : 'bg-slate-100 border-slate-200 text-slate-600')}`}>
+                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                  <span className="text-[10px] font-black">{timeLeft}с</span>
+                </div>
+               )}
             </div>
-            <div className={`w-full h-[2px] rounded-full overflow-hidden mb-1 ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
-              <div className={`h-full transition-all duration-500 ${isDark ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.4)]' : 'bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.2)]'}`} style={{ width: `${progress}%` }}></div>
-            </div>
+            <div className={`px-2 py-0.5 rounded-md border text-[9px] font-bold uppercase ${isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>{moduleTitle}</div>
           </div>
-        </AnimatedContent>
+          <div className={`w-full h-[2px] rounded-full overflow-hidden mb-1 ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
+            <div className={`h-full transition-all duration-500 ${isDark ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.4)]' : 'bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.2)]'}`} style={{ width: `${progress}%` }}></div>
+          </div>
+        </header>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
-          {/* Key with currentQuestionIdx ensures re-animation for every question */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-48">
           <AnimatedContent key={`q-${currentQuestionIdx}`} distance={30} delay={0.1}>
             <div className={`p-5 rounded-2xl border shadow-inner ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                <p className={`text-base leading-snug font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{q?.text}</p>
@@ -298,15 +302,100 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
             </div>
           </div>
         </div>
-        <div className={`absolute bottom-0 left-0 right-0 p-4 flex flex-col gap-1.5 ${isDark ? 'bg-gradient-to-t from-[#081221] via-[#081221] to-transparent' : 'bg-gradient-to-t from-white via-white to-transparent'}`}>
-          {!isAnswerConfirmed ? (
-            <AnimatedContent key={`confirm-${currentQuestionIdx}`} distance={30} delay={0.6} direction="vertical">
-              <button onClick={() => confirmAnswer()} disabled={selectedOptions.length === 0} className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl
-                  ${selectedOptions.length > 0 ? (isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200') : (isDark ? 'bg-white/5 text-white/20 border-white/20' : 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed')}`}>Принять ответ</button>
-            </AnimatedContent>
-          ) : ( <div className="w-full h-14 flex items-center justify-center"><span className={`text-[10px] uppercase font-black tracking-widest animate-pulse ${isDark ? 'text-white/40' : 'text-slate-400'}`}>Переход к следующему вопросу...</span></div> )}
-          <button onClick={() => setScreen('menu')} className={`w-full py-2 bg-transparent font-bold uppercase text-[9px] tracking-widest transition-all ${isDark ? 'text-white/30 active:text-white/60' : 'text-slate-400 active:text-slate-900'}`}>Прервать тест</button>
+
+        <div className={`absolute bottom-0 left-0 right-0 p-4 pb-8 flex flex-col gap-6 z-50 ${isDark ? 'bg-gradient-to-t from-[#081221] via-[#081221] to-transparent' : 'bg-gradient-to-t from-white via-white to-transparent'}`}>
+          <AnimatePresence mode="wait">
+            {!isAnswerConfirmed ? (
+              <motion.div
+                key={`confirm-btn-${currentQuestionIdx}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, delay: 0.1 }}
+                className="w-full"
+              >
+                <button 
+                  onClick={() => confirmAnswer()} 
+                  disabled={selectedOptions.length === 0} 
+                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl
+                    ${selectedOptions.length > 0 
+                      ? (isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200') 
+                      : (isDark ? 'bg-white/5 text-white/20 border-white/20' : 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed')
+                    }`}
+                >
+                  Принять ответ
+                </button>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="loading-msg"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="w-full h-14 flex items-center justify-center"
+              >
+                <span className={`text-[10px] uppercase font-black tracking-widest animate-pulse ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
+                  Переход к следующему вопросу...
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <button 
+            onClick={() => setShowExitConfirm(true)} 
+            className={`w-full py-2 bg-transparent font-bold uppercase text-[10px] tracking-[0.2em] transition-all opacity-40 active:opacity-100 hover:opacity-100 ${isDark ? 'text-white' : 'text-slate-600'}`}
+          >
+            Прервать тест
+          </button>
         </div>
+
+        <AnimatePresence>
+          {showExitConfirm && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-black/40"
+            >
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className={`w-full max-w-[320px] p-8 rounded-[2.5rem] border shadow-2xl relative overflow-hidden
+                  ${isDark ? 'bg-slate-900 border-white/10' : 'bg-white border-slate-200'}`}
+              >
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 mx-auto
+                  ${isDark ? 'bg-red-500/20 text-red-400' : 'bg-red-50 text-red-500'}`}>
+                  <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                
+                <h3 className={`text-xl font-black text-center mb-3 uppercase tracking-tighter ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  Прервать тест?
+                </h3>
+                
+                <p className={`text-sm text-center mb-8 font-medium leading-relaxed ${isDark ? 'text-white/40' : 'text-slate-500'}`}>
+                  Ваш прогресс в текущей сессии не будет сохранен в истории.
+                </p>
+                
+                <div className="flex flex-col gap-3">
+                  <button 
+                    onClick={handleAbortTest}
+                    className="w-full py-4 rounded-2xl bg-red-500 text-white font-black uppercase text-xs tracking-widest shadow-lg shadow-red-500/20 active:scale-[0.98] transition-all"
+                  >
+                    Прервать
+                  </button>
+                  <button 
+                    onClick={() => setShowExitConfirm(false)}
+                    className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-[0.98] transition-all border
+                      ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-100 border-slate-200 text-slate-700'}`}
+                  >
+                    Продолжить тест
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   };
