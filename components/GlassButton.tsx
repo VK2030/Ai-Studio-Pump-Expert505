@@ -24,20 +24,13 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, subtitle, iconType, pr
           <div className={iconWrapperClass}>
              <div className={`absolute inset-0 ${glowColor} rounded-full blur-xl group-hover:opacity-100 transition-opacity`}></div>
              <svg viewBox="0 0 24 24" className={`w-full h-full ${iconColor} drop-shadow-[0_0_8px_rgba(255,255,255,0.1)]`} fill="none" stroke="currentColor" strokeWidth="1.5">
-                {/* Ноутбук */}
                 <rect x="3" y="5" width="18" height="11" rx="1" />
                 <path d="M2 18h20" />
-                
-                {/* Импеллер (крыльчатка насоса) */}
                 <circle cx="8" cy="10.5" r="2.2" />
                 <path d="M8 8.3v4.4M5.8 10.5h4.4" />
                 <path d="M6.5 9l3 3M9.5 9l-3 3" />
-                
-                {/* Графики и стрелка */}
                 <path d="M13 14v-2M15.5 14v-4M18 14v-6" />
                 <path d="M12.5 10l3.5-3.5 3 2" />
-                
-                {/* Текстовые линии-заглушки */}
                 <path d="M6 14h3" opacity="0.5" />
              </svg>
           </div>
@@ -45,9 +38,41 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, subtitle, iconType, pr
       case 'pump':
         return (
           <div className={iconWrapperClass}>
-            <div className={`absolute inset-0 ${isDark ? 'bg-indigo-400/10' : 'bg-slate-300/10'} rounded-full blur-lg`}></div>
-            <svg viewBox="0 0 24 24" className={`w-full h-full ${isDark ? 'text-slate-300' : 'text-slate-500'}`} fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M4 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM21 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM10 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM4 14v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1M4 11V9a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v2M12 6v12" />
+            <div className={`absolute inset-0 ${isDark ? 'bg-indigo-500/10' : 'bg-slate-300/10'} rounded-full blur-lg`}></div>
+            <svg viewBox="0 0 24 24" className={`w-full h-full ${iconColor}`} fill="none" stroke="currentColor" strokeWidth="1.5">
+              {/* Строгая таблица с данными (Data Table / Startup Map) */}
+              {/* Внешняя рамка без скруглений */}
+              <rect x="3" y="4" width="18" height="16" strokeLinejoin="miter" />
+              
+              {/* Заголовок (Header row) */}
+              <line x1="3" y1="8" x2="21" y2="8" strokeLinecap="square" />
+              
+              {/* Вертикальные разделители */}
+              <line x1="9" y1="4" x2="9" y2="20" strokeLinecap="square" />
+              <line x1="15" y1="4" x2="15" y2="20" strokeLinecap="square" />
+              
+              {/* Горизонтальные разделители ячеек */}
+              <line x1="3" y1="12" x2="21" y2="12" strokeLinecap="square" opacity="0.7" />
+              <line x1="3" y1="16" x2="21" y2="16" strokeLinecap="square" opacity="0.7" />
+              
+              {/* Схематичные индикаторы данных в ячейках */}
+              {/* Первая колонка */}
+              <path d="M5 6h2" strokeWidth="1" />
+              <circle cx="6" cy="10" r="0.5" fill="currentColor" stroke="none" />
+              <path d="M5 14h3" strokeWidth="1" opacity="0.5" />
+              <path d="M5 18h2" strokeWidth="1" opacity="0.5" />
+              
+              {/* Вторая колонка */}
+              <path d="M11 6h2.5" strokeWidth="1" />
+              <path d="M10.5 10l1.5 1.5 2-2.5" strokeWidth="1" />
+              <path d="M11 14h2" strokeWidth="1" opacity="0.5" />
+              <circle cx="12" cy="18" r="0.5" fill="currentColor" stroke="none" />
+              
+              {/* Третья колонка */}
+              <path d="M17 6h2" strokeWidth="1" />
+              <path d="M16.5 10.5h3" strokeWidth="1" opacity="0.5" />
+              <path d="M17.5 14l1.5-1.5" strokeWidth="1" opacity="0.5" />
+              <path d="M16.5 18h3" strokeWidth="1" opacity="0.5" />
             </svg>
           </div>
         );
@@ -66,7 +91,6 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, subtitle, iconType, pr
           <div className={iconWrapperClass}>
             <div className={`absolute inset-0 ${isDark ? 'bg-indigo-400/20' : 'bg-slate-400/10'} rounded-full blur-lg`}></div>
             <svg viewBox="0 0 24 24" className={`w-full h-full ${isDark ? 'text-slate-100' : 'text-slate-700'} drop-shadow-[0_0_8px_rgba(255,255,255,0.1)]`} fill="none" stroke="currentColor" strokeWidth="1.8">
-              {/* Предупреждающий треугольник с восклицательным знаком */}
               <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" strokeLinecap="round" strokeLinejoin="round" />
               <line x1="12" y1="9" x2="12" y2="13" strokeLinecap="round" strokeLinejoin="round" />
               <line x1="12" y1="17" x2="12.01" y2="17" strokeLinecap="round" strokeLinejoin="round" />
