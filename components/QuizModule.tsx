@@ -238,8 +238,9 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
 
   const renderQuiz = () => {
     const q = sessionQuestions[currentQuestionIdx];
-    const progress = ((currentQuestionIdx + 1) / sessionQuestions.length) * 100;
     const isCriticalTime = timeLeft <= 10;
+    // Calculate progress as remaining time percentage (30s max)
+    const timerProgress = isTimerEnabled ? (timeLeft / 30) * 100 : 100;
     
     return (
       <div className="flex flex-col h-full overflow-hidden">
@@ -257,8 +258,13 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
             </div>
             <div className={`px-2 py-0.5 rounded-md border text-[9px] font-bold uppercase ${isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>{moduleTitle}</div>
           </div>
+          
+          {/* Time Bar Visualization instead of Question Progress Bar */}
           <div className={`w-full h-[2px] rounded-full overflow-hidden mb-1 ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
-            <div className={`h-full transition-all duration-500 ${isDark ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.4)]' : 'bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.2)]'}`} style={{ width: `${progress}%` }}></div>
+            <div 
+              className={`h-full transition-all duration-1000 linear ${isCriticalTime ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : (isDark ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.4)]' : 'bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.2)]')}`} 
+              style={{ width: `${timerProgress}%` }}
+            ></div>
           </div>
         </header>
 
