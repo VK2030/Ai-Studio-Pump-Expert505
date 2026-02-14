@@ -470,7 +470,7 @@ const App: React.FC = () => {
               <h1 className={`${isDark ? 'text-white' : 'text-slate-900'} text-2xl font-black uppercase tracking-tighter leading-none`}>Упражнения</h1>
             ) : (
               <>
-                <span className="text-indigo-500 text-[9px] font-black uppercase tracking-[0.3em]">Обучение</span>
+                <span className="text-indigo-500 text-[12px] font-black uppercase tracking-[0.3em]">Обучение</span>
                 <h1 className={`${isDark ? 'text-white' : 'text-slate-900'} text-2xl font-black uppercase tracking-tighter leading-none`}>Лучший технолог</h1>
               </>
             )}
