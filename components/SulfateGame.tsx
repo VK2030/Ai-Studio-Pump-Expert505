@@ -458,17 +458,32 @@ const SulfateGame: React.FC<SulfateGameProps> = ({ onClose, isDark = true }) => 
         <div className="flex-1" />
 
         <footer className={`p-8 pb-12 bg-gradient-to-t ${isDark ? 'from-[#081221] via-[#081221]/90 to-transparent' : 'from-slate-50 via-slate-50/90 to-transparent'}`}>
-          <div className="max-w-xs mx-auto">
-            <div className="text-center mb-3">
-              <span className="px-4 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 text-[9px] font-black uppercase tracking-[0.2em]">
+          <div className="max-w-xs mx-auto flex flex-col items-center">
+            <div className="text-center mb-4">
+              <span className={`text-2xl font-black uppercase tracking-tight leading-none ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
                 {sessions[currentSessionIndex] ? TOPICS[sessions[currentSessionIndex]].title : ''}
               </span>
             </div>
-            <h2 className={`text-2xl font-black text-center mb-2 leading-tight uppercase tracking-tight
-              ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {sessions[currentSessionIndex] ? TOPICS[sessions[currentSessionIndex]].tasks[currentTaskIndex]?.text : ''}
-            </h2>
-            <div className="text-indigo-500/50 text-[10px] font-black uppercase tracking-[0.3em] text-center">
+            
+            {(() => {
+                const fullText = sessions[currentSessionIndex] ? TOPICS[sessions[currentSessionIndex]].tasks[currentTaskIndex]?.text : '';
+                if (!fullText) return null;
+                const parts = fullText.split(' ');
+                const firstWord = parts[0];
+                const restOfText = parts.slice(1).join(' ');
+                return (
+                  <div className="flex flex-col items-center text-center">
+                    <span className={`text-2xl font-black uppercase tracking-tight leading-none mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      {firstWord}
+                    </span>
+                    <h2 className={`text-2xl font-black leading-tight uppercase tracking-tight mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      {restOfText}
+                    </h2>
+                  </div>
+                );
+            })()}
+            
+            <div className="text-indigo-500/50 text-[10px] font-black uppercase tracking-[0.3em] text-center mt-2">
               Прогресс <span className="text-indigo-500 ml-1">{totalCompleted} / {totalTasksCount}</span>
             </div>
           </div>

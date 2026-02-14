@@ -425,7 +425,7 @@ const App: React.FC = () => {
                         
                         <h3 className={`text-xl font-black mb-2 uppercase tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Типы минеральных солей</h3>
                         <p className={`text-xs mb-6 leading-relaxed ${isDark ? 'text-white/40' : 'text-slate-500'}`}>
-                          Интерактивное упражнение на поиск химических формул различных групп солей: сульфатов, карбонатов и других.
+                          Интерактивное упражнение на поиск минеральных солей
                         </p>
                         
                         <button 
@@ -435,13 +435,6 @@ const App: React.FC = () => {
                         >
                           Запустить упражнение
                         </button>
-                      </div>
-                    </AnimatedContent>
-
-                    <AnimatedContent distance={30} delay={0.2} direction="vertical">
-                      <div className={`p-8 rounded-[2.5rem] border border-dashed flex flex-col items-center justify-center text-center
-                        ${isDark ? 'border-white/5 bg-white/[0.02]' : 'border-slate-100 bg-slate-50/50'}`}>
-                         <p className={`text-[10px] font-black uppercase tracking-widest opacity-30 ${isDark ? 'text-white' : 'text-slate-900'}`}>Новые задания скоро...</p>
                       </div>
                     </AnimatedContent>
                   </div>
