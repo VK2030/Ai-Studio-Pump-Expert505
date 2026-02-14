@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import AnimatedContent from './AnimatedContent';
 
 interface LoginOverlayProps {
-  onAuthorized: () => void;
+  onAuthorized: (role: 'contestant' | 'admin') => void;
   theme?: 'dark' | 'light';
 }
 
@@ -44,7 +44,7 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
     
     if (value.length === 4 && selectedAccount) {
       if (value === PASSWORDS[selectedAccount]) {
-        onAuthorized();
+        onAuthorized(selectedAccount);
       } else {
         setIsError(true);
         setTimeout(() => { 
@@ -82,20 +82,18 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
             <div className="w-full space-y-4">
               <button 
                 onClick={() => handleAccountSelect('contestant')}
-                className={`w-full py-5 rounded-[2rem] border backdrop-blur-md flex flex-col items-center gap-1 transition-all active:scale-[0.97]
+                className={`w-full h-16 rounded-[2rem] border backdrop-blur-md flex items-center justify-center transition-all active:scale-[0.97]
                   ${isDark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-900 shadow-sm hover:bg-slate-50'}`}
               >
                 <span className="text-xs font-black uppercase tracking-widest">Конкурсант</span>
-                <span className={`text-[9px] font-medium ${isDark ? 'text-white/30' : 'text-slate-400'}`}>Личный кабинет участника</span>
               </button>
 
               <button 
                 onClick={() => handleAccountSelect('admin')}
-                className={`w-full py-5 rounded-[2rem] border backdrop-blur-md flex flex-col items-center gap-1 transition-all active:scale-[0.97]
+                className={`w-full h-16 rounded-[2rem] border backdrop-blur-md flex items-center justify-center transition-all active:scale-[0.97]
                   ${isDark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-900 shadow-sm hover:bg-slate-50'}`}
               >
                 <span className="text-xs font-black uppercase tracking-widest">Администратор</span>
-                <span className={`text-[9px] font-medium ${isDark ? 'text-white/30' : 'text-slate-400'}`}>Управление приложением</span>
               </button>
             </div>
           </div>

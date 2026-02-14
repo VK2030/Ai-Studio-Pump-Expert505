@@ -8,6 +8,8 @@ import AnimatedContent from './AnimatedContent';
 interface QuizModuleProps {
   moduleId?: string;
   theme?: 'dark' | 'light';
+  isTimerEnabled: boolean;
+  isHighlightEnabled: boolean;
   onClose: () => void;
   onExitToApp?: () => void;
 }
@@ -24,7 +26,14 @@ interface QuizHistoryEntry {
   }[];
 }
 
-const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClose, onExitToApp }) => {
+const QuizModule: React.FC<QuizModuleProps> = ({ 
+  moduleId, 
+  theme = 'dark', 
+  isTimerEnabled, 
+  isHighlightEnabled, 
+  onClose, 
+  onExitToApp 
+}) => {
   const isDark = theme === 'dark';
   const [screen, setScreen] = useState<'menu' | 'quiz' | 'results' | 'history'>('menu');
   const [sessionQuestions, setSessionQuestions] = useState<QuizQuestion[]>([]);
@@ -40,16 +49,6 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
   
   const [timeLeft, setTimeLeft] = useState(30);
   const timerRef = useRef<any | null>(null);
-  
-  const isTimerEnabled = (() => {
-    const saved = localStorage.getItem('app_timer_enabled');
-    return saved === null ? true : saved === 'true';
-  })();
-
-  const isHighlightEnabled = (() => {
-    const saved = localStorage.getItem('app_highlight_enabled');
-    return saved === null ? true : saved === 'true';
-  })();
 
   const currentModule = MODULES.find(m => m.id === moduleId);
   const moduleTitle = currentModule?.title || 'Тестирование';
@@ -259,7 +258,6 @@ const QuizModule: React.FC<QuizModuleProps> = ({ moduleId, theme = 'dark', onClo
             <div className={`px-2 py-0.5 rounded-md border text-[9px] font-bold uppercase ${isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>{moduleTitle}</div>
           </div>
           
-          {/* Time Bar Visualization instead of Question Progress Bar */}
           <div className={`w-full h-[2px] rounded-full overflow-hidden mb-1 ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
             <div 
               className={`h-full transition-all duration-1000 linear ${isCriticalTime ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : (isDark ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.4)]' : 'bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.2)]')}`} 

@@ -36,8 +36,10 @@ const App: React.FC = () => {
     const savedReq = localStorage.getItem('app_login_required');
     const req = savedReq === null ? true : savedReq === 'true';
     if (!req) return true;
-    return sessionStorage.getItem('app_authorized') === 'true';
+    return false;
   });
+
+  const [userRole, setUserRole] = useState<'contestant' | 'admin' | null>(null);
 
   const [activeTab, setActiveTab] = useState<AppSection>('home');
   const [selectedModule, setSelectedModule] = useState<ModuleData | null>(null);
@@ -107,9 +109,9 @@ const App: React.FC = () => {
     return Math.round(sum / MODULES.length);
   }, [moduleProgress]);
 
-  const handleAuthorize = () => {
+  const handleAuthorize = (role: 'contestant' | 'admin') => {
+    setUserRole(role);
     setIsAuthorized(true);
-    sessionStorage.setItem('app_authorized', 'true');
   };
 
   const toggleTheme = () => {
@@ -151,7 +153,6 @@ const App: React.FC = () => {
   const isDark = theme === 'dark';
 
   const renderContent = () => {
-    // Unique key to force re-mount and re-play entry animations when returning from quiz or game
     const key = `${activeTab}-${selectedModule ? 'modal' : 'main'}-${activeGame ? 'game' : 'none'}`;
 
     return (
@@ -352,56 +353,60 @@ const App: React.FC = () => {
                       </div>
                     </AnimatedContent>
 
-                    <AnimatedContent distance={30} delay={0.2} direction="vertical">
-                      <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
-                        ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                        <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Таймер ответа 30 сек.</span>
-                        <button 
-                          onClick={toggleTimer}
-                          className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
-                            ${isTimerEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
-                        >
-                          <div 
-                            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
-                              ${isTimerEnabled ? 'left-7' : 'left-1'}`}
-                          />
-                        </button>
-                      </div>
-                    </AnimatedContent>
+                    {userRole === 'admin' && (
+                      <>
+                        <AnimatedContent distance={30} delay={0.2} direction="vertical">
+                          <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
+                            ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
+                            <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Таймер ответа 30 сек.</span>
+                            <button 
+                              onClick={toggleTimer}
+                              className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
+                                ${isTimerEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
+                            >
+                              <div 
+                                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
+                                  ${isTimerEnabled ? 'left-7' : 'left-1'}`}
+                              />
+                            </button>
+                          </div>
+                        </AnimatedContent>
 
-                    <AnimatedContent distance={30} delay={0.3} direction="vertical">
-                      <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
-                        ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                        <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Подсвечивать корректность</span>
-                        <button 
-                          onClick={toggleHighlight}
-                          className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
-                            ${isHighlightEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
-                        >
-                          <div 
-                            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
-                              ${isHighlightEnabled ? 'left-7' : 'left-1'}`}
-                          />
-                        </button>
-                      </div>
-                    </AnimatedContent>
+                        <AnimatedContent distance={30} delay={0.3} direction="vertical">
+                          <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
+                            ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
+                            <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Подсвечивать корректность</span>
+                            <button 
+                              onClick={toggleHighlight}
+                              className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
+                                ${isHighlightEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
+                            >
+                              <div 
+                                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
+                                  ${isHighlightEnabled ? 'left-7' : 'left-1'}`}
+                              />
+                            </button>
+                          </div>
+                        </AnimatedContent>
 
-                    <AnimatedContent distance={30} delay={0.4} direction="vertical">
-                      <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
-                        ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                        <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Вход по паролю</span>
-                        <button 
-                          onClick={toggleLoginRequirement}
-                          className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
-                            ${isLoginRequired ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
-                        >
-                          <div 
-                            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
-                              ${isLoginRequired ? 'left-7' : 'left-1'}`}
-                          />
-                        </button>
-                      </div>
-                    </AnimatedContent>
+                        <AnimatedContent distance={30} delay={0.4} direction="vertical">
+                          <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
+                            ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
+                            <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Вход по паролю</span>
+                            <button 
+                              onClick={toggleLoginRequirement}
+                              className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
+                                ${isLoginRequired ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
+                            >
+                              <div 
+                                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
+                                  ${isLoginRequired ? 'left-7' : 'left-1'}`}
+                              />
+                            </button>
+                          </div>
+                        </AnimatedContent>
+                      </>
+                    )}
                   </div>
                 );
               case 'tasks':
@@ -521,7 +526,13 @@ const App: React.FC = () => {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-0 z-50"
           >
-            <ModuleDetail module={selectedModule} theme={theme} onClose={() => { setSelectedModule(null); loadData(); }} />
+            <ModuleDetail 
+              module={selectedModule} 
+              theme={theme} 
+              isTimerEnabled={isTimerEnabled}
+              isHighlightEnabled={isHighlightEnabled}
+              onClose={() => { setSelectedModule(null); loadData(); }} 
+            />
           </motion.div>
         )}
       </AnimatePresence>
