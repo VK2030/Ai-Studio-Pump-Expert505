@@ -58,6 +58,11 @@ const App: React.FC = () => {
     return saved === null ? true : saved === 'true';
   });
 
+  const [isHistoryAnswersEnabled, setIsHistoryAnswersEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('app_history_answers_enabled');
+    return saved === null ? true : saved === 'true';
+  });
+
   useEffect(() => {
     localStorage.setItem('app_theme', theme);
     if (theme === 'light') {
@@ -129,6 +134,12 @@ const App: React.FC = () => {
     const newValue = !isHighlightEnabled;
     setIsHighlightEnabled(newValue);
     localStorage.setItem('app_highlight_enabled', String(newValue));
+  };
+
+  const toggleHistoryAnswers = () => {
+    const newValue = !isHistoryAnswersEnabled;
+    setIsHistoryAnswersEnabled(newValue);
+    localStorage.setItem('app_history_answers_enabled', String(newValue));
   };
 
   const toggleLoginRequirement = () => {
@@ -268,6 +279,8 @@ const App: React.FC = () => {
                           const module = MODULES.find(m => m.id === entry.moduleId);
                           const [correct] = entry.score.split('/').map(Number);
                           const isSuccess = correct >= 8;
+                          // Show answers if user is admin OR if history answers are enabled for contestants
+                          const showCorrectAnswers = userRole === 'admin' || isHistoryAnswersEnabled;
                           
                           return (
                             <AnimatedContent key={idx} distance={30} delay={idx * 0.05}>
@@ -305,10 +318,12 @@ const App: React.FC = () => {
                                               <span className="text-red-400/80 font-bold uppercase text-[7px] px-1 py-0.5 bg-red-500/10 rounded self-start">Ваш выбор</span>
                                               <span className={isDark ? 'text-white/40' : 'text-slate-500'}>{err.userAnswer || '(пусто)'}</span>
                                             </div>
-                                            <div className="flex gap-2">
-                                              <span className="text-green-500 font-bold uppercase text-[7px] px-1 py-0.5 bg-green-500/10 rounded self-start">Верно</span>
-                                              <span className={isDark ? 'text-green-300/80' : 'text-green-600'}>{err.correctAnswer}</span>
-                                            </div>
+                                            {showCorrectAnswers && (
+                                              <div className="flex gap-2">
+                                                <span className="text-green-500 font-bold uppercase text-[7px] px-1 py-0.5 bg-green-500/10 rounded self-start">Верно</span>
+                                                <span className={isDark ? 'text-green-300/80' : 'text-green-600'}>{err.correctAnswer}</span>
+                                              </div>
+                                            )}
                                           </div>
                                         </div>
                                       ))}
@@ -336,7 +351,7 @@ const App: React.FC = () => {
                 );
               case 'profile':
                 return (
-                  <div className="flex flex-col p-6 h-full overflow-hidden space-y-4">
+                  <div className="flex flex-col p-6 h-full overflow-y-auto space-y-4 pb-24">
                     <AnimatedContent distance={30} delay={0.1} direction="vertical">
                       <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
                         ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
@@ -385,6 +400,23 @@ const App: React.FC = () => {
                               <div 
                                 className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
                                   ${isHighlightEnabled ? 'left-7' : 'left-1'}`}
+                              />
+                            </button>
+                          </div>
+                        </AnimatedContent>
+
+                        <AnimatedContent distance={30} delay={0.35} direction="vertical">
+                          <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
+                            ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
+                            <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Правильный ответ в истории</span>
+                            <button 
+                              onClick={toggleHistoryAnswers}
+                              className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
+                                ${isHistoryAnswersEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
+                            >
+                              <div 
+                                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
+                                  ${isHistoryAnswersEnabled ? 'left-7' : 'left-1'}`}
                               />
                             </button>
                           </div>
@@ -596,8 +628,10 @@ const App: React.FC = () => {
             <ModuleDetail 
               module={selectedModule} 
               theme={theme} 
+              userRole={userRole}
               isTimerEnabled={isTimerEnabled}
               isHighlightEnabled={isHighlightEnabled}
+              isHistoryAnswersEnabled={isHistoryAnswersEnabled}
               onClose={() => { setSelectedModule(null); loadData(); }} 
             />
           </motion.div>
