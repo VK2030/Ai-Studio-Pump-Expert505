@@ -58,8 +58,25 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   const moduleTitle = currentModule?.title || 'Тестирование';
 
   useEffect(() => {
-    const savedHistory = localStorage.getItem('quizHistory');
-    if (savedHistory) setHistory(JSON.parse(savedHistory));
+    const fetchHistory = async () => {
+      try {
+        const response = await fetch('/api/history');
+        if (response.ok) {
+          const data = await response.json();
+          setHistory(data);
+        } else {
+          // Fallback to localStorage if API fails
+          const savedHistory = localStorage.getItem('quizHistory');
+          if (savedHistory) setHistory(JSON.parse(savedHistory));
+        }
+      } catch (error) {
+        console.error("Error fetching history:", error);
+        const savedHistory = localStorage.getItem('quizHistory');
+        if (savedHistory) setHistory(JSON.parse(savedHistory));
+      }
+    };
+    
+    fetchHistory();
     
     const savedSession = localStorage.getItem(`quizSessionNum_${moduleId || 'global'}`);
     if (savedSession) setCurrentSession(parseInt(savedSession, 10));
@@ -140,17 +157,31 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     }, 1500);
   };
 
-  const finishQuiz = () => {
+  const finishQuiz = async () => {
     const newEntry: QuizHistoryEntry = {
       date: new Date().toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
       session: currentSession, score: `${correctAnswersCount}/${sessionQuestions.length}`, moduleId: moduleId, incorrectAnswers: incorrectAnswers
     };
+    
+    // Save to local state and localStorage immediately for responsiveness
     const updatedHistory = [newEntry, ...history];
     setHistory(updatedHistory);
     localStorage.setItem('quizHistory', JSON.stringify(updatedHistory));
     localStorage.setItem(`quizSessionNum_${moduleId || 'global'}`, (currentSession + 1).toString());
     setCurrentSession(prev => prev + 1);
     window.dispatchEvent(new Event('storage'));
+    
+    // Save to external database via API
+    try {
+      await fetch('/api/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newEntry)
+      });
+    } catch (error) {
+      console.error("Failed to save history to cloud:", error);
+    }
+    
     setScreen('results');
   };
 

@@ -74,30 +74,37 @@ const App: React.FC = () => {
     }
   }, [theme]);
 
-  const loadData = () => {
-    const savedHistory = localStorage.getItem('quizHistory');
+  const loadData = async () => {
     const latestProgress: Record<string, number> = {};
     MODULES.forEach(m => latestProgress[m.id] = 0);
 
-    if (savedHistory) {
-      try {
-        const history: QuizHistoryEntry[] = JSON.parse(savedHistory);
-        setFullHistory(history);
-        MODULES.forEach(module => {
-          const lastEntry = history.find((h: QuizHistoryEntry) => h.moduleId === module.id);
-          if (lastEntry && lastEntry.score) {
-            const [correct, total] = lastEntry.score.split('/').map(Number);
-            if (!isNaN(correct) && !isNaN(total) && total > 0) {
-              latestProgress[module.id] = Math.round((correct / total) * 100);
-            }
-          }
-        });
-      } catch (e) {
-        console.error("Failed to parse history", e);
+    let history: QuizHistoryEntry[] = [];
+    
+    try {
+      const response = await fetch('/api/history');
+      if (response.ok) {
+        history = await response.json();
+      } else {
+        const savedHistory = localStorage.getItem('quizHistory');
+        if (savedHistory) history = JSON.parse(savedHistory);
       }
-    } else {
-      setFullHistory([]);
+    } catch (error) {
+      console.error("Error loading history from cloud:", error);
+      const savedHistory = localStorage.getItem('quizHistory');
+      if (savedHistory) history = JSON.parse(savedHistory);
     }
+
+    setFullHistory(history);
+    MODULES.forEach(module => {
+      const lastEntry = history.find((h: QuizHistoryEntry) => h.moduleId === module.id);
+      if (lastEntry && lastEntry.score) {
+        const [correct, total] = lastEntry.score.split('/').map(Number);
+        if (!isNaN(correct) && !isNaN(total) && total > 0) {
+          latestProgress[module.id] = Math.round((correct / total) * 100);
+        }
+      }
+    });
+    
     setModuleProgress(latestProgress);
   };
 
