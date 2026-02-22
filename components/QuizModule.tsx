@@ -62,25 +62,40 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     const fetchHistory = async () => {
       try {
         const response = await fetch('/api/history');
+        let data: QuizHistoryEntry[] = [];
         if (response.ok) {
-          const data = await response.json();
-          setHistory(data);
+          data = await response.json();
         } else {
-          // Fallback to localStorage if API fails
           const savedHistory = localStorage.getItem('quizHistory');
-          if (savedHistory) setHistory(JSON.parse(savedHistory));
+          if (savedHistory) data = JSON.parse(savedHistory);
+        }
+        
+        setHistory(data);
+        
+        // Calculate next session number based on history (cloud-synced)
+        const moduleHistory = data.filter(h => h.moduleId === moduleId);
+        if (moduleHistory.length > 0) {
+          const maxSession = Math.max(...moduleHistory.map(h => h.session || 0));
+          setCurrentSession(maxSession + 1);
+        } else {
+          setCurrentSession(1);
         }
       } catch (error) {
         console.error("Error fetching history:", error);
         const savedHistory = localStorage.getItem('quizHistory');
-        if (savedHistory) setHistory(JSON.parse(savedHistory));
+        if (savedHistory) {
+          const data = JSON.parse(savedHistory);
+          setHistory(data);
+          const moduleHistory = data.filter((h: any) => h.moduleId === moduleId);
+          if (moduleHistory.length > 0) {
+            const maxSession = Math.max(...moduleHistory.map((h: any) => h.session || 0));
+            setCurrentSession(maxSession + 1);
+          }
+        }
       }
     };
     
     fetchHistory();
-    
-    const savedSession = localStorage.getItem(`quizSessionNum_${moduleId || 'global'}`);
-    if (savedSession) setCurrentSession(parseInt(savedSession, 10));
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -168,7 +183,6 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     const updatedHistory = [newEntry, ...history];
     setHistory(updatedHistory);
     localStorage.setItem('quizHistory', JSON.stringify(updatedHistory));
-    localStorage.setItem(`quizSessionNum_${moduleId || 'global'}`, (currentSession + 1).toString());
     setCurrentSession(prev => prev + 1);
     window.dispatchEvent(new Event('storage'));
     
