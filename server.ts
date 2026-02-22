@@ -36,7 +36,10 @@ async function startServer() {
     }
   }
 
-  const db = admin.firestore();
+  let db: admin.firestore.Firestore | null = null;
+  if (admin.apps.length > 0) {
+    db = admin.firestore();
+  }
   app.use(express.json());
 
   // API: Debug Firebase connection
@@ -46,13 +49,18 @@ async function startServer() {
       projectId: projectId || "MISSING",
       clientEmail: clientEmail || "MISSING",
       hasPrivateKey: !!privateKey,
-      initialized: admin.apps.length > 0
+      initialized: admin.apps.length > 0,
+      dbReady: !!db
     });
   });
 
   // API: Get history from Firestore
   app.get("/api/history", async (req, res) => {
     try {
+      if (!db) {
+        console.warn("⚠️ Firestore not initialized, returning local mock/empty history");
+        return res.json([]);
+      }
       const snapshot = await db.collection("quiz_history")
         .orderBy("created_at", "desc")
         .limit(100)
@@ -76,9 +84,9 @@ async function startServer() {
       const entry = req.body;
       console.log("📥 Попытка сохранения в Firebase:", entry.moduleId, entry.score);
 
-      if (admin.apps.length === 0) {
+      if (!db) {
         console.error("❌ Ошибка: Firebase Admin не инициализирован. Проверьте переменные окружения.");
-        return res.status(500).json({ error: "Firebase not initialized" });
+        return res.status(500).json({ error: "Firebase not initialized. Check your environment variables (Project ID, Client Email, Private Key)." });
       }
 
       const docRef = await db.collection("quiz_history").add({
@@ -102,6 +110,9 @@ async function startServer() {
   app.delete("/api/history", async (req, res) => {
     try {
       console.log("🗑️ Запрос на полную очистку базы данных...");
+      if (!db) {
+        return res.status(500).json({ error: "Firebase not initialized" });
+      }
       const snapshot = await db.collection("quiz_history").get();
       
       if (snapshot.empty) {
