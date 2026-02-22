@@ -61,7 +61,7 @@ async function startServer() {
         console.warn("⚠️ Firestore not initialized, returning local mock/empty history");
         return res.json([]);
       }
-      const snapshot = await db.collection("quiz_history")
+      const snapshot = await db.collection("results")
         .orderBy("created_at", "desc")
         .limit(100)
         .get();
@@ -82,19 +82,20 @@ async function startServer() {
   app.post("/api/history", async (req, res) => {
     try {
       const entry = req.body;
-      console.log("📥 Попытка сохранения в Firebase:", entry.moduleId, entry.score);
+      console.log("📥 Сохранение в Firebase (коллекция results):", entry.user || entry.moduleId);
 
       if (!db) {
-        console.error("❌ Ошибка: Firebase Admin не инициализирован. Проверьте переменные окружения.");
-        return res.status(500).json({ error: "Firebase not initialized. Check your environment variables (Project ID, Client Email, Private Key)." });
+        return res.status(500).json({ error: "Firebase not initialized. Check environment variables." });
       }
 
-      const docRef = await db.collection("quiz_history").add({
-        moduleId: entry.moduleId,
+      const docRef = await db.collection("results").add({
+        user: entry.user || "Contestant",
         score: entry.score,
-        session: entry.session,
-        incorrectAnswers: entry.incorrectAnswers,
-        date: entry.date,
+        correct_answers: entry.correct_answers || parseInt(entry.score?.split('/')[0] || '0'),
+        moduleId: entry.moduleId || "unknown",
+        session: entry.session || 0,
+        incorrectAnswers: entry.incorrectAnswers || [],
+        date: entry.date || new Date().toISOString(),
         created_at: admin.firestore.FieldValue.serverTimestamp(),
       });
 
@@ -113,7 +114,7 @@ async function startServer() {
       if (!db) {
         return res.status(500).json({ error: "Firebase not initialized" });
       }
-      const snapshot = await db.collection("quiz_history").get();
+      const snapshot = await db.collection("results").get();
       
       if (snapshot.empty) {
         return res.json({ success: true, deletedCount: 0 });

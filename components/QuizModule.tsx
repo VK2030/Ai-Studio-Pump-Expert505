@@ -193,15 +193,23 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         const response = await fetch('/api/history', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newEntry)
+          body: JSON.stringify({
+            ...newEntry,
+            user: localStorage.getItem('app_user_name') || 'Contestant',
+            correct_answers: correctAnswersCount
+          })
         });
         if (response.ok) {
           setSaveStatus('success');
         } else {
+          const errData = await response.json();
+          console.error("Server error during save:", errData);
+          alert('⚠️ Ошибка сохранения в облако: ' + (errData.error || 'Неизвестная ошибка'));
           setSaveStatus('error');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to save history to cloud:", error);
+        alert('⚠️ Ошибка сети при сохранении: ' + error.message);
         setSaveStatus('error');
       }
     } else {
