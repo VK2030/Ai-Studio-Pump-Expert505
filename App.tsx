@@ -40,7 +40,9 @@ const App: React.FC = () => {
     return false;
   });
 
-  const [userRole, setUserRole] = useState<'contestant' | 'admin' | null>(null);
+  const [userRole, setUserRole] = useState<'contestant' | 'admin' | null>(() => {
+    return localStorage.getItem('app_user_role') as 'contestant' | 'admin' | null;
+  });
 
   const [activeTab, setActiveTab] = useState<AppSection>('home');
   const [selectedModule, setSelectedModule] = useState<ModuleData | null>(null);
@@ -129,6 +131,7 @@ const App: React.FC = () => {
 
   const handleAuthorize = (role: 'contestant' | 'admin') => {
     setUserRole(role);
+    localStorage.setItem('app_user_role', role);
     setIsAuthorized(true);
   };
 
@@ -163,18 +166,69 @@ const App: React.FC = () => {
     }
   };
 
-  const clearGlobalHistory = () => {
-    if (window.confirm('Вы уверены, что хотите полностью очистить всю историю тестирования?')) {
-      localStorage.removeItem('quizHistory');
-      MODULES.forEach(m => {
-        localStorage.removeItem(`quizSessionNum_${m.id}`);
-      });
-      loadData();
-      window.dispatchEvent(new Event('storage'));
+  const clearGlobalHistory = async () => {
+    if (userRole !== 'admin') {
+      alert('У вас нет прав для очистки глобальной истории.');
+      return;
+    }
+
+    if (window.confirm('Вы уверены, что хотите полностью очистить ВСЮ историю тестирования во всех аккаунтах и в облаке?')) {
+      console.log("Attempting to clear global history...");
+      setSyncStatus('syncing');
+      try {
+        const response = await fetch('/api/history', { method: 'DELETE' });
+        const result = await response.json();
+        
+        if (response.ok) {
+          localStorage.removeItem('quizHistory');
+          MODULES.forEach(m => {
+            localStorage.removeItem(`quizSessionNum_${m.id}`);
+          });
+          
+          await loadData();
+          window.dispatchEvent(new Event('storage'));
+          alert(`✅ База очищена. Удалено записей: ${result.deletedCount || 0}`);
+        } else {
+          alert('❌ Ошибка при удалении из облака: ' + (result.error || 'Неизвестная ошибка'));
+          setSyncStatus('error');
+        }
+      } catch (error: any) {
+        console.error("Clear history error:", error);
+        alert('❌ Ошибка сети: ' + error.message);
+        setSyncStatus('error');
+      }
     }
   };
 
   const isDark = theme === 'dark';
+
+  const testFirebaseConnection = async () => {
+    setSyncStatus('syncing');
+    try {
+      const response = await fetch('/api/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          moduleId: 'test-connection',
+          score: '0/0',
+          session: 0,
+          incorrectAnswers: [],
+          date: new Date().toLocaleString('ru-RU')
+        })
+      });
+      if (response.ok) {
+        alert('✅ Тестовая запись успешно создана в Firebase!');
+        loadData();
+      } else {
+        const err = await response.json();
+        alert('❌ Ошибка сервера: ' + err.error);
+        setSyncStatus('error');
+      }
+    } catch (error: any) {
+      alert('❌ Ошибка сети: ' + error.message);
+      setSyncStatus('error');
+    }
+  };
 
   const renderContent = () => {
     const key = `${activeTab}-${selectedModule ? 'modal' : 'main'}-${activeGame ? 'game' : 'none'}`;
@@ -348,14 +402,14 @@ const App: React.FC = () => {
                         })
                       )}
                     </div>
-                    {fullHistory.length > 0 && (
+                    {fullHistory.length > 0 && userRole === 'admin' && (
                       <AnimatedContent distance={20} delay={0.5} direction="vertical" className="p-4 pt-0">
                         <button 
                           onClick={clearGlobalHistory}
                           className={`w-full py-3 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
                             ${isDark ? 'bg-red-500/5 border-red-500/10 text-red-500/50 active:bg-red-500 active:text-white' : 'bg-red-50 border-red-100 text-red-600 active:bg-red-600 active:text-white'}`}
                         >
-                          Очистить всю историю
+                          Очистить всю историю (Admin)
                         </button>
                       </AnimatedContent>
                     )}
@@ -449,6 +503,25 @@ const App: React.FC = () => {
                               />
                             </button>
                           </div>
+                        </AnimatedContent>
+
+                        <AnimatedContent distance={30} delay={0.45} direction="vertical">
+                          <button 
+                            onClick={testFirebaseConnection}
+                            className={`w-full p-6 rounded-[2rem] border flex items-center gap-4 backdrop-blur-md active:scale-[0.98] transition-all
+                              ${isDark ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}`}
+                          >
+                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border
+                              ${isDark ? 'bg-indigo-500/20 border-indigo-500/30' : 'bg-white border-indigo-100'}`}>
+                              <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                              </svg>
+                            </div>
+                            <div className="flex flex-col items-start">
+                              <span className="font-bold text-sm">Проверить связь с базой</span>
+                              <span className="text-[10px] opacity-60">Создать тестовую запись в Firebase</span>
+                            </div>
+                          </button>
                         </AnimatedContent>
                       </>
                     )}

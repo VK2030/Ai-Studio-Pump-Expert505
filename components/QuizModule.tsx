@@ -172,22 +172,27 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     setCurrentSession(prev => prev + 1);
     window.dispatchEvent(new Event('storage'));
     
-    // Save to external database via API
-    setSaveStatus('saving');
-    try {
-      const response = await fetch('/api/history', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newEntry)
-      });
-      if (response.ok) {
-        setSaveStatus('success');
-      } else {
+    // Save to external database via API ONLY for contestants
+    if (userRole !== 'admin') {
+      setSaveStatus('saving');
+      try {
+        const response = await fetch('/api/history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newEntry)
+        });
+        if (response.ok) {
+          setSaveStatus('success');
+        } else {
+          setSaveStatus('error');
+        }
+      } catch (error) {
+        console.error("Failed to save history to cloud:", error);
         setSaveStatus('error');
       }
-    } catch (error) {
-      console.error("Failed to save history to cloud:", error);
-      setSaveStatus('error');
+    } else {
+      // For admins, we just skip saving but show a neutral status
+      setSaveStatus('success'); 
     }
     
     setScreen('results');

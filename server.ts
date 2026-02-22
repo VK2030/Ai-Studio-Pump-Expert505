@@ -74,6 +74,13 @@ async function startServer() {
   app.post("/api/history", async (req, res) => {
     try {
       const entry = req.body;
+      console.log("📥 Попытка сохранения в Firebase:", entry.moduleId, entry.score);
+
+      if (admin.apps.length === 0) {
+        console.error("❌ Ошибка: Firebase Admin не инициализирован. Проверьте переменные окружения.");
+        return res.status(500).json({ error: "Firebase not initialized" });
+      }
+
       const docRef = await db.collection("quiz_history").add({
         moduleId: entry.moduleId,
         score: entry.score,
@@ -83,9 +90,43 @@ async function startServer() {
         created_at: admin.firestore.FieldValue.serverTimestamp(),
       });
 
+      console.log("✅ Успешно сохранено! ID документа:", docRef.id);
       res.json({ id: docRef.id, ...entry });
     } catch (error: any) {
-      console.error("Error saving history:", error.message);
+      console.error("❌ Ошибка при сохранении в Firestore:", error.message);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // API: Delete all history from Firestore (Admin only)
+  app.delete("/api/history", async (req, res) => {
+    try {
+      console.log("🗑️ Запрос на полную очистку базы данных...");
+      const snapshot = await db.collection("quiz_history").get();
+      
+      if (snapshot.empty) {
+        return res.json({ success: true, deletedCount: 0 });
+      }
+
+      // Firestore batch limit is 500. For simplicity, we delete in chunks if needed.
+      const chunks = [];
+      const docs = snapshot.docs;
+      for (let i = 0; i < docs.length; i += 500) {
+        chunks.push(docs.slice(i, i + 500));
+      }
+
+      for (const chunk of chunks) {
+        const batch = db.batch();
+        chunk.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+      }
+      
+      console.log(`✅ База очищена. Удалено документов: ${snapshot.size}`);
+      res.json({ success: true, deletedCount: snapshot.size });
+    } catch (error: any) {
+      console.error("❌ Ошибка при очистке Firestore:", error.message);
       res.status(500).json({ error: error.message });
     }
   });
