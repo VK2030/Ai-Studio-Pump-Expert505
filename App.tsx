@@ -74,7 +74,10 @@ const App: React.FC = () => {
     }
   }, [theme]);
 
+  const [syncStatus, setSyncStatus] = useState<'syncing' | 'synced' | 'error'>('synced');
+
   const loadData = async () => {
+    setSyncStatus('syncing');
     const latestProgress: Record<string, number> = {};
     MODULES.forEach(m => latestProgress[m.id] = 0);
 
@@ -90,11 +93,13 @@ const App: React.FC = () => {
       }
     } catch (error) {
       console.error("Error loading history from cloud:", error);
+      setSyncStatus('error');
       const savedHistory = localStorage.getItem('quizHistory');
       if (savedHistory) history = JSON.parse(savedHistory);
     }
 
     setFullHistory(history);
+    setSyncStatus('synced');
     MODULES.forEach(module => {
       const lastEntry = history.find((h: QuizHistoryEntry) => h.moduleId === module.id);
       if (lastEntry && lastEntry.score) {
@@ -521,6 +526,23 @@ const App: React.FC = () => {
                 direction="vertical"
               >
                 <div className="flex flex-col">
+                  <div className="flex items-center justify-between">
+                    <span className="text-indigo-500 text-[12px] font-black uppercase tracking-[0.3em]">Обучение</span>
+                    <div className="flex items-center gap-2">
+                      {syncStatus === 'syncing' && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></div>
+                          <span className="text-[8px] font-black uppercase text-indigo-500/60 tracking-widest">Синхронизация</span>
+                        </div>
+                      )}
+                      {syncStatus === 'error' && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                          <span className="text-[8px] font-black uppercase text-red-500/60 tracking-widest">Ошибка сети</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   {activeTab === 'profile' ? (
                     <SplitText
                       key="profile-header"
@@ -561,21 +583,18 @@ const App: React.FC = () => {
                       tag="h1"
                     />
                   ) : (
-                    <>
-                      <span className="text-indigo-500 text-[12px] font-black uppercase tracking-[0.3em]">Обучение</span>
-                      <SplitText
-                        key="home-header"
-                        text="Лучший технолог"
-                        className={`${isDark ? 'text-white' : 'text-slate-900'} text-2xl font-black uppercase tracking-tighter leading-tight pt-1`}
-                        delay={50}
-                        duration={1.25}
-                        ease="power3.out"
-                        from={{ opacity: 0, y: 40 }}
-                        to={{ opacity: 1, y: 0 }}
-                        textAlign="left"
-                        tag="h1"
-                      />
-                    </>
+                    <SplitText
+                      key="home-header"
+                      text="Лучший технолог"
+                      className={`${isDark ? 'text-white' : 'text-slate-900'} text-2xl font-black uppercase tracking-tighter leading-tight pt-1`}
+                      delay={50}
+                      duration={1.25}
+                      ease="power3.out"
+                      from={{ opacity: 0, y: 40 }}
+                      to={{ opacity: 1, y: 0 }}
+                      textAlign="left"
+                      tag="h1"
+                    />
                   )}
                 </div>
               </AnimatedContent>
