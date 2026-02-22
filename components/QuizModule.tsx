@@ -50,6 +50,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   const [incorrectAnswers, setIncorrectAnswers] = useState<QuizHistoryEntry['incorrectAnswers']>([]);
   const [history, setHistory] = useState<QuizHistoryEntry[]>([]);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   
   const [timeLeft, setTimeLeft] = useState(30);
   const timerRef = useRef<any | null>(null);
@@ -172,14 +173,21 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     window.dispatchEvent(new Event('storage'));
     
     // Save to external database via API
+    setSaveStatus('saving');
     try {
-      await fetch('/api/history', {
+      const response = await fetch('/api/history', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newEntry)
       });
+      if (response.ok) {
+        setSaveStatus('success');
+      } else {
+        setSaveStatus('error');
+      }
     } catch (error) {
       console.error("Failed to save history to cloud:", error);
+      setSaveStatus('error');
     }
     
     setScreen('results');
@@ -278,7 +286,26 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     
     return (
       <div className="flex flex-col h-full overflow-hidden">
-        <header className={`p-4 pt-8 border-b relative overflow-hidden flex-shrink-0 ${isDark ? 'bg-[#0c1e3a] border-white/10' : 'bg-white border-slate-200'}`}>
+        <div className="absolute top-2 left-0 right-0 z-[110] flex justify-center pointer-events-none">
+          <div className={`px-3 py-1 rounded-full border backdrop-blur-md flex items-center gap-2 transition-all duration-500 ${
+            saveStatus === 'error' ? 'bg-red-500/20 border-red-500/30 text-red-500' : 
+            saveStatus === 'saving' ? 'bg-amber-500/20 border-amber-500/30 text-amber-500' :
+            'bg-green-500/20 border-green-500/30 text-green-500'
+          }`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${
+              saveStatus === 'error' ? 'bg-red-500' : 
+              saveStatus === 'saving' ? 'bg-amber-500 animate-pulse' : 
+              'bg-green-500'
+            }`}></div>
+            <span className="text-[8px] font-black uppercase tracking-widest">
+              {saveStatus === 'error' ? 'Ошибка сохранения' : 
+               saveStatus === 'saving' ? 'Сохранение в облако...' : 
+               'Облако: Синхронизировано'}
+            </span>
+          </div>
+        </div>
+
+        <header className={`p-4 pt-10 border-b relative overflow-hidden flex-shrink-0 ${isDark ? 'bg-[#0c1e3a] border-white/10' : 'bg-white border-slate-200'}`}>
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-2">
                <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-white' : 'text-slate-900'}`}>Вопрос {currentQuestionIdx + 1} / {sessionQuestions.length}</span>

@@ -39,6 +39,17 @@ async function startServer() {
   const db = admin.firestore();
   app.use(express.json());
 
+  // API: Debug Firebase connection
+  app.get("/api/debug/firebase", (req, res) => {
+    res.json({
+      configured: !!(projectId && clientEmail && privateKey),
+      projectId: projectId || "MISSING",
+      clientEmail: clientEmail || "MISSING",
+      hasPrivateKey: !!privateKey,
+      initialized: admin.apps.length > 0
+    });
+  });
+
   // API: Get history from Firestore
   app.get("/api/history", async (req, res) => {
     try {

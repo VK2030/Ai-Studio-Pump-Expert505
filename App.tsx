@@ -529,18 +529,20 @@ const App: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-indigo-500 text-[12px] font-black uppercase tracking-[0.3em]">Обучение</span>
                     <div className="flex items-center gap-2">
-                      {syncStatus === 'syncing' && (
-                        <div className="flex items-center gap-1">
-                          <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></div>
-                          <span className="text-[8px] font-black uppercase text-indigo-500/60 tracking-widest">Синхронизация</span>
-                        </div>
-                      )}
-                      {syncStatus === 'error' && (
-                        <div className="flex items-center gap-1">
-                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                          <span className="text-[8px] font-black uppercase text-red-500/60 tracking-widest">Ошибка сети</span>
-                        </div>
-                      )}
+                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all duration-500 ${
+                        syncStatus === 'syncing' 
+                          ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' 
+                          : syncStatus === 'error'
+                            ? 'bg-red-500/10 border-red-500/20 text-red-500'
+                            : 'bg-green-500/10 border-green-500/20 text-green-500'
+                      }`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${
+                          syncStatus === 'syncing' ? 'bg-amber-500 animate-pulse' : syncStatus === 'error' ? 'bg-red-500' : 'bg-green-500'
+                        }`}></div>
+                        <span className="text-[7px] font-black uppercase tracking-[0.1em]">
+                          {syncStatus === 'syncing' ? 'Облако: Синхронизация' : syncStatus === 'error' ? 'Облако: Ошибка связи' : 'Облако: Подключено'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   {activeTab === 'profile' ? (
