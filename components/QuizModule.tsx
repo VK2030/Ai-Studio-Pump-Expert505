@@ -185,10 +185,10 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     localStorage.setItem('quizHistory', JSON.stringify(updatedHistory));
     setCurrentSession(prev => prev + 1);
     window.dispatchEvent(new Event('storage'));
-    
-    // Save to external database via API ONLY for contestants
-    if (userRole !== 'admin') {
+    if (userRole === 'contestant') {
       setSaveStatus('saving');
+    
+
       try {
         const response = await fetch('/api/history', {
           method: 'POST',

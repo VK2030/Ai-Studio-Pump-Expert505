@@ -10,6 +10,7 @@ interface ModuleDetailProps {
   isTimerEnabled: boolean;
   isHighlightEnabled: boolean;
   isHistoryAnswersEnabled: boolean;
+  globalHistory: any[];
   onClose: () => void;
 }
 
@@ -20,6 +21,7 @@ const ModuleDetail: React.FC<ModuleDetailProps> = ({
   isTimerEnabled, 
   isHighlightEnabled, 
   isHistoryAnswersEnabled,
+  globalHistory,
   onClose 
 }) => {
   return (
@@ -30,6 +32,7 @@ const ModuleDetail: React.FC<ModuleDetailProps> = ({
       isTimerEnabled={isTimerEnabled}
       isHighlightEnabled={isHighlightEnabled}
       isHistoryAnswersEnabled={isHistoryAnswersEnabled}
+      globalHistory={globalHistory}
       onClose={onClose} 
       onExitToApp={onClose} 
     />

@@ -1,6 +1,6 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import admin from "firebase-admin";
+import { createClient } from "@supabase/supabase-js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -11,134 +11,112 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // Initialize Firebase Admin
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  // Initialize Supabase Client
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!projectId || !clientEmail || !privateKey) {
-    console.error("❌ Firebase environment variables are missing!");
-    console.log("Required: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY");
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error("❌ Supabase environment variables are missing!");
+    console.log("Required: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY");
   }
 
-  if (!admin.apps.length && projectId && clientEmail && privateKey) {
-    try {
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId,
-          clientEmail,
-          privateKey: privateKey.replace(/\\n/g, '\n'),
-        }),
-      });
-      console.log("✅ Firebase Admin initialized successfully");
-    } catch (error: any) {
-      console.error("❌ Firebase initialization error:", error.message);
-    }
+  const supabase = (supabaseUrl && supabaseServiceKey) 
+    ? createClient(supabaseUrl, supabaseServiceKey)
+    : null;
+
+  if (supabase) {
+    console.log("✅ Supabase Client initialized successfully");
   }
 
-  let db: admin.firestore.Firestore | null = null;
-  if (admin.apps.length > 0) {
-    db = admin.firestore();
-  }
   app.use(express.json());
 
-  // API: Debug Firebase connection
-  app.get("/api/debug/firebase", (req, res) => {
+  // API: Debug Supabase connection
+  app.get("/api/debug/supabase", (req, res) => {
     res.json({
-      configured: !!(projectId && clientEmail && privateKey),
-      projectId: projectId || "MISSING",
-      clientEmail: clientEmail || "MISSING",
-      hasPrivateKey: !!privateKey,
-      initialized: admin.apps.length > 0,
-      dbReady: !!db
+      configured: !!(supabaseUrl && supabaseServiceKey),
+      url: supabaseUrl || "MISSING",
+      hasServiceKey: !!supabaseServiceKey,
+      initialized: !!supabase
     });
   });
 
-  // API: Get history from Firestore
+  // API: Get history from Supabase
   app.get("/api/history", async (req, res) => {
     try {
-      if (!db) {
-        console.warn("⚠️ Firestore not initialized, returning local mock/empty history");
+      if (!supabase) {
+        console.warn("⚠️ Supabase not initialized, returning empty history");
         return res.json([]);
       }
-      const snapshot = await db.collection("results")
-        .orderBy("created_at", "desc")
-        .limit(100)
-        .get();
-
-      const history = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
       
-      res.json(history);
+      const { data, error } = await supabase
+        .from("results")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+      
+      res.json(data || []);
     } catch (error: any) {
       console.error("Error fetching history:", error.message);
       res.status(500).json({ error: error.message });
     }
   });
 
-  // API: Save history entry to Firestore
+  // API: Save history entry to Supabase
   app.post("/api/history", async (req, res) => {
     try {
       const entry = req.body;
-      console.log("📥 Сохранение в Firebase (коллекция results):", entry.user || entry.moduleId);
+      console.log("📥 Сохранение в Supabase (таблица results):", entry.user || entry.moduleId);
 
-      if (!db) {
-        return res.status(500).json({ error: "Firebase not initialized. Check environment variables." });
+      if (!supabase) {
+        return res.status(500).json({ error: "Supabase not initialized. Check environment variables." });
       }
 
-      const docRef = await db.collection("results").add({
-        user: entry.user || "Contestant",
-        score: entry.score,
-        correct_answers: entry.correct_answers || parseInt(entry.score?.split('/')[0] || '0'),
-        moduleId: entry.moduleId || "unknown",
-        session: entry.session || 0,
-        incorrectAnswers: entry.incorrectAnswers || [],
-        date: entry.date || new Date().toISOString(),
-        created_at: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      const { data, error } = await supabase
+        .from("results")
+        .insert([{
+          user: entry.user || "Contestant",
+          score: entry.score,
+          correct_answers: entry.correct_answers || parseInt(entry.score?.split('/')[0] || '0'),
+          moduleId: entry.moduleId || "unknown",
+          session: entry.session || 0,
+          incorrectAnswers: entry.incorrectAnswers || [],
+          date: entry.date || new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        }])
+        .select()
+        .single();
 
-      console.log("✅ Успешно сохранено! ID документа:", docRef.id);
-      res.json({ id: docRef.id, ...entry });
+      if (error) throw error;
+
+      console.log("✅ Успешно сохранено! ID записи:", data.id);
+      res.json(data);
     } catch (error: any) {
-      console.error("❌ Ошибка при сохранении в Firestore:", error.message);
+      console.error("❌ Ошибка при сохранении в Supabase:", error.message);
       res.status(500).json({ error: error.message });
     }
   });
 
-  // API: Delete all history from Firestore (Admin only)
+  // API: Delete all history from Supabase (Admin only)
   app.delete("/api/history", async (req, res) => {
     try {
       console.log("🗑️ Запрос на полную очистку базы данных...");
-      if (!db) {
-        return res.status(500).json({ error: "Firebase not initialized" });
-      }
-      const snapshot = await db.collection("results").get();
-      
-      if (snapshot.empty) {
-        return res.json({ success: true, deletedCount: 0 });
+      if (!supabase) {
+        return res.status(500).json({ error: "Supabase not initialized" });
       }
 
-      // Firestore batch limit is 500. For simplicity, we delete in chunks if needed.
-      const chunks = [];
-      const docs = snapshot.docs;
-      for (let i = 0; i < docs.length; i += 500) {
-        chunks.push(docs.slice(i, i + 500));
-      }
+      const { count, error } = await supabase
+        .from("results")
+        .delete({ count: 'exact' })
+        .neq('id', -1);
 
-      for (const chunk of chunks) {
-        const batch = db.batch();
-        chunk.forEach((doc) => {
-          batch.delete(doc.ref);
-        });
-        await batch.commit();
-      }
+      if (error) throw error;
       
-      console.log(`✅ База очищена. Удалено документов: ${snapshot.size}`);
-      res.json({ success: true, deletedCount: snapshot.size });
+      console.log(`✅ База очищена. Удалено записей: ${count}`);
+      res.json({ success: true, deletedCount: count });
     } catch (error: any) {
-      console.error("❌ Ошибка при очистке Firestore:", error.message);
+      console.error("❌ Ошибка при очистке Supabase:", error.message);
       res.status(500).json({ error: error.message });
     }
   });
