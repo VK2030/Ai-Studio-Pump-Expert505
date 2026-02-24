@@ -70,6 +70,17 @@ const QuizModule: React.FC<QuizModuleProps> = ({
           if (savedHistory) data = JSON.parse(savedHistory);
         }
         
+        // Fetch global config for history visibility
+        const configResponse = await fetch('/api/config');
+        if (configResponse.ok) {
+          const config = await configResponse.json();
+          if (config.isHistoryAnswersEnabled !== undefined) {
+             // We don't have a direct setter here, but the parent App.tsx 
+             // will pass the updated prop. However, for immediate local use:
+             localStorage.setItem('app_history_answers_enabled', String(config.isHistoryAnswersEnabled));
+          }
+        }
+
         setHistory(data);
         
         // Calculate next session number based on history (cloud-synced)
@@ -112,6 +123,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   };
 
   const startQuiz = () => {
+    finishQuizRef.current = false;
     const questionsForModule = (moduleId && QUIZ_QUESTIONS[moduleId]) || [];
     const selected = shuffleArray(questionsForModule).slice(0, Math.min(10, questionsForModule.length));
     setSessionQuestions(selected);
@@ -173,7 +185,12 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     }, 1500);
   };
 
+  const finishQuizRef = useRef(false);
+
   const finishQuiz = async () => {
+    if (finishQuizRef.current) return;
+    finishQuizRef.current = true;
+    
     const newEntry: QuizHistoryEntry = {
       date: new Date().toISOString(),
       session: currentSession, 
@@ -188,6 +205,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     localStorage.setItem('quizHistory', JSON.stringify(updatedHistory));
     setCurrentSession(prev => prev + 1);
     window.dispatchEvent(new Event('storage'));
+    setScreen('results');
     if (userRole === 'contestant') {
       setSaveStatus('saving');
     
@@ -219,8 +237,6 @@ const QuizModule: React.FC<QuizModuleProps> = ({
       // For admins, we just skip saving but show a neutral status
       setSaveStatus('success'); 
     }
-    
-    setScreen('results');
   };
 
   const clearModuleHistory = () => {

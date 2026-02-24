@@ -86,15 +86,26 @@ const App: React.FC = () => {
     let history: QuizHistoryEntry[] = [];
     
     try {
-      const response = await fetch('/api/history');
-      if (response.ok) {
-        history = await response.json();
+      // Fetch history
+      const historyResponse = await fetch('/api/history');
+      if (historyResponse.ok) {
+        history = await historyResponse.json();
       } else {
         const savedHistory = localStorage.getItem('quizHistory');
         if (savedHistory) history = JSON.parse(savedHistory);
       }
+
+      // Fetch global config
+      const configResponse = await fetch('/api/config');
+      if (configResponse.ok) {
+        const config = await configResponse.json();
+        if (config.isHistoryAnswersEnabled !== undefined) {
+          setIsHistoryAnswersEnabled(config.isHistoryAnswersEnabled);
+          localStorage.setItem('app_history_answers_enabled', String(config.isHistoryAnswersEnabled));
+        }
+      }
     } catch (error) {
-      console.error("Error loading history from cloud:", error);
+      console.error("Error loading data from cloud:", error);
       setSyncStatus('error');
       const savedHistory = localStorage.getItem('quizHistory');
       if (savedHistory) history = JSON.parse(savedHistory);
@@ -151,10 +162,23 @@ const App: React.FC = () => {
     localStorage.setItem('app_highlight_enabled', String(newValue));
   };
 
-  const toggleHistoryAnswers = () => {
+  const toggleHistoryAnswers = async () => {
     const newValue = !isHistoryAnswersEnabled;
     setIsHistoryAnswersEnabled(newValue);
     localStorage.setItem('app_history_answers_enabled', String(newValue));
+    
+    // Sync with global config if admin
+    if (userRole === 'admin') {
+      try {
+        await fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'isHistoryAnswersEnabled', value: newValue })
+        });
+      } catch (error) {
+        console.error("Failed to sync global config:", error);
+      }
+    }
   };
 
   const toggleLoginRequirement = () => {

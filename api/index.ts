@@ -79,4 +79,42 @@ app.delete("/api/history", async (req, res) => {
   }
 });
 
+// API: Получение глобальных настроек
+app.get("/api/config", async (req, res) => {
+  try {
+    if (!supabase) return res.json({ isHistoryAnswersEnabled: true });
+    const { data, error } = await supabase
+      .from("app_settings")
+      .select("*");
+    
+    if (error) throw error;
+    
+    const config: Record<string, any> = {};
+    data.forEach(item => {
+      config[item.key] = item.value;
+    });
+    
+    res.json(config);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API: Обновление глобальных настроек (Admin)
+app.post("/api/config", async (req, res) => {
+  try {
+    const { key, value } = req.body;
+    if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
+    
+    const { error } = await supabase
+      .from("app_settings")
+      .upsert({ key, value }, { onConflict: 'key' });
+      
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default app;
