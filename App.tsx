@@ -213,7 +213,7 @@ const App: React.FC = () => {
           score: '0/0',
           session: 0,
           incorrectAnswers: [],
-          date: new Date().toLocaleString('ru-RU')
+          date: new Date().toISOString()
         })
       });
       if (response.ok) {
@@ -348,6 +348,17 @@ const App: React.FC = () => {
                           // Show answers if user is admin OR if history answers are enabled for contestants
                           const showCorrectAnswers = userRole === 'admin' || isHistoryAnswersEnabled;
                           
+                          const formattedDate = (() => {
+                            try {
+                              return new Date(entry.date).toLocaleString('ru-RU', { 
+                                day: '2-digit', month: '2-digit', year: 'numeric', 
+                                hour: '2-digit', minute: '2-digit' 
+                              });
+                            } catch (e) {
+                              return entry.date;
+                            }
+                          })();
+
                           return (
                             <AnimatedContent key={idx} distance={30} delay={idx * 0.05}>
                               <div className={`p-5 rounded-2xl border relative overflow-hidden group
@@ -359,7 +370,7 @@ const App: React.FC = () => {
                                     <span className="text-[8px] font-black text-indigo-500 uppercase tracking-widest mb-1">
                                       {module?.title || 'Общий тест'} • Сессия {entry.session}
                                     </span>
-                                    <span className={`text-[10px] font-bold ${isDark ? 'text-white/50' : 'text-slate-400'}`}>{entry.date}</span>
+                                    <span className={`text-[10px] font-bold ${isDark ? 'text-white/50' : 'text-slate-400'}`}>{formattedDate}</span>
                                   </div>
                                   <div className="flex flex-col items-end">
                                     <span className={`text-xl font-black ${isSuccess ? 'text-green-500' : 'text-indigo-500'}`}>{entry.score}</span>
