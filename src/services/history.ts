@@ -1,8 +1,8 @@
 
 /**
- * БЕЗОПАСНАЯ ВЕРСИЯ FIREBASE SERVICE
+ * БЕЗОПАСНАЯ ВЕРСИЯ SUPABASE SERVICE
  * Мы не храним ключи в этом файле, так как он попадает в браузер.
- * Вместо этого мы отправляем данные на наш сервер, который уже имеет доступ к Firebase.
+ * Вместо этого мы отправляем данные на наш сервер, который уже имеет доступ к Supabase.
  */
 
 export async function saveTestResult(userName: string, totalScore: string, correctAnswersCount: number) {

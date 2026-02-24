@@ -202,7 +202,7 @@ const App: React.FC = () => {
 
   const isDark = theme === 'dark';
 
-  const testFirebaseConnection = async () => {
+  const testSupabaseConnection = async () => {
     setSyncStatus('syncing');
     try {
       const response = await fetch('/api/history', {
@@ -217,7 +217,7 @@ const App: React.FC = () => {
         })
       });
       if (response.ok) {
-        alert('✅ Тестовая запись успешно создана в Firebase!');
+        alert('✅ Тестовая запись успешно создана в Supabase!');
         loadData();
       } else {
         const err = await response.json();
@@ -507,7 +507,7 @@ const App: React.FC = () => {
 
                         <AnimatedContent distance={30} delay={0.45} direction="vertical">
                           <button 
-                            onClick={testFirebaseConnection}
+                            onClick={testSupabaseConnection}
                             className={`w-full p-6 rounded-[2rem] border flex items-center gap-4 backdrop-blur-md active:scale-[0.98] transition-all
                               ${isDark ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}`}
                           >
@@ -519,7 +519,7 @@ const App: React.FC = () => {
                             </div>
                             <div className="flex flex-col items-start">
                               <span className="font-bold text-sm">Проверить связь с базой</span>
-                              <span className="text-[10px] opacity-60">Создать тестовую запись в Firebase</span>
+                              <span className="text-[10px] opacity-60">Создать тестовую запись в Supabase</span>
                             </div>
                           </button>
                         </AnimatedContent>
