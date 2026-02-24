@@ -78,6 +78,8 @@ const App: React.FC = () => {
 
   const [syncStatus, setSyncStatus] = useState<'syncing' | 'synced' | 'error'>('synced');
 
+  const [historyFilter, setHistoryFilter] = useState<string | 'all'>('all');
+
   const loadData = async () => {
     setSyncStatus('syncing');
     const latestProgress: Record<string, number> = {};
@@ -350,10 +352,39 @@ const App: React.FC = () => {
                   </div>
                 );
               case 'history':
+                const filteredHistory = historyFilter === 'all' 
+                  ? fullHistory 
+                  : fullHistory.filter(h => h.moduleId === historyFilter);
+
                 return (
                   <div className="flex-1 flex flex-col overflow-hidden px-4">
+                    {/* Filter Bar */}
+                    <div className="flex-shrink-0 mb-4 overflow-x-auto no-scrollbar flex gap-2 pb-2">
+                      <button 
+                        onClick={() => setHistoryFilter('all')}
+                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap
+                          ${historyFilter === 'all' 
+                            ? (isDark ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-white') 
+                            : (isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-white border-slate-200 text-slate-400')}`}
+                      >
+                        Все разделы
+                      </button>
+                      {MODULES.map(m => (
+                        <button 
+                          key={m.id}
+                          onClick={() => setHistoryFilter(m.id)}
+                          className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap
+                            ${historyFilter === m.id 
+                              ? (isDark ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-white') 
+                              : (isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-white border-slate-200 text-slate-400')}`}
+                        >
+                          {m.title}
+                        </button>
+                      ))}
+                    </div>
+
                     <div className="flex-1 overflow-y-auto space-y-3 pb-24 pr-1">
-                      {fullHistory.length === 0 ? (
+                      {filteredHistory.length === 0 ? (
                         <AnimatedContent distance={20} delay={0.2}>
                           <div className={`flex flex-col items-center justify-center py-24 italic text-sm text-center
                             ${isDark ? 'text-white/20' : 'text-slate-300'}`}>
@@ -361,11 +392,11 @@ const App: React.FC = () => {
                               <circle cx="12" cy="12" r="10" />
                               <polyline points="12 6 12 12 16 14" />
                             </svg>
-                            История тестирований пуста
+                            {historyFilter === 'all' ? 'История тестирований пуста' : 'В этом разделе еще нет результатов'}
                           </div>
                         </AnimatedContent>
                       ) : (
-                        fullHistory.map((entry, idx) => {
+                        filteredHistory.map((entry, idx) => {
                           const module = MODULES.find(m => m.id === entry.moduleId);
                           const [correct] = entry.score.split('/').map(Number);
                           const isSuccess = correct >= 8;
