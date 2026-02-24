@@ -1,76 +1,48 @@
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
+app.use(express.json());
 
-// Initialize Supabase Client
+// Инициализация Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error("❌ Supabase environment variables are missing!");
-  console.log("Required: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY");
-}
 
 const supabase = (supabaseUrl && supabaseServiceKey) 
   ? createClient(supabaseUrl, supabaseServiceKey)
   : null;
 
-if (supabase) {
-  console.log("✅ Supabase Client initialized successfully");
-}
-
-app.use(express.json());
-
-// API: Debug Supabase connection
+// API: Проверка статуса
 app.get("/api/debug/supabase", (req, res) => {
   res.json({
+    status: "ok",
     configured: !!(supabaseUrl && supabaseServiceKey),
-    url: supabaseUrl || "MISSING",
-    hasServiceKey: !!supabaseServiceKey,
-    initialized: !!supabase
+    initialized: !!supabase,
+    env: process.env.NODE_ENV || "development"
   });
 });
 
-// API: Get history from Supabase
+// API: Получение истории
 app.get("/api/history", async (req, res) => {
   try {
-    if (!supabase) {
-      console.warn("⚠️ Supabase not initialized, returning empty history");
-      return res.json([]);
-    }
-    
+    if (!supabase) return res.json([]);
     const { data, error } = await supabase
       .from("results")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(100);
-
     if (error) throw error;
-    
     res.json(data || []);
   } catch (error: any) {
-    console.error("Error fetching history:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// API: Save history entry to Supabase
+// API: Сохранение результата
 app.post("/api/history", async (req, res) => {
   try {
     const entry = req.body;
-    console.log("📥 Сохранение в Supabase (таблица results):", entry.user || entry.moduleId);
-
-    if (!supabase) {
-      return res.status(500).json({ error: "Supabase not initialized. Check environment variables." });
-    }
-
+    if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
     const { data, error } = await supabase
       .from("results")
       .insert([{
@@ -85,62 +57,26 @@ app.post("/api/history", async (req, res) => {
       }])
       .select()
       .single();
-
     if (error) throw error;
-
-    console.log("✅ Успешно сохранено! ID записи:", data.id);
     res.json(data);
   } catch (error: any) {
-    console.error("❌ Ошибка при сохранении в Supabase:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// API: Delete all history from Supabase (Admin only)
+// API: Очистка (Admin)
 app.delete("/api/history", async (req, res) => {
   try {
-    console.log("🗑️ Запрос на полную очистку базы данных...");
-    if (!supabase) {
-      return res.status(500).json({ error: "Supabase not initialized" });
-    }
-
+    if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
     const { count, error } = await supabase
       .from("results")
       .delete({ count: 'exact' })
       .neq('id', -1);
-
     if (error) throw error;
-    
-    console.log(`✅ База очищена. Удалено записей: ${count}`);
     res.json({ success: true, deletedCount: count });
   } catch (error: any) {
-    console.error("❌ Ошибка при очистке Supabase:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
-
-// Vite middleware for development
-if (process.env.NODE_ENV !== "production") {
-  const startDevServer = async () => {
-    const { createServer: createViteServer } = await import("vite");
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-    
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
-  };
-  startDevServer();
-} else {
-  // Serve static files in production (Vercel handles this via rewrites, but good for local prod test)
-  const distPath = path.join(__dirname, "..", "dist");
-  app.use(express.static(distPath));
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(distPath, "index.html"));
-  });
-}
 
 export default app;
