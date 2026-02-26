@@ -1,16 +1,17 @@
 
 import React from 'react';
+import { motion } from 'framer-motion';
 
 interface GlassButtonProps {
   title: string;
-  subtitle: string;
   iconType: string;
   progress?: number;
+  recentScores?: number[];
   onClick: () => void;
   theme?: 'dark' | 'light';
 }
 
-const GlassButton: React.FC<GlassButtonProps> = ({ title, subtitle, iconType, progress = 0, onClick, theme = 'dark' }) => {
+const GlassButton: React.FC<GlassButtonProps> = ({ title, iconType, progress = 0, recentScores = [], onClick, theme = 'dark' }) => {
   const isDark = theme === 'dark';
 
   const renderIcon = () => {
@@ -105,7 +106,7 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, subtitle, iconType, pr
   return (
     <button 
       onClick={onClick}
-      className={`flex flex-col items-start p-4 pb-10 rounded-3xl border backdrop-blur-md relative overflow-hidden group w-full h-full transition-all duration-300 active:scale-95
+      className={`flex flex-col items-start p-4 pb-12 rounded-3xl border backdrop-blur-md relative overflow-hidden group w-full h-full transition-all duration-300 active:scale-95
         ${isDark 
           ? 'bg-white/5 border-white/10 hover:bg-white/[0.08]' 
           : 'bg-white border-slate-200 shadow-sm hover:bg-slate-50'}`}
@@ -120,22 +121,19 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, subtitle, iconType, pr
           ${isDark ? 'text-white/90' : 'text-slate-900'}`}>
           {title}
         </h3>
-        <p className={`text-[9px] mt-1 leading-tight line-clamp-2 ${isDark ? 'text-white/30' : 'text-slate-400'}`}>
-          {subtitle}
-        </p>
       </div>
       
-      <div className="absolute bottom-3 left-4 right-4 z-10">
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-[8px] uppercase font-black text-slate-500/60 tracking-wider">Прогресс</span>
-          <span className={`text-[9px] font-black ${isDark ? 'text-white/40' : 'text-slate-400'}`}>{progress}%</span>
-        </div>
-        <div className={`w-full h-1 rounded-full overflow-hidden ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
-          <div 
-            className="h-full bg-gradient-to-r from-slate-400 to-slate-600 rounded-full shadow-[0_0_8px_rgba(71,85,105,0.2)] transition-all duration-1000" 
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
+      <div className="absolute bottom-2 left-4 right-4 z-10 text-left">
+        {recentScores.length > 0 && (
+          <div className="flex flex-col gap-0.5 items-start">
+            <span className={`text-[8px] uppercase font-black tracking-wider ${isDark ? 'text-white/20' : 'text-slate-400'}`}>
+              Последние результаты:
+            </span>
+            <div className={`text-[9px] font-black ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
+              {recentScores.map(s => `${s}%`).join(' / ')}
+            </div>
+          </div>
+        )}
       </div>
     </button>
   );

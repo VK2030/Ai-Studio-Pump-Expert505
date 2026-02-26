@@ -47,6 +47,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AppSection>('home');
   const [selectedModule, setSelectedModule] = useState<ModuleData | null>(null);
   const [moduleProgress, setModuleProgress] = useState<Record<string, number>>({});
+  const [moduleRecentScores, setModuleRecentScores] = useState<Record<string, number[]>>({});
   const [fullHistory, setFullHistory] = useState<QuizHistoryEntry[]>([]);
   const [activeGame, setActiveGame] = useState<string | null>(null);
   
@@ -115,17 +116,31 @@ const App: React.FC = () => {
 
     setFullHistory(history);
     setSyncStatus('synced');
+    
+    const recentScoresMap: Record<string, number[]> = {};
+    
     MODULES.forEach(module => {
-      const lastEntry = history.find((h: QuizHistoryEntry) => h.moduleId === module.id);
+      // Calculate progress (last result)
+      const moduleEntries = history.filter((h: QuizHistoryEntry) => h.moduleId === module.id);
+      const lastEntry = moduleEntries[0]; // history is usually sorted by date desc
+      
       if (lastEntry && lastEntry.score) {
         const [correct, total] = lastEntry.score.split('/').map(Number);
         if (!isNaN(correct) && !isNaN(total) && total > 0) {
           latestProgress[module.id] = Math.round((correct / total) * 100);
         }
       }
+      
+      // Calculate last 3 scores
+      const last3 = moduleEntries.slice(0, 3).reverse().map((h: QuizHistoryEntry) => {
+        const [correct, total] = h.score.split('/').map(Number);
+        return Math.round((correct / total) * 100);
+      });
+      recentScoresMap[module.id] = last3;
     });
     
     setModuleProgress(latestProgress);
+    setModuleRecentScores(recentScoresMap);
   };
 
   useEffect(() => {
@@ -284,9 +299,9 @@ const App: React.FC = () => {
                         >
                           <GlassButton 
                             title={m.title}
-                            subtitle={m.subtitle}
                             iconType={m.icon}
                             progress={moduleProgress[m.id] || 0}
+                            recentScores={moduleRecentScores[m.id] || []}
                             onClick={() => setSelectedModule(m)}
                             theme={theme}
                           />
@@ -824,12 +839,40 @@ const App: React.FC = () => {
 };
 
 const NavButton: React.FC<{ isDark: boolean; active: boolean; onClick: () => void; icon: (active: boolean) => React.ReactNode; label: string }> = ({ isDark, active, onClick, icon, label }) => (
-  <button onClick={onClick} className="flex flex-col items-center justify-center gap-1 min-w-[64px] transition-all active:scale-95">
-    {icon(active)}
-    <span className={`text-[9px] font-bold tracking-wide uppercase transition-colors duration-300
-      ${active ? (isDark ? 'text-white' : 'text-slate-800') : (isDark ? 'text-white/30' : 'text-slate-400')}`}>
-      {label}
-    </span>
+  <button onClick={onClick} className="flex flex-col items-center justify-center gap-1 min-w-[64px] relative group">
+    <motion.div 
+      className="flex flex-col items-center justify-center gap-1"
+      animate={{ 
+        scale: active ? 1.1 : 1,
+        y: active ? -2 : 0
+      }}
+      whileTap={{ scale: 0.9 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+    >
+      <div className="relative">
+        {icon(active)}
+        {active && (
+          <motion.div 
+            layoutId="nav-glow"
+            className="absolute inset-0 bg-indigo-500/20 blur-md rounded-full -z-10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          />
+        )}
+      </div>
+      <span className={`text-[9px] font-bold tracking-wide uppercase transition-colors duration-300
+        ${active ? (isDark ? 'text-white' : 'text-slate-800') : (isDark ? 'text-white/30' : 'text-slate-400')}`}>
+        {label}
+      </span>
+    </motion.div>
+    {active && (
+      <motion.div 
+        layoutId="nav-indicator"
+        className="absolute -bottom-2 w-1 h-1 rounded-full bg-indigo-500"
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      />
+    )}
   </button>
 );
 

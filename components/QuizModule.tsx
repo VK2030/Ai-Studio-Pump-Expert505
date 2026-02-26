@@ -521,11 +521,35 @@ const QuizModule: React.FC<QuizModuleProps> = ({
           <div className="relative w-48 h-48 mb-8">
             <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
               <circle cx="50" cy="50" r="44" className={`${isDark ? 'stroke-white/5' : 'stroke-slate-100'} fill-none`} strokeWidth="6" />
-              <circle cx="50" cy="50" r="44" className="stroke-indigo-500 fill-none" strokeWidth="8" strokeDasharray={`${total > 0 ? (correctAnswersCount / total) * 276 : 0} 276`} strokeLinecap="round" />
+              <motion.circle 
+                cx="50" 
+                cy="50" 
+                r="44" 
+                className="stroke-indigo-500 fill-none" 
+                strokeWidth="8" 
+                initial={{ strokeDasharray: "0 276" }}
+                animate={{ strokeDasharray: `${total > 0 ? (correctAnswersCount / total) * 276 : 0} 276` }}
+                transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+                strokeLinecap="round" 
+              />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className={`text-5xl font-black tracking-tighter ${isDark ? 'text-white' : 'text-slate-900'}`}>{Math.round(percentage)}%</span>
-              <span className="text-[10px] text-indigo-500 uppercase font-black tracking-[0.2em] mt-1">Уровень</span>
+              <motion.span 
+                className={`text-5xl font-black tracking-tighter ${isDark ? 'text-white' : 'text-slate-900'}`}
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+              >
+                {Math.round(percentage)}%
+              </motion.span>
+              <motion.span 
+                className="text-[10px] text-indigo-500 uppercase font-black tracking-[0.2em] mt-1"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.7 }}
+              >
+                Уровень
+              </motion.span>
             </div>
           </div>
         </AnimatedContent>
