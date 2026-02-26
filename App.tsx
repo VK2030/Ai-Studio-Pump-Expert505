@@ -683,19 +683,13 @@ const App: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-indigo-500 text-[12px] font-black uppercase tracking-[0.3em]">Обучение</span>
                     <div className="flex items-center gap-2">
-                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all duration-500 ${
-                        syncStatus === 'syncing' 
-                          ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' 
-                          : syncStatus === 'error'
-                            ? 'bg-red-500/10 border-red-500/20 text-red-500'
-                            : 'bg-green-500/10 border-green-500/20 text-green-500'
-                      }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${
-                          syncStatus === 'syncing' ? 'bg-amber-500 animate-pulse' : syncStatus === 'error' ? 'bg-red-500' : 'bg-green-500'
-                        }`}></div>
-                        <span className="text-[7px] font-black uppercase tracking-[0.1em]">
-                          {syncStatus === 'syncing' ? 'Облако: Синхронизация' : syncStatus === 'error' ? 'Облако: Ошибка связи' : 'Облако: Подключено'}
-                        </span>
+                      <div className="flex items-center justify-center w-4 h-4">
+                        <div 
+                          title={syncStatus === 'syncing' ? 'Синхронизация' : syncStatus === 'error' ? 'Ошибка связи' : 'Подключено'}
+                          className={`w-2 h-2 rounded-full shadow-sm transition-all duration-500 ${
+                            syncStatus === 'syncing' ? 'bg-amber-500 animate-pulse' : syncStatus === 'error' ? 'bg-red-500' : 'bg-green-500'
+                          }`}
+                        ></div>
                       </div>
                     </div>
                   </div>
