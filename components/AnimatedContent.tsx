@@ -1,8 +1,5 @@
 import React, { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 interface AnimatedContentProps {
   children: React.ReactNode;
@@ -98,16 +95,22 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
       ease
     });
 
-    const st = ScrollTrigger.create({
-      trigger: el,
-      scroller: scrollerTarget,
-      start: `top ${startPct}%`,
-      once: true,
-      onEnter: () => tl.play()
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          tl.play();
+          observer.unobserve(el);
+        }
+      });
+    }, { 
+      threshold,
+      root: typeof scrollerTarget === 'string' ? document.querySelector(scrollerTarget) : scrollerTarget
     });
 
+    observer.observe(el);
+
     return () => {
-      st.kill();
+      observer.disconnect();
       tl.kill();
     };
   }, [

@@ -264,7 +264,11 @@ const App: React.FC = () => {
                 return (
                   <div className="flex-1 flex flex-col px-4 pb-2 gap-3 overflow-hidden">
                     <div className="flex flex-col gap-2 flex-shrink-0">
-                      <AnimatedContent distance={30} delay={0.1} direction="vertical">
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1, duration: 0.5 }}
+                      >
                         <div className={`w-full p-4 rounded-3xl border backdrop-blur-md relative overflow-hidden group flex items-center justify-between transition-all
                           ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-slate-200 shadow-sm text-slate-900'}`}>
                           <div className="flex items-center gap-4">
@@ -281,7 +285,7 @@ const App: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                      </AnimatedContent>
+                      </motion.div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 flex-1 min-h-0 overflow-y-auto pr-1">
@@ -305,7 +309,11 @@ const App: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col gap-2 flex-shrink-0 mt-2">
-                      <AnimatedContent distance={30} delay={0.8} direction="vertical">
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4, duration: 0.5 }}
+                      >
                         <button 
                           onClick={() => setActiveTab('tasks')}
                           className={`w-full p-4 rounded-3xl border backdrop-blur-md relative overflow-hidden group flex items-center justify-between active:scale-[0.98] transition-all
@@ -327,7 +335,7 @@ const App: React.FC = () => {
                             <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </button>
-                      </AnimatedContent>
+                      </motion.div>
                     </div>
                   </div>
                 );
