@@ -15,7 +15,7 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, iconType, progress = 0
   const isDark = theme === 'dark';
 
   const renderIcon = () => {
-    const iconWrapperClass = "relative w-10 h-10 mb-2 transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-105";
+    const iconWrapperClass = "relative w-12 h-12 mb-3 transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-105";
     const iconColor = isDark ? "text-slate-200" : "text-slate-600";
     const glowColor = isDark ? "bg-indigo-500/20" : "bg-slate-400/10";
     
@@ -106,7 +106,7 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, iconType, progress = 0
   return (
     <button 
       onClick={onClick}
-      className={`flex flex-col items-start p-3 pb-8 rounded-2xl border backdrop-blur-md relative overflow-hidden group w-full h-full transition-all duration-300 active:scale-95
+      className={`flex flex-col items-start p-4 pb-12 rounded-3xl border backdrop-blur-md relative overflow-hidden group w-full h-full transition-all duration-300 active:scale-95
         ${isDark 
           ? 'bg-white/5 border-white/10 hover:bg-white/[0.08]' 
           : 'bg-white border-slate-200 shadow-sm hover:bg-slate-50'}`}
@@ -117,7 +117,7 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, iconType, progress = 0
       {renderIcon()}
       
       <div className="text-left flex-1 relative z-10 w-full">
-        <h3 className={`text-[12px] font-bold leading-tight transition-colors line-clamp-2
+        <h3 className={`text-[13px] font-bold leading-tight transition-colors line-clamp-2
           ${isDark ? 'text-white/90' : 'text-slate-900'}`}>
           {title}
         </h3>
