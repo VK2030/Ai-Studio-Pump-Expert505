@@ -500,6 +500,12 @@ const App: React.FC = () => {
                           </div>
                         </AnimatedContent>
 
+                        <AnimatedContent distance={20} delay={0.18} direction="vertical">
+                          <p className={`text-[10px] font-black uppercase tracking-widest px-6 pt-2 pb-1 ${isDark ? 'text-white/30' : 'text-slate-400'}`}>
+                            Отображение для конкурсанта
+                          </p>
+                        </AnimatedContent>
+
                         <AnimatedContent distance={30} delay={0.2} direction="vertical">
                           <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
                             ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
@@ -600,7 +606,7 @@ const App: React.FC = () => {
 
   return (
     <div className={`relative h-screen max-w-md mx-auto shadow-2xl flex flex-col overflow-hidden transition-all duration-500 ${appBg}`}>
-      <div className="absolute top-4 right-6 z-[120]">
+      <div className="absolute top-4 right-4 z-[120]">
         <CloudStatus status={syncStatus} />
       </div>
       <AnimatePresence mode="wait">
