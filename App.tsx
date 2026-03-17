@@ -262,29 +262,29 @@ const App: React.FC = () => {
             switch (activeTab) {
               case 'home':
                 return (
-                  <div className="flex-1 flex flex-col px-4 pb-2 gap-3 overflow-hidden">
+                  <div className="flex-1 flex flex-col px-4 pb-2 gap-2 overflow-hidden">
                     <div className="flex flex-col gap-2 flex-shrink-0">
                       <AnimatedContent distance={30} delay={0.1} direction="vertical">
-                        <div className={`w-full p-4 rounded-3xl border backdrop-blur-md relative overflow-hidden group flex items-center justify-between transition-all
+                        <div className={`w-full p-3 rounded-2xl border backdrop-blur-md relative overflow-hidden group flex items-center justify-between transition-all
                           ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-slate-200 shadow-sm text-slate-900'}`}>
-                          <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border transition-colors
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-colors
                               ${isDark ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-500'}`}>
-                              <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2">
+                              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                 <path d="M9 14l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
                               </svg>
                             </div>
                             <div className="flex flex-col items-start">
-                              <span className="text-[9px] uppercase tracking-widest text-indigo-500 font-black">Раздел</span>
-                              <span className="font-bold text-sm">Тестирование</span>
+                              <span className="text-[8px] uppercase tracking-widest text-indigo-500 font-black">Раздел</span>
+                              <span className="font-bold text-xs">Тестирование</span>
                             </div>
                           </div>
                         </div>
                       </AnimatedContent>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 flex-1 min-h-0 overflow-y-auto pr-1">
+                    <div className="grid grid-cols-2 gap-2 flex-1 min-h-0 overflow-y-auto pr-1">
                       {MODULES.map((m, index) => (
                         <AnimatedContent
                           key={m.id}
@@ -304,26 +304,26 @@ const App: React.FC = () => {
                       ))}
                     </div>
 
-                    <div className="flex flex-col gap-2 flex-shrink-0 mt-2">
+                    <div className="flex flex-col gap-2 flex-shrink-0 mt-1">
                       <AnimatedContent distance={30} delay={0.8} direction="vertical">
                         <button 
                           onClick={() => setActiveTab('tasks')}
-                          className={`w-full p-4 rounded-3xl border backdrop-blur-md relative overflow-hidden group flex items-center justify-between active:scale-[0.98] transition-all
+                          className={`w-full p-3 rounded-2xl border backdrop-blur-md relative overflow-hidden group flex items-center justify-between active:scale-[0.98] transition-all
                             ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-slate-200 shadow-sm text-slate-900'}`}
                         >
-                          <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border transition-colors
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-colors
                               ${isDark ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-500'}`}>
-                              <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.5">
                                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
                               </svg>
                             </div>
                             <div className="flex flex-col items-start">
-                              <span className="text-[9px] uppercase tracking-widest text-indigo-500 font-black">Раздел</span>
-                              <span className="font-bold text-sm">Упражнения</span>
+                              <span className="text-[8px] uppercase tracking-widest text-indigo-500 font-black">Раздел</span>
+                              <span className="font-bold text-xs">Упражнения</span>
                             </div>
                           </div>
-                          <svg viewBox="0 0 24 24" className={`w-5 h-5 opacity-30 group-hover:opacity-100 transition-opacity ${isDark ? 'text-white' : 'text-slate-900'}`} fill="none" stroke="currentColor" strokeWidth="3">
+                          <svg viewBox="0 0 24 24" className={`w-4 h-4 opacity-30 group-hover:opacity-100 transition-opacity ${isDark ? 'text-white' : 'text-slate-900'}`} fill="none" stroke="currentColor" strokeWidth="3">
                             <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </button>
@@ -622,7 +622,7 @@ const App: React.FC = () => {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="flex flex-col h-full w-full relative"
           >
-            <header className="px-6 py-4 pt-10 flex-shrink-0">
+            <header className="px-6 py-2 pt-6 flex-shrink-0">
               <AnimatedContent
                 distance={20}
                 delay={0}
