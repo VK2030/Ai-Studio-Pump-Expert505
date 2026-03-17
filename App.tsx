@@ -264,11 +264,7 @@ const App: React.FC = () => {
                 return (
                   <div className="flex-1 flex flex-col px-4 pb-2 gap-3 overflow-hidden">
                     <div className="flex flex-col gap-2 flex-shrink-0">
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1, duration: 0.5 }}
-                      >
+                      <AnimatedContent distance={30} delay={0.1} direction="vertical">
                         <div className={`w-full p-4 rounded-3xl border backdrop-blur-md relative overflow-hidden group flex items-center justify-between transition-all
                           ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-slate-200 shadow-sm text-slate-900'}`}>
                           <div className="flex items-center gap-4">
@@ -285,10 +281,10 @@ const App: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                      </motion.div>
+                      </AnimatedContent>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 flex-1 min-h-0 overflow-y-auto pr-1">
+                    <div className="grid grid-cols-2 gap-3 flex-1 min-h-0 overflow-y-auto">
                       {MODULES.map((m, index) => (
                         <AnimatedContent
                           key={m.id}
@@ -309,11 +305,7 @@ const App: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col gap-2 flex-shrink-0 mt-2">
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4, duration: 0.5 }}
-                      >
+                      <AnimatedContent distance={30} delay={0.8} direction="vertical">
                         <button 
                           onClick={() => setActiveTab('tasks')}
                           className={`w-full p-4 rounded-3xl border backdrop-blur-md relative overflow-hidden group flex items-center justify-between active:scale-[0.98] transition-all
@@ -335,7 +327,7 @@ const App: React.FC = () => {
                             <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </button>
-                      </motion.div>
+                      </AnimatedContent>
                     </div>
                   </div>
                 );
@@ -491,6 +483,23 @@ const App: React.FC = () => {
 
                     {userRole === 'admin' && (
                       <>
+                        <AnimatedContent distance={30} delay={0.15} direction="vertical">
+                          <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
+                            ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
+                            <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Вход по паролю</span>
+                            <button 
+                              onClick={toggleLoginRequirement}
+                              className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
+                                ${isLoginRequired ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
+                            >
+                              <div 
+                                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
+                                  ${isLoginRequired ? 'left-7' : 'left-1'}`}
+                              />
+                            </button>
+                          </div>
+                        </AnimatedContent>
+
                         <AnimatedContent distance={30} delay={0.2} direction="vertical">
                           <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
                             ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
@@ -508,7 +517,7 @@ const App: React.FC = () => {
                           </div>
                         </AnimatedContent>
 
-                        <AnimatedContent distance={30} delay={0.3} direction="vertical">
+                        <AnimatedContent distance={30} delay={0.25} direction="vertical">
                           <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
                             ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                             <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Подсвечивать корректность</span>
@@ -525,7 +534,7 @@ const App: React.FC = () => {
                           </div>
                         </AnimatedContent>
 
-                        <AnimatedContent distance={30} delay={0.35} direction="vertical">
+                        <AnimatedContent distance={30} delay={0.3} direction="vertical">
                           <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
                             ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                             <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Правильный ответ в истории</span>
@@ -537,23 +546,6 @@ const App: React.FC = () => {
                               <div 
                                 className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
                                   ${isHistoryAnswersEnabled ? 'left-7' : 'left-1'}`}
-                              />
-                            </button>
-                          </div>
-                        </AnimatedContent>
-
-                        <AnimatedContent distance={30} delay={0.4} direction="vertical">
-                          <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
-                            ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                            <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Вход по паролю</span>
-                            <button 
-                              onClick={toggleLoginRequirement}
-                              className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
-                                ${isLoginRequired ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
-                            >
-                              <div 
-                                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
-                                  ${isLoginRequired ? 'left-7' : 'left-1'}`}
                               />
                             </button>
                           </div>

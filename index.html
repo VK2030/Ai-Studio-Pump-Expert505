@@ -16,19 +16,13 @@
             -webkit-tap-highlight-color: transparent;
             transition: background-color 0.3s ease;
         }
-        /* Custom scrollbar */
+        /* Hide scrollbar for all elements */
+        * {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
         ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #1e3a8a;
-            border-radius: 10px;
-        }
-        .light-theme ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
+            display: none;
         }
         * {
             transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease, shadow 0.3s ease;
