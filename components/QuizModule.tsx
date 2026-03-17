@@ -5,6 +5,8 @@ import { QUIZ_QUESTIONS, MODULES } from '../constants';
 import { QuizQuestion } from '../types';
 import AnimatedContent from './AnimatedContent';
 
+import CloudStatus from './CloudStatus';
+
 interface QuizModuleProps {
   moduleId?: string;
   theme?: 'dark' | 'light';
@@ -12,6 +14,7 @@ interface QuizModuleProps {
   isTimerEnabled: boolean;
   isHighlightEnabled: boolean;
   isHistoryAnswersEnabled: boolean;
+  syncStatus?: 'syncing' | 'synced' | 'error';
   onClose: () => void;
   onExitToApp?: () => void;
 }
@@ -35,6 +38,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   isTimerEnabled, 
   isHighlightEnabled, 
   isHistoryAnswersEnabled,
+  syncStatus = 'synced',
   onClose, 
   onExitToApp 
 }) => {
@@ -332,25 +336,6 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     
     return (
       <div className="flex flex-col h-full overflow-hidden">
-        <div className="absolute top-2 left-0 right-0 z-[110] flex justify-center pointer-events-none">
-          <div className={`px-3 py-1 rounded-full border backdrop-blur-md flex items-center gap-2 transition-all duration-500 ${
-            saveStatus === 'error' ? 'bg-red-500/20 border-red-500/30 text-red-500' : 
-            saveStatus === 'saving' ? 'bg-amber-500/20 border-amber-500/30 text-amber-500' :
-            'bg-green-500/20 border-green-500/30 text-green-500'
-          }`}>
-            <div className={`w-1.5 h-1.5 rounded-full ${
-              saveStatus === 'error' ? 'bg-red-500' : 
-              saveStatus === 'saving' ? 'bg-amber-500 animate-pulse' : 
-              'bg-green-500'
-            }`}></div>
-            <span className="text-[8px] font-black uppercase tracking-widest">
-              {saveStatus === 'error' ? 'Ошибка сохранения' : 
-               saveStatus === 'saving' ? 'Сохранение в облако...' : 
-               'Облако: Синхронизировано'}
-            </span>
-          </div>
-        </div>
-
         <header className={`p-4 pt-10 border-b relative overflow-hidden flex-shrink-0 ${isDark ? 'bg-[#0c1e3a] border-white/10' : 'bg-white border-slate-200'}`}>
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-2">
@@ -621,7 +606,14 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   };
 
   const mainBg = isDark ? 'bg-[#081221]' : 'bg-slate-50';
-  return ( <div className={`fixed inset-0 z-[60] flex flex-col ${mainBg}`}> {screen === 'menu' && renderMenu()} {screen === 'quiz' && renderQuiz()} {screen === 'results' && renderResults()} {screen === 'history' && renderHistory()} </div> );
+  return ( 
+    <div className={`fixed inset-0 z-[60] flex flex-col ${mainBg}`}> 
+      {screen === 'menu' && renderMenu()} 
+      {screen === 'quiz' && renderQuiz()} 
+      {screen === 'results' && renderResults()} 
+      {screen === 'history' && renderHistory()} 
+    </div> 
+  );
 };
 
 export default QuizModule;

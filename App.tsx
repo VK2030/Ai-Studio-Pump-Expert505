@@ -10,6 +10,8 @@ import AnimatedContent from './components/AnimatedContent';
 import SulfateGame from './components/SulfateGame';
 import SplitText from './components/SplitText';
 
+import CloudStatus from './components/CloudStatus';
+
 interface QuizHistoryEntry {
   date: string;
   session: number;
@@ -242,34 +244,6 @@ const App: React.FC = () => {
   };
 
   const isDark = theme === 'dark';
-
-  const testSupabaseConnection = async () => {
-    setSyncStatus('syncing');
-    try {
-      const response = await fetch('/api/history', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          moduleId: 'test-connection',
-          score: '0/0',
-          session: 0,
-          incorrectAnswers: [],
-          date: new Date().toISOString()
-        })
-      });
-      if (response.ok) {
-        alert('✅ Тестовая запись успешно создана в Supabase!');
-        loadData();
-      } else {
-        const err = await response.json();
-        alert('❌ Ошибка сервера: ' + err.error);
-        setSyncStatus('error');
-      }
-    } catch (error: any) {
-      alert('❌ Ошибка сети: ' + error.message);
-      setSyncStatus('error');
-    }
-  };
 
   const renderContent = () => {
     const key = `${activeTab}-${selectedModule ? 'modal' : 'main'}-${activeGame ? 'game' : 'none'}`;
@@ -585,25 +559,6 @@ const App: React.FC = () => {
                             </button>
                           </div>
                         </AnimatedContent>
-
-                        <AnimatedContent distance={30} delay={0.45} direction="vertical">
-                          <button 
-                            onClick={testSupabaseConnection}
-                            className={`w-full p-6 rounded-[2rem] border flex items-center gap-4 backdrop-blur-md active:scale-[0.98] transition-all
-                              ${isDark ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}`}
-                          >
-                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border
-                              ${isDark ? 'bg-indigo-500/20 border-indigo-500/30' : 'bg-white border-indigo-100'}`}>
-                              <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                              </svg>
-                            </div>
-                            <div className="flex flex-col items-start">
-                              <span className="font-bold text-sm">Проверить связь с базой</span>
-                              <span className="text-[10px] opacity-60">Создать тестовую запись в Supabase</span>
-                            </div>
-                          </button>
-                        </AnimatedContent>
                       </>
                     )}
                   </div>
@@ -629,7 +584,7 @@ const App: React.FC = () => {
                         
                         <h3 className={`text-xl font-black mb-2 uppercase tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Типы минеральных солей</h3>
                         <p className={`text-xs mb-6 leading-relaxed ${isDark ? 'text-white/40' : 'text-slate-500'}`}>
-                          Интерактивное упражнение на поиск минеральных солей
+                        Интерактивное упражнение на поиск минеральных солей
                         </p>
                         
                         <button 
@@ -654,6 +609,9 @@ const App: React.FC = () => {
 
   return (
     <div className={`relative h-screen max-w-md mx-auto shadow-2xl flex flex-col overflow-hidden transition-all duration-500 ${appBg}`}>
+      <div className="absolute top-4 right-6 z-[120]">
+        <CloudStatus status={syncStatus} />
+      </div>
       <AnimatePresence mode="wait">
         {!isAuthorized ? (
           <motion.div
@@ -671,7 +629,7 @@ const App: React.FC = () => {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="flex flex-col h-full w-full"
+            className="flex flex-col h-full w-full relative"
           >
             <header className="px-6 py-4 pt-10 flex-shrink-0">
               <AnimatedContent
@@ -682,16 +640,6 @@ const App: React.FC = () => {
                 <div className="flex flex-col">
                   <div className="flex items-center justify-between">
                     <span className="text-indigo-500 text-[12px] font-black uppercase tracking-[0.3em]">Обучение</span>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center justify-center w-4 h-4">
-                        <div 
-                          title={syncStatus === 'syncing' ? 'Синхронизация' : syncStatus === 'error' ? 'Ошибка связи' : 'Подключено'}
-                          className={`w-2 h-2 rounded-full shadow-sm transition-all duration-500 ${
-                            syncStatus === 'syncing' ? 'bg-amber-500 animate-pulse' : syncStatus === 'error' ? 'bg-red-500' : 'bg-green-500'
-                          }`}
-                        ></div>
-                      </div>
-                    </div>
                   </div>
                   {activeTab === 'profile' ? (
                     <SplitText
@@ -804,10 +752,9 @@ const App: React.FC = () => {
             <ModuleDetail 
               module={selectedModule} 
               theme={theme} 
-              userRole={userRole}
-              isTimerEnabled={isTimerEnabled}
               isHighlightEnabled={isHighlightEnabled}
               isHistoryAnswersEnabled={isHistoryAnswersEnabled}
+              syncStatus={syncStatus}
               onClose={() => { setSelectedModule(null); loadData(); }} 
             />
           </motion.div>
@@ -824,7 +771,7 @@ const App: React.FC = () => {
             transition={{ duration: 0.3 }}
             className="fixed inset-0 z-[70]"
           >
-            <SulfateGame isDark={isDark} onClose={() => setActiveGame(null)} />
+            <SulfateGame isDark={isDark} syncStatus={syncStatus} onClose={() => setActiveGame(null)} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -840,7 +787,6 @@ const NavButton: React.FC<{ isDark: boolean; active: boolean; onClick: () => voi
         scale: active ? 1.1 : 1,
         y: active ? -2 : 0
       }}
-      whileTap={{ scale: 0.9 }}
       transition={{ type: 'spring', stiffness: 400, damping: 17 }}
     >
       <div className="relative">

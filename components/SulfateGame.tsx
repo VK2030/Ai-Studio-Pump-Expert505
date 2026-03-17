@@ -2,6 +2,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import CloudStatus from './CloudStatus';
+
 // --- Константы данных ---
 const TOPICS = {
     sulfates: {
@@ -43,9 +45,10 @@ const GAME_TIME = 30;
 interface SulfateGameProps {
   onClose: () => void;
   isDark?: boolean;
+  syncStatus?: 'syncing' | 'synced' | 'error';
 }
 
-const SulfateGame: React.FC<SulfateGameProps> = ({ onClose, isDark = true }) => {
+const SulfateGame: React.FC<SulfateGameProps> = ({ onClose, isDark = true, syncStatus = 'synced' }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const particlesContainerRef = useRef<HTMLDivElement>(null);
