@@ -10,6 +10,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+if (!supabaseUrl) console.warn("SUPABASE_URL is missing in environment");
+if (!supabaseServiceKey) console.warn("SUPABASE_SERVICE_ROLE_KEY is missing in environment");
+
 const supabase = (supabaseUrl && supabaseServiceKey) 
   ? createClient(supabaseUrl, supabaseServiceKey)
   : null;
@@ -20,6 +23,8 @@ app.get("/api/debug/supabase", (req, res) => {
     status: "ok",
     configured: !!(supabaseUrl && supabaseServiceKey),
     initialized: !!supabase,
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseServiceKey,
     env: process.env.NODE_ENV || "development"
   });
 });
@@ -201,6 +206,7 @@ app.post("/api/quiz/check", async (req, res) => {
 app.post("/api/login", async (req, res) => {
   try {
     const { role, password } = req.body;
+    console.log(`Login attempt: role=${role}, password=${password}`);
     
     if (!role || !password) {
       return res.status(400).json({ error: "Role and password are required" });
@@ -210,34 +216,43 @@ app.post("/api/login", async (req, res) => {
     await new Promise(resolve => setTimeout(resolve, 500));
 
     // Если Supabase не настроен, используем временные дефолтные пароли (для отладки)
-    // В продакшене это должно быть строго в базе
     const defaultPasswords: Record<string, string> = {
       contestant: '7777',
       admin: '2026'
     };
 
     let correctPassword = defaultPasswords[role];
+    console.log(`Default password for ${role}: ${correctPassword}`);
 
     if (supabase) {
+      console.log(`Checking Supabase for ${role}_password...`);
       const { data, error } = await supabase
         .from("app_settings")
         .select("value")
         .eq("key", `${role}_password`)
         .single();
       
-      if (!error && data) {
+      if (error) {
+        console.error(`Supabase error fetching ${role}_password:`, error.message);
+      } else if (data) {
         correctPassword = data.value;
+        console.log(`Supabase password found for ${role}: ${correctPassword}`);
+      } else {
+        console.log(`No custom password found in Supabase for ${role}, using default.`);
       }
+    } else {
+      console.warn("Supabase not initialized, using default passwords.");
     }
 
-    if (password === correctPassword) {
-      // В идеале здесь нужно генерировать JWT токен
-      // Для текущей архитектуры возвращаем успех и роль
+    if (password === String(correctPassword)) {
+      console.log(`Login successful for ${role}`);
       res.json({ success: true, role });
     } else {
+      console.warn(`Login failed for ${role}: expected ${correctPassword}, got ${password}`);
       res.status(401).json({ success: false, error: "Invalid password" });
     }
   } catch (error: any) {
+    console.error("Login endpoint error:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -249,8 +264,9 @@ const autoSyncQuestions = async () => {
     return;
   }
 
-  console.log("🚀 Starting auto-sync of questions...");
+  console.log("🚀 Starting auto-sync of questions and settings...");
   try {
+    // 1. Синхронизация вопросов
     const rows: any[] = [];
     for (const moduleId in QUIZ_QUESTIONS) {
       QUIZ_QUESTIONS[moduleId].forEach((q: any, index: number) => {
@@ -264,12 +280,34 @@ const autoSyncQuestions = async () => {
       });
     }
 
-    const { error } = await supabase
+    const { error: questionsError } = await supabase
       .from("quiz_questions")
       .upsert(rows, { onConflict: 'id' });
 
-    if (error) throw error;
+    if (questionsError) throw questionsError;
     console.log(`✅ Auto-sync completed: ${rows.length} questions updated.`);
+
+    // 2. Инициализация дефолтных паролей, если их нет
+    const defaultSettings = [
+      { key: 'admin_password', value: '2026' },
+      { key: 'contestant_password', value: '7777' }
+    ];
+
+    for (const setting of defaultSettings) {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", setting.key)
+        .single();
+      
+      if (!data) {
+        console.log(`Setting default ${setting.key}...`);
+        await supabase
+          .from("app_settings")
+          .insert([setting]);
+      }
+    }
+    console.log("✅ Settings initialization checked.");
   } catch (error) {
     console.error("❌ Auto-sync failed:", error);
   }
