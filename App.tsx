@@ -80,6 +80,9 @@ const App: React.FC = () => {
   }, [theme]);
 
   const [syncStatus, setSyncStatus] = useState<'syncing' | 'synced' | 'error'>('synced');
+  const [adminPassword, setAdminPassword] = useState<string>(() => {
+    return sessionStorage.getItem('app_admin_password') || '';
+  });
 
   const [historyFilter, setHistoryFilter] = useState<string | 'all'>('all');
 
@@ -159,9 +162,13 @@ const App: React.FC = () => {
     return Math.round(sum / MODULES.length);
   }, [moduleProgress]);
 
-  const handleAuthorize = (role: 'contestant' | 'admin') => {
+  const handleAuthorize = (role: 'contestant' | 'admin', password?: string) => {
     setUserRole(role);
     localStorage.setItem('app_user_role', role);
+    if (role === 'admin' && password) {
+      setAdminPassword(password);
+      sessionStorage.setItem('app_admin_password', password);
+    }
     setIsAuthorized(true);
   };
 
@@ -181,6 +188,23 @@ const App: React.FC = () => {
     localStorage.setItem('app_highlight_enabled', String(newValue));
   };
 
+  const updateConfig = async (key: string, value: any) => {
+    if (userRole !== 'admin') return;
+    
+    try {
+      await fetch('/api/config', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-password': adminPassword
+        },
+        body: JSON.stringify({ key, value })
+      });
+    } catch (error) {
+      console.error(`Failed to sync global config for ${key}:`, error);
+    }
+  };
+
   const toggleHistoryAnswers = async () => {
     const newValue = !isHistoryAnswersEnabled;
     setIsHistoryAnswersEnabled(newValue);
@@ -188,15 +212,7 @@ const App: React.FC = () => {
     
     // Sync with global config if admin
     if (userRole === 'admin') {
-      try {
-        await fetch('/api/config', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: 'isHistoryAnswersEnabled', value: newValue })
-        });
-      } catch (error) {
-        console.error("Failed to sync global config:", error);
-      }
+      updateConfig('isHistoryAnswersEnabled', newValue);
     }
   };
 
@@ -219,7 +235,10 @@ const App: React.FC = () => {
       console.log("Attempting to clear global history...");
       setSyncStatus('syncing');
       try {
-        const response = await fetch('/api/history', { method: 'DELETE' });
+        const response = await fetch('/api/history', { 
+          method: 'DELETE',
+          headers: { 'x-admin-password': adminPassword }
+        });
         const result = await response.json();
         
         if (response.ok) {
@@ -556,6 +575,52 @@ const App: React.FC = () => {
                             </button>
                           </div>
                         </AnimatedContent>
+
+                        <AnimatedContent distance={20} delay={0.33} direction="vertical">
+                          <p className={`text-[10px] font-black uppercase tracking-widest px-6 pt-2 pb-1 ${isDark ? 'text-white/30' : 'text-slate-400'}`}>
+                            Безопасность (Пароли)
+                          </p>
+                        </AnimatedContent>
+
+                        <AnimatedContent distance={30} delay={0.35} direction="vertical">
+                          <div className={`p-6 rounded-[2rem] border flex flex-col space-y-4 backdrop-blur-md
+                            ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
+                            <div className="flex flex-col space-y-2">
+                              <label className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white/40' : 'text-slate-400'}`}>Пароль администратора (4 цифры)</label>
+                              <div className="flex gap-2">
+                                <input 
+                                  type="password" 
+                                  maxLength={4}
+                                  placeholder="****"
+                                  className={`flex-1 h-12 rounded-xl border px-4 text-center font-mono tracking-widest outline-none transition-all
+                                    ${isDark ? 'bg-white/5 border-white/10 text-white focus:border-blue-500/50' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500/50'}`}
+                                  onBlur={(e) => {
+                                    if (e.target.value.length === 4) {
+                                      updateConfig('admin_password', e.target.value);
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex flex-col space-y-2">
+                              <label className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white/40' : 'text-slate-400'}`}>Пароль конкурсанта (4 цифры)</label>
+                              <div className="flex gap-2">
+                                <input 
+                                  type="password" 
+                                  maxLength={4}
+                                  placeholder="****"
+                                  className={`flex-1 h-12 rounded-xl border px-4 text-center font-mono tracking-widest outline-none transition-all
+                                    ${isDark ? 'bg-white/5 border-white/10 text-white focus:border-blue-500/50' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500/50'}`}
+                                  onBlur={(e) => {
+                                    if (e.target.value.length === 4) {
+                                      updateConfig('contestant_password', e.target.value);
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </AnimatedContent>
                       </>
                     )}
                   </div>
@@ -618,7 +683,10 @@ const App: React.FC = () => {
             transition={{ duration: 0.3 }}
             className="absolute inset-0 z-[100]"
           >
-            <LoginOverlay theme={theme} onAuthorized={handleAuthorize} />
+            <LoginOverlay 
+              theme={theme} 
+              onAuthorized={(role, password) => handleAuthorize(role, password)} 
+            />
           </motion.div>
         ) : (
           <motion.div

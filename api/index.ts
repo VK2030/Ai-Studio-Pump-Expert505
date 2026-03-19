@@ -67,7 +67,21 @@ app.post("/api/history", async (req, res) => {
 // API: Очистка (Admin)
 app.delete("/api/history", async (req, res) => {
   try {
+    const adminPassword = req.headers['x-admin-password'];
     if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
+
+    // Проверка пароля админа
+    const { data: authData } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "admin_password")
+      .single();
+    
+    const correctPassword = authData?.value || '2026';
+    if (adminPassword !== correctPassword) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
     const { count, error } = await supabase
       .from("results")
       .delete({ count: 'exact' })
@@ -91,7 +105,10 @@ app.get("/api/config", async (req, res) => {
     
     const config: Record<string, any> = {};
     data.forEach(item => {
-      config[item.key] = item.value;
+      // Не отправляем пароли на фронтенд
+      if (!item.key.endsWith('_password')) {
+        config[item.key] = item.value;
+      }
     });
     
     res.json(config);
@@ -104,14 +121,72 @@ app.get("/api/config", async (req, res) => {
 app.post("/api/config", async (req, res) => {
   try {
     const { key, value } = req.body;
+    const adminPassword = req.headers['x-admin-password'];
     if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
     
+    // Проверка пароля админа
+    const { data: authData } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "admin_password")
+      .single();
+    
+    const correctPassword = authData?.value || '2026';
+    if (adminPassword !== correctPassword) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
     const { error } = await supabase
       .from("app_settings")
       .upsert({ key, value }, { onConflict: 'key' });
       
     if (error) throw error;
     res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API: Вход (Безопасная проверка пароля на сервере)
+app.post("/api/login", async (req, res) => {
+  try {
+    const { role, password } = req.body;
+    
+    if (!role || !password) {
+      return res.status(400).json({ error: "Role and password are required" });
+    }
+
+    // Имитация задержки для предотвращения быстрого перебора (brute force)
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Если Supabase не настроен, используем временные дефолтные пароли (для отладки)
+    // В продакшене это должно быть строго в базе
+    const defaultPasswords: Record<string, string> = {
+      contestant: '7777',
+      admin: '2026'
+    };
+
+    let correctPassword = defaultPasswords[role];
+
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", `${role}_password`)
+        .single();
+      
+      if (!error && data) {
+        correctPassword = data.value;
+      }
+    }
+
+    if (password === correctPassword) {
+      // В идеале здесь нужно генерировать JWT токен
+      // Для текущей архитектуры возвращаем успех и роль
+      res.json({ success: true, role });
+    } else {
+      res.status(401).json({ success: false, error: "Invalid password" });
+    }
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
