@@ -1,8 +1,10 @@
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
+import { QUIZ_QUESTIONS } from "../constants.js";
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Инициализация Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -147,6 +149,54 @@ app.post("/api/config", async (req, res) => {
   }
 });
 
+// API: Получение вопросов модуля (без правильных ответов)
+app.get("/api/quiz/questions/:moduleId", async (req, res) => {
+  try {
+    const { moduleId } = req.params;
+    if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
+
+    const { data, error } = await supabase
+      .from("quiz_questions")
+      .select("id, text, options")
+      .eq("module_id", moduleId)
+      .order("id", { ascending: true });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API: Проверка ответа (на сервере)
+app.post("/api/quiz/check", async (req, res) => {
+  try {
+    const { questionId, selectedOptions } = req.body;
+    if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
+
+    const { data, error } = await supabase
+      .from("quiz_questions")
+      .select("correct")
+      .eq("id", questionId)
+      .single();
+
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: "Question not found" });
+
+    const correctIndices = data.correct as number[];
+    const isCorrect = 
+      selectedOptions.length === correctIndices.length &&
+      selectedOptions.every((opt: number) => correctIndices.includes(opt));
+
+    res.json({ 
+      isCorrect, 
+      correctIndices: correctIndices
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // API: Вход (Безопасная проверка пароля на сервере)
 app.post("/api/login", async (req, res) => {
   try {
@@ -191,5 +241,41 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Автоматическая синхронизация при запуске сервера
+const autoSyncQuestions = async () => {
+  if (!supabase) {
+    console.warn("Auto-sync skipped: Supabase not initialized");
+    return;
+  }
+
+  console.log("🚀 Starting auto-sync of questions...");
+  try {
+    const rows: any[] = [];
+    for (const moduleId in QUIZ_QUESTIONS) {
+      QUIZ_QUESTIONS[moduleId].forEach((q: any, index: number) => {
+        rows.push({
+          id: `${moduleId}_${index}`,
+          module_id: moduleId,
+          text: q.text,
+          options: q.options,
+          correct: q.correct
+        });
+      });
+    }
+
+    const { error } = await supabase
+      .from("quiz_questions")
+      .upsert(rows, { onConflict: 'id' });
+
+    if (error) throw error;
+    console.log(`✅ Auto-sync completed: ${rows.length} questions updated.`);
+  } catch (error) {
+    console.error("❌ Auto-sync failed:", error);
+  }
+};
+
+// Запуск авто-синхронизации
+autoSyncQuestions();
 
 export default app;

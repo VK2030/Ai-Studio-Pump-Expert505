@@ -55,6 +55,8 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   const [history, setHistory] = useState<QuizHistoryEntry[]>([]);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  const [correctIndicesForCurrentQuestion, setCorrectIndicesForCurrentQuestion] = useState<number[] | null>(null);
   
   const [timeLeft, setTimeLeft] = useState(30);
   const timerRef = useRef<any | null>(null);
@@ -126,15 +128,34 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     return arr;
   };
 
-  const startQuiz = () => {
+  const startQuiz = async () => {
+    if (!moduleId) return;
     finishQuizRef.current = false;
-    const questionsForModule = (moduleId && QUIZ_QUESTIONS[moduleId]) || [];
-    const selected = shuffleArray(questionsForModule).slice(0, Math.min(10, questionsForModule.length));
-    setSessionQuestions(selected);
-    setCurrentQuestionIdx(0);
-    setCorrectAnswersCount(0);
-    setIncorrectAnswers([]);
-    setScreen('quiz');
+    setIsLoadingQuestions(true);
+    
+    try {
+      const response = await fetch(`/api/quiz/questions/${moduleId}`);
+      if (!response.ok) throw new Error('Failed to fetch questions');
+      const questionsForModule = await response.json();
+      
+      if (questionsForModule.length === 0) {
+        alert('В этом модуле пока нет вопросов.');
+        setIsLoadingQuestions(false);
+        return;
+      }
+
+      const selected = shuffleArray(questionsForModule).slice(0, Math.min(10, questionsForModule.length));
+      setSessionQuestions(selected);
+      setCurrentQuestionIdx(0);
+      setCorrectAnswersCount(0);
+      setIncorrectAnswers([]);
+      setScreen('quiz');
+    } catch (error) {
+      console.error("Error starting quiz:", error);
+      alert('Ошибка при загрузке вопросов. Попробуйте позже.');
+    } finally {
+      setIsLoadingQuestions(false);
+    }
   };
 
   useEffect(() => {
@@ -161,6 +182,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
       setShuffledOptions(shuffleArray(sessionQuestions[currentQuestionIdx].options));
       setSelectedOptions([]);
       setIsAnswerConfirmed(false);
+      setCorrectIndicesForCurrentQuestion(null);
     }
   }, [currentQuestionIdx, sessionQuestions, screen]);
 
@@ -169,24 +191,67 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     setSelectedOptions(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]);
   };
 
-  const confirmAnswer = (isTimeout = false) => {
-    if (isAnswerConfirmed) return;
+  const [isCheckingAnswer, setIsCheckingAnswer] = useState(false);
+
+  const confirmAnswer = async (isTimeout = false) => {
+    if (isAnswerConfirmed || isCheckingAnswer) return;
     if (!isTimeout && selectedOptions.length === 0) return;
     if (timerRef.current) clearInterval(timerRef.current);
-    setIsAnswerConfirmed(true);
     
+    setIsCheckingAnswer(true);
     const q = sessionQuestions[currentQuestionIdx];
-    const correctOptionTexts = q.correct.map(idx => q.options[idx]);
-    const selectedOptionTexts = selectedOptions.map(idx => shuffledOptions[idx]);
-    const isFullyCorrect = !isTimeout && correctOptionTexts.length === selectedOptionTexts.length && correctOptionTexts.every(text => selectedOptionTexts.includes(text));
+    
+    // Находим оригинальные индексы выбранных вариантов
+    const originalSelectedIndices = selectedOptions.map(idx => {
+      const selectedText = shuffledOptions[idx];
+      return q.options.indexOf(selectedText);
+    }).filter(idx => idx !== -1);
+    
+    try {
+      const response = await fetch('/api/quiz/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          questionId: q.id,
+          selectedOptions: originalSelectedIndices
+        })
+      });
+      
+      if (!response.ok) throw new Error('Failed to check answer');
+      const { isCorrect, correctIndices } = await response.json();
 
-    if (isFullyCorrect) setCorrectAnswersCount(prev => prev + 1);
-    else setIncorrectAnswers(prev => [...prev, { question: q.text, userAnswer: isTimeout ? "Время истекло" : (selectedOptionTexts.join(', ') || "Нет ответа"), correctAnswer: correctOptionTexts.join(', ') }]);
+      setCorrectIndicesForCurrentQuestion(correctIndices);
+      setIsAnswerConfirmed(true);
+      
+      if (isCorrect) {
+        setCorrectAnswersCount(prev => prev + 1);
+      } else {
+        // Если ответ неверный, нам нужны тексты правильных ответов для истории
+        // В идеале сервер должен возвращать их, если мы хотим их показать
+        // Но пока мы можем использовать локальные опции, если они совпадают
+        const correctOptionTexts = correctIndices ? correctIndices.map((idx: number) => q.options[idx]) : ["(Скрыто)"];
+        const selectedOptionTexts = selectedOptions.map(idx => shuffledOptions[idx]);
+        
+        setIncorrectAnswers(prev => [...prev, { 
+          question: q.text, 
+          userAnswer: isTimeout ? "Время истекло" : (selectedOptionTexts.join(', ') || "Нет ответа"), 
+          correctAnswer: correctOptionTexts.join(', ') 
+        }]);
+      }
 
-    setTimeout(() => {
-      if (currentQuestionIdx < sessionQuestions.length - 1) setCurrentQuestionIdx(prev => prev + 1);
-      else finishQuiz();
-    }, 1500);
+      setTimeout(() => {
+        if (currentQuestionIdx < sessionQuestions.length - 1) {
+          setCurrentQuestionIdx(prev => prev + 1);
+        } else {
+          finishQuiz();
+        }
+        setIsCheckingAnswer(false);
+      }, 1500);
+    } catch (error) {
+      console.error("Error checking answer:", error);
+      alert('Ошибка связи с сервером при проверке ответа.');
+      setIsCheckingAnswer(false);
+    }
   };
 
   const finishQuizRef = useRef(false);
@@ -308,8 +373,19 @@ const QuizModule: React.FC<QuizModuleProps> = ({
       </AnimatedContent>
       <div className="w-full space-y-3">
         <AnimatedContent distance={30} delay={0.5} direction="vertical">
-          <button onClick={startQuiz} className={`w-full py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-all shadow-xl border
-            ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200'}`}>Начать тест</button>
+          <button 
+            onClick={startQuiz} 
+            disabled={isLoadingQuestions}
+            className={`w-full py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-all shadow-xl border flex items-center justify-center gap-2
+            ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200'}`}
+          >
+            {isLoadingQuestions ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Загрузка...
+              </>
+            ) : 'Начать тест'}
+          </button>
         </AnimatedContent>
         <AnimatedContent distance={30} delay={0.6} direction="vertical">
           <button onClick={() => setScreen('history')} className={`w-full py-4 rounded-2xl font-bold active:scale-[0.98] transition-all border
@@ -372,8 +448,14 @@ const QuizModule: React.FC<QuizModuleProps> = ({
             <div className="grid grid-cols-1 gap-2">
               {shuffledOptions.map((opt, i) => {
                 const isSelected = selectedOptions.includes(i);
-                const qCorrectTexts = q.correct.map(idx => q.options[idx]);
-                const isCorrect = qCorrectTexts.includes(opt);
+                
+                // Проверяем корректность опции, если ответ уже подтвержден
+                let isCorrect = false;
+                if (isAnswerConfirmed && correctIndicesForCurrentQuestion) {
+                  const originalIdx = q.options.indexOf(opt);
+                  isCorrect = correctIndicesForCurrentQuestion.includes(originalIdx);
+                }
+
                 let btnClass = "w-full p-3.5 rounded-xl text-left transition-all duration-200 border flex items-center gap-3 ";
                 if (!isAnswerConfirmed) {
                   btnClass += isSelected 
@@ -413,14 +495,19 @@ const QuizModule: React.FC<QuizModuleProps> = ({
               >
                 <button 
                   onClick={() => confirmAnswer()} 
-                  disabled={selectedOptions.length === 0} 
-                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl
-                    ${selectedOptions.length > 0 
+                  disabled={selectedOptions.length === 0 || isCheckingAnswer} 
+                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl flex items-center justify-center gap-2
+                    ${selectedOptions.length > 0 && !isCheckingAnswer
                       ? (isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200') 
                       : (isDark ? 'bg-white/5 text-white/20 border-white/20' : 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed')
                     }`}
                 >
-                  Принять ответ
+                  {isCheckingAnswer ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Проверка...
+                    </>
+                  ) : 'Принять ответ'}
                 </button>
               </motion.div>
             ) : (

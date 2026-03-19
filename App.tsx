@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AppSection, ModuleData } from './types';
-import { MODULES } from './constants';
+import { AppSection, ModuleData, QuizQuestion } from './types';
+import { MODULES, QUIZ_QUESTIONS } from './constants';
 import GlassButton from './components/GlassButton';
 import ModuleDetail from './components/ModuleDetail';
 import LoginOverlay from './components/LoginOverlay';
@@ -576,51 +576,6 @@ const App: React.FC = () => {
                           </div>
                         </AnimatedContent>
 
-                        <AnimatedContent distance={20} delay={0.33} direction="vertical">
-                          <p className={`text-[10px] font-black uppercase tracking-widest px-6 pt-2 pb-1 ${isDark ? 'text-white/30' : 'text-slate-400'}`}>
-                            Безопасность (Пароли)
-                          </p>
-                        </AnimatedContent>
-
-                        <AnimatedContent distance={30} delay={0.35} direction="vertical">
-                          <div className={`p-6 rounded-[2rem] border flex flex-col space-y-4 backdrop-blur-md
-                            ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                            <div className="flex flex-col space-y-2">
-                              <label className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white/40' : 'text-slate-400'}`}>Пароль администратора (4 цифры)</label>
-                              <div className="flex gap-2">
-                                <input 
-                                  type="password" 
-                                  maxLength={4}
-                                  placeholder="****"
-                                  className={`flex-1 h-12 rounded-xl border px-4 text-center font-mono tracking-widest outline-none transition-all
-                                    ${isDark ? 'bg-white/5 border-white/10 text-white focus:border-blue-500/50' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500/50'}`}
-                                  onBlur={(e) => {
-                                    if (e.target.value.length === 4) {
-                                      updateConfig('admin_password', e.target.value);
-                                    }
-                                  }}
-                                />
-                              </div>
-                            </div>
-                            <div className="flex flex-col space-y-2">
-                              <label className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white/40' : 'text-slate-400'}`}>Пароль конкурсанта (4 цифры)</label>
-                              <div className="flex gap-2">
-                                <input 
-                                  type="password" 
-                                  maxLength={4}
-                                  placeholder="****"
-                                  className={`flex-1 h-12 rounded-xl border px-4 text-center font-mono tracking-widest outline-none transition-all
-                                    ${isDark ? 'bg-white/5 border-white/10 text-white focus:border-blue-500/50' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500/50'}`}
-                                  onBlur={(e) => {
-                                    if (e.target.value.length === 4) {
-                                      updateConfig('contestant_password', e.target.value);
-                                    }
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </AnimatedContent>
                       </>
                     )}
                   </div>
@@ -817,6 +772,8 @@ const App: React.FC = () => {
             <ModuleDetail 
               module={selectedModule} 
               theme={theme} 
+              userRole={userRole}
+              isTimerEnabled={isTimerEnabled}
               isHighlightEnabled={isHighlightEnabled}
               isHistoryAnswersEnabled={isHistoryAnswersEnabled}
               syncStatus={syncStatus}

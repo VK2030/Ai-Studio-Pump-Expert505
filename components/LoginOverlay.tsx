@@ -53,7 +53,7 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
         const result = await response.json();
         
         if (response.ok && result.success) {
-          onAuthorized(selectedAccount);
+          onAuthorized(selectedAccount, value);
         } else {
           setIsError(true);
           setTimeout(() => { 

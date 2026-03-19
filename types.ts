@@ -16,6 +16,7 @@ export interface ChatMessage {
 }
 
 export interface QuizQuestion {
+  id?: string;
   text: string;
   options: string[];
   correct: number[]; // Changed from number to number[]
