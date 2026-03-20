@@ -1,6 +1,6 @@
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
-import { QUIZ_QUESTIONS } from "./constants_data";
+import { QUIZ_QUESTIONS } from "./constants_data.js";
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -16,6 +16,11 @@ if (!supabaseServiceKey) console.warn("SUPABASE_SERVICE_ROLE_KEY is missing in e
 const supabase = (supabaseUrl && supabaseServiceKey) 
   ? createClient(supabaseUrl, supabaseServiceKey)
   : null;
+
+// API: Простая проверка
+app.get("/api/test", (req, res) => {
+  res.json({ message: "Server is alive" });
+});
 
 // API: Проверка статуса
 app.get("/api/debug/supabase", (req, res) => {
@@ -322,7 +327,7 @@ const autoSyncQuestions = async () => {
   }
 };
 
-// Запуск авто-синхронизации
-autoSyncQuestions();
+// Запуск авто-синхронизации (отключено для отладки на Vercel)
+// autoSyncQuestions();
 
 export default app;
