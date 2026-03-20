@@ -1,6 +1,6 @@
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
-import { QUIZ_QUESTIONS } from "../constants";
+import { QUIZ_QUESTIONS } from "./constants_data";
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
