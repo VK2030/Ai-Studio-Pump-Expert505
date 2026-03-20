@@ -1,14 +1,14 @@
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
-import { QUIZ_QUESTIONS } from "../constants.js";
+import { QUIZ_QUESTIONS } from "../constants";
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Инициализация Supabase
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Инициализация Supabase с очисткой ключей
+const supabaseUrl = (process.env.SUPABASE_URL || "").trim();
+const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 
 if (!supabaseUrl) console.warn("SUPABASE_URL is missing in environment");
 if (!supabaseServiceKey) console.warn("SUPABASE_SERVICE_ROLE_KEY is missing in environment");
@@ -249,7 +249,16 @@ app.post("/api/login", async (req, res) => {
       res.json({ success: true, role });
     } else {
       console.warn(`Login failed for ${role}: expected ${correctPassword}, got ${password}`);
-      res.status(401).json({ success: false, error: "Invalid password" });
+      // Возвращаем более детальную ошибку для отладки (временно)
+      res.status(401).json({ 
+        success: false, 
+        error: "Invalid password",
+        debug: {
+          supabaseInitialized: !!supabase,
+          roleRequested: role,
+          usingDefault: correctPassword === defaultPasswords[role]
+        }
+      });
     }
   } catch (error: any) {
     console.error("Login endpoint error:", error);
