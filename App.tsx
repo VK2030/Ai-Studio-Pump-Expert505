@@ -30,18 +30,7 @@ const App: React.FC = () => {
     return (saved as 'dark' | 'light') || 'light';
   });
 
-  const [isLoginRequired, setIsLoginRequired] = useState<boolean>(() => {
-    const saved = localStorage.getItem('app_login_required');
-    return saved === null ? true : saved === 'true';
-  });
-
-  const [isAuthorized, setIsAuthorized] = useState<boolean>(() => {
-    const savedReq = localStorage.getItem('app_login_required');
-    const req = savedReq === null ? true : savedReq === 'true';
-    if (!req) return true;
-    return false;
-  });
-
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<'contestant' | 'admin' | null>(() => {
     return localStorage.getItem('app_user_role') as 'contestant' | 'admin' | null;
   });
@@ -216,14 +205,6 @@ const App: React.FC = () => {
     }
   };
 
-  const toggleLoginRequirement = () => {
-    const newValue = !isLoginRequired;
-    setIsLoginRequired(newValue);
-    localStorage.setItem('app_login_required', String(newValue));
-    if (!newValue) {
-      setIsAuthorized(true);
-    }
-  };
 
   const clearGlobalHistory = async () => {
     if (userRole !== 'admin') {
@@ -502,22 +483,6 @@ const App: React.FC = () => {
 
                     {userRole === 'admin' && (
                       <>
-                        <AnimatedContent distance={30} delay={0.15} direction="vertical">
-                          <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
-                            ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                            <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Вход по паролю</span>
-                            <button 
-                              onClick={toggleLoginRequirement}
-                              className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
-                                ${isLoginRequired ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
-                            >
-                              <div 
-                                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
-                                  ${isLoginRequired ? 'left-7' : 'left-1'}`}
-                              />
-                            </button>
-                          </div>
-                        </AnimatedContent>
 
                         <AnimatedContent distance={20} delay={0.18} direction="vertical">
                           <p className={`text-[10px] font-black uppercase tracking-widest px-6 pt-2 pb-1 ${isDark ? 'text-white/30' : 'text-slate-400'}`}>
