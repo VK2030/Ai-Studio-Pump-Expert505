@@ -74,6 +74,76 @@ const App: React.FC = () => {
   });
 
   const [historyFilter, setHistoryFilter] = useState<string | 'all'>('all');
+  const [telegramStatus, setTelegramStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+
+  const sendHistoryToTelegram = async () => {
+    if (fullHistory.length === 0) {
+      alert("История пуста. Нечего отправлять.");
+      return;
+    }
+
+    setTelegramStatus('sending');
+    try {
+      // Группируем результаты по модулям
+      const statsByModule: Record<string, { count: number, totalScore: number, latestEntry?: QuizHistoryEntry }> = {};
+      fullHistory.forEach(entry => {
+        const modId = entry.moduleId || 'unknown';
+        if (!statsByModule[modId]) {
+          statsByModule[modId] = { count: 0, totalScore: 0, latestEntry: entry };
+        }
+        
+        const scoreParts = entry.score.split('/');
+        const score = parseInt(scoreParts[0]) || 0;
+        statsByModule[modId].count += 1;
+        statsByModule[modId].totalScore += score;
+      });
+
+      let summary = `<b>📊 Сводный отчет о результатах тестирования</b>\n\n`;
+      
+      Object.entries(statsByModule).forEach(([modId, stats]) => {
+        const module = MODULES.find(m => m.id === modId);
+        const recentScores = moduleRecentScores[modId] || [];
+        
+        summary += `🔹 <b>${module?.title || modId}</b>\n`;
+        
+        if (recentScores.length > 0) {
+          summary += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
+        }
+        summary += `   Пройдено раз: ${stats.count}\n`;
+
+        if (stats.latestEntry?.incorrectAnswers && stats.latestEntry.incorrectAnswers.length > 0) {
+          summary += `<blockquote expandable>`;
+          summary += `<b>Ошибки в последнем тесте:</b>\n\n`;
+          stats.latestEntry.incorrectAnswers.forEach((ans, idx) => {
+            summary += `<b>${idx + 1}. ${ans.question}</b>\n`;
+            summary += `❌ Ваш ответ: ${ans.userAnswer}\n`;
+            summary += `✅ Правильный: ${ans.correctAnswer}\n\n`;
+          });
+          summary += `</blockquote>`;
+        }
+        
+        summary += `\n`;
+      });
+
+      const lastEntry = fullHistory[0];
+      summary += `🕒 <i>Последнее обновление: ${new Date().toLocaleString()}</i>`;
+
+      const response = await fetch('/api/telegram/send-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ summary }),
+      });
+
+      if (!response.ok) throw new Error('Failed to send');
+      
+      setTelegramStatus('success');
+      setTimeout(() => setTelegramStatus('idle'), 3000);
+    } catch (error) {
+      console.error(error);
+      setTelegramStatus('error');
+      setTimeout(() => setTelegramStatus('idle'), 3000);
+    }
+  };
 
   const loadData = async () => {
     setSyncStatus('syncing');
@@ -539,6 +609,32 @@ const App: React.FC = () => {
                               />
                             </button>
                           </div>
+                        </AnimatedContent>
+
+                        <AnimatedContent distance={30} delay={0.35} direction="vertical">
+                          <button 
+                            onClick={sendHistoryToTelegram}
+                            disabled={telegramStatus === 'sending'}
+                            className={`w-full p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
+                              ${isDark ? 'bg-indigo-500/10 border-indigo-500/20 text-white' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center
+                                ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'}`}>
+                                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" />
+                                </svg>
+                              </div>
+                              <span className="text-base font-semibold">
+                                {telegramStatus === 'sending' ? 'Отправка...' : 
+                                 telegramStatus === 'success' ? 'Отправлено!' : 
+                                 telegramStatus === 'error' ? 'Ошибка отправки' : 'Отчет в Telegram'}
+                              </span>
+                            </div>
+                            <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-30" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M9 18l6-6-6-6" />
+                            </svg>
+                          </button>
                         </AnimatedContent>
 
                       </>
