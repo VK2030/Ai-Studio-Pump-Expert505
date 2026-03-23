@@ -134,12 +134,16 @@ const App: React.FC = () => {
         body: JSON.stringify({ summary }),
       });
 
-      if (!response.ok) throw new Error('Failed to send');
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Failed to send');
+      }
       
       setTelegramStatus('success');
       setTimeout(() => setTelegramStatus('idle'), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      alert(`Ошибка отправки: ${error.message}`);
       setTelegramStatus('error');
       setTimeout(() => setTelegramStatus('idle'), 3000);
     }
