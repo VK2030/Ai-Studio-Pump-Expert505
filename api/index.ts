@@ -194,20 +194,74 @@ app.post("/api/config", async (req, res) => {
   }
 });
 
-// API: Получение вопросов модуля (без правильных ответов)
+// API: Получение вопросов модуля (с учетом просмотров пользователя)
 app.get("/api/quiz/questions/:moduleId", async (req, res) => {
   try {
     const { moduleId } = req.params;
+    const { userName } = req.query;
     if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
 
-    const { data, error } = await supabase
+    const { data: questions, error: questionsError } = await supabase
       .from("quiz_questions")
       .select("id, text, options")
       .eq("module_id", moduleId)
       .order("id", { ascending: true });
 
-    if (error) throw error;
-    res.json(data || []);
+    if (questionsError) throw questionsError;
+
+    if (userName && questions) {
+      const { data: views, error: viewsError } = await supabase
+        .from("question_views")
+        .select("question_id, view_count")
+        .eq("user_name", userName);
+      
+      if (!viewsError && views) {
+        const viewMap = new Map(views.map(v => [v.question_id, v.view_count]));
+        const enrichedQuestions = questions.map(q => ({
+          ...q,
+          viewCount: viewMap.get(q.id) || 0
+        }));
+        return res.json(enrichedQuestions);
+      }
+    }
+
+    res.json(questions || []);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API: Инкремент просмотров вопросов
+app.post("/api/quiz/views/increment", async (req, res) => {
+  try {
+    const { userName, questionIds } = req.body;
+    if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
+    if (!userName || !questionIds || !Array.isArray(questionIds)) {
+      return res.status(400).json({ error: "Invalid request" });
+    }
+
+    for (const qId of questionIds) {
+      // Получаем текущее количество просмотров
+      const { data, error: selectError } = await supabase
+        .from("question_views")
+        .select("view_count")
+        .eq("user_name", userName)
+        .eq("question_id", qId)
+        .maybeSingle();
+      
+      const currentCount = data?.view_count || 0;
+      
+      await supabase
+        .from("question_views")
+        .upsert({
+          user_name: userName,
+          question_id: qId,
+          view_count: currentCount + 1,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_name,question_id' });
+    }
+
+    res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -362,7 +416,7 @@ const autoSyncQuestions = async () => {
   }
 };
 
-// Запуск авто-синхронизации (отключено для отладки на Vercel)
-// autoSyncQuestions();
+// Запуск авто-синхронизации
+autoSyncQuestions();
 
 export default app;

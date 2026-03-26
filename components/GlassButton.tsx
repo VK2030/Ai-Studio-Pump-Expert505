@@ -98,6 +98,15 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, iconType, progress = 0
             </svg>
           </div>
         );
+      case 'shield':
+        return (
+          <div className={iconWrapperClass}>
+            <div className={`absolute inset-0 ${isDark ? 'bg-indigo-500/10' : 'bg-slate-400/10'} rounded-full blur-lg`}></div>
+            <svg viewBox="0 0 24 24" className={`w-full h-full ${iconColor}`} fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+        );
       default:
         return null;
     }
@@ -117,7 +126,7 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, iconType, progress = 0
       {renderIcon()}
       
       <div className="text-left flex-1 relative z-10 w-full">
-        <h3 className={`text-[12px] font-bold leading-tight transition-colors line-clamp-2
+        <h3 className={`text-[12px] font-bold leading-tight transition-colors line-clamp-2 whitespace-pre-line
           ${isDark ? 'text-white/90' : 'text-slate-900'}`}>
           {title}
         </h3>

@@ -44,6 +44,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
 }) => {
   const isDark = theme === 'dark';
   const [screen, setScreen] = useState<'menu' | 'quiz' | 'results' | 'history'>('menu');
+  const [activeSubModuleId, setActiveSubModuleId] = useState<string | null>(null);
   const [sessionQuestions, setSessionQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
@@ -62,7 +63,16 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   const timerRef = useRef<any | null>(null);
 
   const currentModule = MODULES.find(m => m.id === moduleId);
-  const moduleTitle = currentModule?.title || 'Тестирование';
+  const PBOTOS_SUBMODULES = [
+    { id: 'pbotos-general', title: 'Общие вопросы ОТ' },
+    { id: 'pbotos-siz', title: 'СИЗ' },
+    { id: 'pbotos-harmful', title: 'Вредные и опасные ПФ' },
+    { id: 'pbotos-firstaid', title: 'Оказание первой помощи' },
+    { id: 'pbotos-a1', title: 'А1. Основы ПБ' },
+    { id: 'pbotos-b21', title: 'Б.2.1 Для объектов нефтяной промышленности' },
+  ];
+  const currentSubModule = PBOTOS_SUBMODULES.find(s => s.id === activeSubModuleId);
+  const moduleTitle = activeSubModuleId ? currentSubModule?.title : (currentModule?.title || 'Тестирование');
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -90,7 +100,8 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         setHistory(data);
         
         // Calculate next session number based on history (cloud-synced)
-        const moduleHistory = data.filter(h => h.moduleId === moduleId);
+        const targetId = activeSubModuleId || moduleId;
+        const moduleHistory = data.filter(h => h.moduleId === targetId);
         if (moduleHistory.length > 0) {
           const maxSession = Math.max(...moduleHistory.map(h => h.session || 0));
           setCurrentSession(maxSession + 1);
@@ -103,7 +114,8 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         if (savedHistory) {
           const data = JSON.parse(savedHistory);
           setHistory(data);
-          const moduleHistory = data.filter((h: any) => h.moduleId === moduleId);
+          const targetId = activeSubModuleId || moduleId;
+          const moduleHistory = data.filter((h: any) => h.moduleId === targetId);
           if (moduleHistory.length > 0) {
             const maxSession = Math.max(...moduleHistory.map((h: any) => h.session || 0));
             setCurrentSession(maxSession + 1);
@@ -117,7 +129,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [moduleId]);
+  }, [moduleId, activeSubModuleId]);
 
   const shuffleArray = <T,>(array: T[]): T[] => {
     const arr = [...array];
@@ -129,12 +141,15 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   };
 
   const startQuiz = async () => {
-    if (!moduleId) return;
+    const targetId = activeSubModuleId || moduleId;
+    if (!targetId) return;
     finishQuizRef.current = false;
     setIsLoadingQuestions(true);
     
+    const userName = localStorage.getItem('app_user_name') || 'Contestant';
+
     try {
-      const response = await fetch(`/api/quiz/questions/${moduleId}`);
+      const response = await fetch(`/api/quiz/questions/${targetId}?userName=${encodeURIComponent(userName)}`);
       if (!response.ok) throw new Error('Failed to fetch questions');
       const questionsForModule = await response.json();
       
@@ -144,8 +159,38 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         return;
       }
 
-      const selected = shuffleArray(questionsForModule).slice(0, Math.min(10, questionsForModule.length));
-      setSessionQuestions(selected);
+      // Умная выборка: группируем по количеству просмотров
+      const groupedByViews: Record<number, any[]> = {};
+      questionsForModule.forEach((q: any) => {
+        const views = q.viewCount || 0;
+        if (!groupedByViews[views]) groupedByViews[views] = [];
+        groupedByViews[views].push(q);
+      });
+
+      // Сортируем ключи (количества просмотров) по возрастанию
+      const sortedViewCounts = Object.keys(groupedByViews).map(Number).sort((a, b) => a - b);
+      
+      let selected: any[] = [];
+      for (const count of sortedViewCounts) {
+        const group = shuffleArray(groupedByViews[count]);
+        selected = [...selected, ...group];
+        if (selected.length >= 10) break;
+      }
+
+      // Берем первые 10 (или сколько есть)
+      const finalSelected = selected.slice(0, Math.min(10, questionsForModule.length));
+      
+      // Инкрементируем просмотры для выбранных вопросов
+      fetch('/api/quiz/views/increment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userName,
+          questionIds: finalSelected.map(q => q.id)
+        })
+      }).catch(err => console.error("Failed to increment views:", err));
+
+      setSessionQuestions(finalSelected);
       setCurrentQuestionIdx(0);
       setCorrectAnswersCount(0);
       setIncorrectAnswers([]);
@@ -260,11 +305,12 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     if (finishQuizRef.current) return;
     finishQuizRef.current = true;
     
+    const targetId = activeSubModuleId || moduleId;
     const newEntry: QuizHistoryEntry = {
       date: new Date().toISOString(),
       session: currentSession, 
       score: `${correctAnswersCount}/${sessionQuestions.length}`, 
-      moduleId: moduleId, 
+      moduleId: targetId, 
       incorrectAnswers: incorrectAnswers
     };
     
@@ -309,15 +355,17 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   };
 
   const clearModuleHistory = () => {
-    const filteredHistory = history.filter(h => h.moduleId !== moduleId);
+    const targetId = activeSubModuleId || moduleId;
+    const filteredHistory = history.filter(h => h.moduleId !== targetId);
     setHistory(filteredHistory);
     localStorage.setItem('quizHistory', JSON.stringify(filteredHistory));
     setCurrentSession(1);
-    localStorage.setItem(`quizSessionNum_${moduleId || 'global'}`, '1');
+    localStorage.setItem(`quizSessionNum_${targetId || 'global'}`, '1');
     window.dispatchEvent(new Event('storage'));
   };
 
-  const moduleHistory = history.filter(h => h.moduleId === moduleId);
+  const targetId = activeSubModuleId || moduleId;
+  const moduleHistory = history.filter(h => h.moduleId === targetId);
 
   const handleAbortTest = () => {
     setShowExitConfirm(false);
@@ -356,53 +404,106 @@ const QuizModule: React.FC<QuizModuleProps> = ({
           </svg> 
         </div> 
       );
+      case 'shield': return (
+        <div className={containerClass}>
+          <div className={`absolute inset-0 ${isDark ? 'bg-indigo-500/20' : 'bg-slate-400/10'} blur-2xl group-hover:bg-opacity-30 transition-all duration-500`}></div>
+          <svg viewBox="0 0 24 24" className="w-14 h-14 text-indigo-500 drop-shadow-[0_0_12px_rgba(99,102,241,0.4)] transition-all duration-500 group-hover:scale-110 group-hover:rotate-3" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      );
       default: return ( <div className={containerClass}> <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> <path d="M12 2v20M2 12h20" /> </svg> </div> );
     }
   };
 
-  const renderMenu = () => (
-    <div className="flex flex-col items-center justify-center h-full p-8 text-center overflow-hidden">
-      <AnimatedContent distance={60} delay={0.1}>
-        {renderModuleIcon()}
-      </AnimatedContent>
-      <AnimatedContent distance={30} delay={0.3}>
-        <h2 className={`text-3xl font-black mb-2 uppercase tracking-tight leading-none drop-shadow-lg ${isDark ? 'text-white' : 'text-slate-900'}`}>{moduleTitle}</h2>
-      </AnimatedContent>
-      <AnimatedContent distance={20} delay={0.4}>
-        <p className={`mb-10 text-sm leading-relaxed max-w-[280px] mx-auto ${isDark ? 'text-white/40' : 'text-slate-500'}`}>Может быть несколько вариантов ответа.</p>
-      </AnimatedContent>
-      <div className="w-full space-y-3">
-        <AnimatedContent distance={30} delay={0.5} direction="vertical">
-          <button 
-            onClick={startQuiz} 
-            disabled={isLoadingQuestions}
-            className={`w-full py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-all shadow-xl border flex items-center justify-center gap-2
-            ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200'}`}
-          >
-            {isLoadingQuestions ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Загрузка...
-              </>
-            ) : 'Начать тест'}
-          </button>
-        </AnimatedContent>
-        <AnimatedContent distance={30} delay={0.6} direction="vertical">
-          <button onClick={() => setScreen('history')} className={`w-full py-4 rounded-2xl font-bold active:scale-[0.98] transition-all border
-            ${isDark ? 'bg-white/5 border-white/10 text-indigo-100' : 'bg-white border-slate-200 text-slate-700'}`}>История тестирования</button>
-        </AnimatedContent>
-        <AnimatedContent distance={30} delay={0.7} direction="vertical">
-          <div className="pt-4">
-            <button onClick={onClose} className={`w-full py-4 flex items-center justify-center gap-2 rounded-2xl font-bold text-xs uppercase tracking-[0.15em] transition-all active:scale-[0.98] border
-              ${isDark ? 'bg-white/5 border-white/10 text-white/40 active:text-white' : 'bg-white border-slate-200 text-slate-400 active:text-slate-900'}`}>
-              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              Вернуться назад
-            </button>
+  const renderMenu = () => {
+    if (moduleId === 'pbotos' && !activeSubModuleId) {
+      return (
+        <div className="flex flex-col h-full p-6 overflow-hidden">
+          <div className="flex items-center gap-4 mb-8">
+             <button onClick={onClose} className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all active:scale-90
+               ${isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-white border-slate-200 text-slate-400'}`}>
+               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5">
+                 <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+               </svg>
+             </button>
+             <h2 className={`text-2xl font-black uppercase tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>
+               ПБОТОС
+             </h2>
           </div>
+          
+          <div className="flex-1 overflow-y-auto pr-1 space-y-3 pb-8 no-scrollbar">
+            {PBOTOS_SUBMODULES.map((sub, idx) => (
+              <AnimatedContent key={sub.id} distance={30} delay={idx * 0.05} direction="vertical">
+                <button 
+                  onClick={() => setActiveSubModuleId(sub.id)}
+                  className={`w-full p-5 rounded-2xl border text-left transition-all active:scale-[0.98] group relative overflow-hidden
+                    ${isDark ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-slate-200 hover:border-indigo-200 shadow-sm'}`}
+                >
+                  <div className={`absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-3xl -mr-8 -mt-8 transition-opacity group-hover:opacity-100 opacity-0`}></div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className={`text-sm font-bold leading-tight ${isDark ? 'text-white/90' : 'text-slate-800'}`}>{sub.title}</span>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-colors
+                      ${isDark ? 'bg-white/5 border-white/10 text-white/20' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>
+                      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="3">
+                        <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </div>
+                </button>
+              </AnimatedContent>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center overflow-hidden">
+        <AnimatedContent distance={60} delay={0.1}>
+          {renderModuleIcon()}
         </AnimatedContent>
+        <AnimatedContent distance={30} delay={0.3}>
+          <h2 className={`text-3xl font-black mb-2 uppercase tracking-tight leading-none drop-shadow-lg whitespace-pre-line ${isDark ? 'text-white' : 'text-slate-900'}`}>{moduleTitle}</h2>
+        </AnimatedContent>
+        <AnimatedContent distance={20} delay={0.4}>
+          <p className={`mb-10 text-sm leading-relaxed max-w-[280px] mx-auto ${isDark ? 'text-white/40' : 'text-slate-500'}`}>Может быть несколько вариантов ответа.</p>
+        </AnimatedContent>
+        <div className="w-full space-y-3">
+          <AnimatedContent distance={30} delay={0.5} direction="vertical">
+            <button 
+              onClick={startQuiz} 
+              disabled={isLoadingQuestions}
+              className={`w-full py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-all shadow-xl border flex items-center justify-center gap-2
+              ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200'}`}
+            >
+              {isLoadingQuestions ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Загрузка...
+                </>
+              ) : 'Начать тест'}
+            </button>
+          </AnimatedContent>
+          <AnimatedContent distance={30} delay={0.6} direction="vertical">
+            <button onClick={() => setScreen('history')} className={`w-full py-4 rounded-2xl font-bold active:scale-[0.98] transition-all border
+              ${isDark ? 'bg-white/5 border-white/10 text-indigo-100' : 'bg-white border-slate-200 text-slate-700'}`}>История тестирования</button>
+          </AnimatedContent>
+          <AnimatedContent distance={30} delay={0.7} direction="vertical">
+            <div className="pt-4">
+              <button 
+                onClick={activeSubModuleId ? () => setActiveSubModuleId(null) : onClose} 
+                className={`w-full py-4 flex items-center justify-center gap-2 rounded-2xl font-bold text-xs uppercase tracking-[0.15em] transition-all active:scale-[0.98] border
+                ${isDark ? 'bg-white/5 border-white/10 text-white/40 active:text-white' : 'bg-white border-slate-200 text-slate-400 active:text-slate-900'}`}>
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                {activeSubModuleId ? 'К подразделам' : 'Вернуться назад'}
+              </button>
+            </div>
+          </AnimatedContent>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderQuiz = () => {
     const q = sessionQuestions[currentQuestionIdx];

@@ -4,19 +4,11 @@ import { ModuleData } from './types';
 
 export const MODULES: ModuleData[] = [
   {
-    id: 'esp-selection',
-    title: 'Подбор ЭЦН',
-    subtitle: 'Методики расчета и выбора оптимального насоса.',
-    description: 'Изучите основы гидравлического расчета, подбор типоразмера ЭЦН и расчет характеристик скважины.',
+    id: 'esp-selection-startup',
+    title: 'Подбор ЭЦН\nВывод скважины на режим',
+    subtitle: 'Методики расчета, выбора и запуска ЭЦН.',
+    description: 'Комплексный раздел по подбору оборудования и технологии вывода скважины на расчетный режим.',
     icon: 'calc',
-    progress: 0
-  },
-  {
-    id: 'well-startup',
-    title: 'Вывод скважины на режим',
-    subtitle: 'Технология запуска и стабилизации работы ЭЦН.',
-    description: 'Правила пуска, контроль параметров, динамический уровень и выход на расчетный режим.',
-    icon: 'pump',
     progress: 0
   },
   {
@@ -34,11 +26,19 @@ export const MODULES: ModuleData[] = [
     description: 'Борьба с отложениями, выбор протекторов и химических реагентов для защиты оборудования.',
     icon: 'corrosion',
     progress: 0
+  },
+  {
+    id: 'pbotos',
+    title: 'ПБОТОС',
+    subtitle: 'Промышленная безопасность и охрана труда.',
+    description: 'Правила безопасности, охрана труда и окружающей среды при эксплуатации оборудования.',
+    icon: 'shield',
+    progress: 0
   }
 ];
 
 export const QUIZ_QUESTIONS: Record<string, QuizQuestion[]> = {
-  'esp-selection': [
+  'esp-selection-startup': [
     {
       text: "Какое специализированное программное обеспечение в обязательном порядке применяется для подбора УЭЦН согласно регламенту?",
       options: ["ROSPUMP", "ИС «МЕХФОНД»", "AutoCAD", "Компас-3D"],
@@ -123,9 +123,7 @@ export const QUIZ_QUESTIONS: Record<string, QuizQuestion[]> = {
         "Использование НКТ с более толстыми стенками"
       ],
       correct: [0]
-    }
-  ],
-  'well-startup': [
+    },
     {
       text: "Когда скважина считается вышедшей на режим работы после запуска?",
       options: [
@@ -1300,5 +1298,6 @@ export const QUIZ_QUESTIONS: Record<string, QuizQuestion[]> = {
       ],
       correct: [0, 1, 2]
     }
-  ]
+  ],
+  'pbotos': []
 };
