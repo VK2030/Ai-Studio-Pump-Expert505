@@ -1,6 +1,6 @@
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
-import { QUIZ_QUESTIONS } from "./constants_data.js";
+import { QUIZ_QUESTIONS } from "./constants_data";
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -199,6 +199,8 @@ app.get("/api/quiz/questions/:moduleId", async (req, res) => {
   try {
     const { moduleId } = req.params;
     const { userName } = req.query;
+    console.log(`[API] Fetching questions for module: ${moduleId}, user: ${userName}`);
+    
     if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
 
     const { data: questions, error: questionsError } = await supabase
@@ -207,7 +209,21 @@ app.get("/api/quiz/questions/:moduleId", async (req, res) => {
       .eq("module_id", moduleId)
       .order("id", { ascending: true });
 
-    if (questionsError) throw questionsError;
+    if (questionsError) {
+      console.error(`[API] Error fetching questions for ${moduleId}:`, questionsError);
+      throw questionsError;
+    }
+
+    if (!questions || questions.length === 0) {
+      console.log(`[API] No questions in DB for ${moduleId}, checking constants...`);
+      const fallback = QUIZ_QUESTIONS[moduleId] || [];
+      if (fallback.length === 0) {
+        console.warn(`[API] No fallback questions found for ${moduleId}`);
+      }
+      return res.json(fallback.map((q, i) => ({ ...q, id: `${moduleId}_${i}`, viewCount: 0 })));
+    }
+
+    console.log(`[API] Found ${questions.length} questions for ${moduleId}`);
 
     if (userName && questions) {
       const { data: views, error: viewsError } = await supabase
@@ -387,7 +403,10 @@ const autoSyncQuestions = async () => {
       .from("quiz_questions")
       .upsert(rows, { onConflict: 'id' });
 
-    if (questionsError) throw questionsError;
+    if (questionsError) {
+      console.error("❌ Auto-sync questions error:", questionsError);
+      throw questionsError;
+    }
     console.log(`✅ Auto-sync completed: ${rows.length} questions updated.`);
 
     // 2. Инициализация дефолтных паролей, если их нет
@@ -418,5 +437,15 @@ const autoSyncQuestions = async () => {
 
 // Запуск авто-синхронизации
 autoSyncQuestions();
+
+app.get("/api/health", async (req, res) => {
+  try {
+    if (!supabase) return res.json({ status: "error", message: "Supabase not initialized" });
+    const { count, error } = await supabase.from("quiz_questions").select("*", { count: 'exact', head: true });
+    res.json({ status: "ok", questionCount: count, error });
+  } catch (e: any) {
+    res.json({ status: "error", message: e.message });
+  }
+});
 
 export default app;

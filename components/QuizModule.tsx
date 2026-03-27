@@ -73,6 +73,10 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   ];
   const currentSubModule = PBOTOS_SUBMODULES.find(s => s.id === activeSubModuleId);
   const moduleTitle = activeSubModuleId ? currentSubModule?.title : (currentModule?.title || 'Тестирование');
+  
+  useEffect(() => {
+    console.log("QuizModule: moduleTitle =", JSON.stringify(moduleTitle));
+  }, [moduleTitle]);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -142,6 +146,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
 
   const startQuiz = async () => {
     const targetId = activeSubModuleId || moduleId;
+    console.log("Starting quiz for module:", targetId);
     if (!targetId) return;
     finishQuizRef.current = false;
     setIsLoadingQuestions(true);
@@ -374,13 +379,13 @@ const QuizModule: React.FC<QuizModuleProps> = ({
 
   const renderModuleIcon = () => {
     const iconType = currentModule?.icon;
-    const containerClass = `w-24 h-24 relative mb-10 flex items-center justify-center rounded-3xl border overflow-hidden group shadow-2xl ${isDark ? 'bg-white/5 border-slate-500/20 shadow-slate-500/10' : 'bg-white border-slate-100 shadow-slate-200/50'}`;
-    const iconClass = `w-12 h-12 ${isDark ? 'text-slate-100' : 'text-slate-600'} transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3`;
+    const containerClass = `w-20 h-20 relative mb-8 flex items-center justify-center rounded-3xl border overflow-hidden group shadow-2xl ${isDark ? 'bg-white/5 border-slate-500/20 shadow-slate-500/10' : 'bg-white border-slate-100 shadow-slate-200/50'}`;
+    const iconClass = `w-10 h-10 ${isDark ? 'text-slate-100' : 'text-slate-600'} transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3`;
 
     switch (iconType) {
       case 'calc': return ( 
         <div className={containerClass}> 
-          <div className={`absolute inset-0 ${isDark ? 'bg-indigo-500/10' : 'bg-slate-400/5'} blur-xl group-hover:bg-opacity-20 transition-colors`}></div> 
+          <div className={`absolute inset-0 ${isDark ? 'bg-indigo-500/10' : 'bg-slate-400/5'} blur-xl`}></div> 
           <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> 
             <rect x="3" y="5" width="18" height="11" rx="1" />
             <path d="M2 18h20" />
@@ -392,7 +397,31 @@ const QuizModule: React.FC<QuizModuleProps> = ({
           </svg> 
         </div> 
       );
-      case 'pump': return ( <div className={containerClass}> <div className={`absolute inset-0 ${isDark ? 'bg-indigo-500/10' : 'bg-slate-400/5'} blur-xl`}></div> <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> <path d="M4 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM21 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM10 11a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1zM4 14v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1M4 11V9a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v2M12 6v12" /> </svg> </div> );
+      case 'pump': return ( 
+        <div className={containerClass}> 
+          <div className={`absolute inset-0 ${isDark ? 'bg-indigo-500/10' : 'bg-slate-300/10'} blur-lg`}></div> 
+          <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> 
+            <rect x="3" y="4" width="18" height="16" strokeLinejoin="miter" />
+            <line x1="3" y1="8" x2="21" y2="8" strokeLinecap="square" />
+            <line x1="9" y1="4" x2="9" y2="20" strokeLinecap="square" />
+            <line x1="15" y1="4" x2="15" y2="20" strokeLinecap="square" />
+            <line x1="3" y1="12" x2="21" y2="12" strokeLinecap="square" opacity="0.7" />
+            <line x1="3" y1="16" x2="21" y2="16" strokeLinecap="square" opacity="0.7" />
+            <path d="M5 6h2" strokeWidth="1" />
+            <circle cx="6" cy="10" r="0.5" fill="currentColor" stroke="none" />
+            <path d="M5 14h3" strokeWidth="1" opacity="0.5" />
+            <path d="M5 18h2" strokeWidth="1" opacity="0.5" />
+            <path d="M11 6h2.5" strokeWidth="1" />
+            <path d="M10.5 10l1.5 1.5 2-2.5" strokeWidth="1" />
+            <path d="M11 14h2" strokeWidth="1" opacity="0.5" />
+            <circle cx="12" cy="18" r="0.5" fill="currentColor" stroke="none" />
+            <path d="M17 6h2" strokeWidth="1" />
+            <path d="M16.5 10.5h3" strokeWidth="1" opacity="0.5" />
+            <path d="M17.5 14l1.5-1.5" strokeWidth="1" opacity="0.5" />
+            <path d="M16.5 18h3" strokeWidth="1" opacity="0.5" />
+          </svg> 
+        </div> 
+      );
       case 'search': return ( <div className={containerClass}> <div className={`absolute inset-0 ${isDark ? 'bg-indigo-500/10' : 'bg-slate-400/5'} blur-xl`}></div> <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> <circle cx="11" cy="11" r="8" /> <path d="m21 21-4.3-4.3" /> </svg> </div> );
       case 'corrosion': return ( 
         <div className={containerClass}> 
@@ -406,8 +435,8 @@ const QuizModule: React.FC<QuizModuleProps> = ({
       );
       case 'shield': return (
         <div className={containerClass}>
-          <div className={`absolute inset-0 ${isDark ? 'bg-indigo-500/20' : 'bg-slate-400/10'} blur-2xl group-hover:bg-opacity-30 transition-all duration-500`}></div>
-          <svg viewBox="0 0 24 24" className="w-14 h-14 text-indigo-500 drop-shadow-[0_0_12px_rgba(99,102,241,0.4)] transition-all duration-500 group-hover:scale-110 group-hover:rotate-3" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <div className={`absolute inset-0 ${isDark ? 'bg-indigo-500/20' : 'bg-slate-400/10'} blur-2xl`}></div>
+          <svg viewBox="0 0 24 24" className={`w-10 h-10 ${isDark ? 'text-indigo-400' : 'text-indigo-500'} drop-shadow-[0_0_12px_rgba(99,102,241,0.4)] transition-all duration-500 group-hover:scale-110 group-hover:rotate-3`} fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
@@ -427,32 +456,60 @@ const QuizModule: React.FC<QuizModuleProps> = ({
                  <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
                </svg>
              </button>
-             <h2 className={`text-2xl font-black uppercase tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>
-               ПБОТОС
-             </h2>
+             <div className="flex items-center gap-3">
+               <div className={`w-10 h-10 rounded-xl flex items-center justify-center border
+                 ${isDark ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-500'}`}>
+                 <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.5">
+                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
+                 </svg>
+               </div>
+               <h2 className={`text-2xl font-black uppercase tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                 ПБОТОС
+               </h2>
+             </div>
           </div>
           
           <div className="flex-1 overflow-y-auto pr-1 space-y-3 pb-8 no-scrollbar">
-            {PBOTOS_SUBMODULES.map((sub, idx) => (
-              <AnimatedContent key={sub.id} distance={30} delay={idx * 0.05} direction="vertical">
-                <button 
-                  onClick={() => setActiveSubModuleId(sub.id)}
-                  className={`w-full p-5 rounded-2xl border text-left transition-all active:scale-[0.98] group relative overflow-hidden
-                    ${isDark ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-slate-200 hover:border-indigo-200 shadow-sm'}`}
-                >
-                  <div className={`absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-3xl -mr-8 -mt-8 transition-opacity group-hover:opacity-100 opacity-0`}></div>
-                  <div className="flex items-center justify-between gap-4">
-                    <span className={`text-sm font-bold leading-tight ${isDark ? 'text-white/90' : 'text-slate-800'}`}>{sub.title}</span>
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-colors
-                      ${isDark ? 'bg-white/5 border-white/10 text-white/20' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>
-                      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="3">
-                        <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
+            {PBOTOS_SUBMODULES.map((sub, idx) => {
+              const subModuleHistory = history.filter(h => h.moduleId === sub.id);
+              const recentScores = subModuleHistory.slice(0, 3).reverse().map(h => {
+                const [correct, total] = h.score.split('/').map(Number);
+                return Math.round((correct / total) * 100);
+              });
+
+              return (
+                <AnimatedContent key={sub.id} distance={30} delay={idx * 0.05} direction="vertical">
+                  <button 
+                    onClick={() => setActiveSubModuleId(sub.id)}
+                    className={`w-full p-5 rounded-2xl border text-left transition-all active:scale-[0.98] group relative overflow-hidden
+                      ${isDark ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-slate-200 hover:border-indigo-200 shadow-sm'}`}
+                  >
+                    <div className={`absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-3xl -mr-8 -mt-8 transition-opacity group-hover:opacity-100 opacity-0`}></div>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex flex-col gap-1">
+                        <span className={`text-sm font-bold leading-tight ${isDark ? 'text-white/90' : 'text-slate-800'}`}>{sub.title}</span>
+                        {recentScores.length > 0 && (
+                          <div className="flex flex-col gap-0.5 items-start mt-1">
+                            <span className={`text-[8px] uppercase font-black tracking-wider ${isDark ? 'text-white/20' : 'text-slate-400'}`}>
+                              Последние результаты:
+                            </span>
+                            <div className={`text-[9px] font-black ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
+                              {recentScores.map(s => `${s}%`).join(' / ')}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-colors
+                        ${isDark ? 'bg-white/5 border-white/10 text-white/20' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>
+                        <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="3">
+                          <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              </AnimatedContent>
-            ))}
+                  </button>
+                </AnimatedContent>
+              );
+            })}
           </div>
         </div>
       );

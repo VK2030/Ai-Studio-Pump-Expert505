@@ -101,17 +101,33 @@ const App: React.FC = () => {
       let summary = `<b>📊 Сводный отчет о результатах тестирования</b>\n\n`;
       
       Object.entries(statsByModule).forEach(([modId, stats]) => {
+        const PBOTOS_SUBMODULES: Record<string, string> = {
+          'pbotos-general': 'Общие вопросы ОТ',
+          'pbotos-siz': 'СИЗ',
+          'pbotos-harmful': 'Вредные и опасные ПФ',
+          'pbotos-firstaid': 'Оказание первой помощи',
+          'pbotos-a1': 'А1. Основы ПБ',
+          'pbotos-b21': 'Б.2.1 Для объектов нефтяной промышленности',
+        };
+
         const module = MODULES.find(m => m.id === modId);
         const recentScores = moduleRecentScores[modId] || [];
         
-        summary += `🔹 <b>${module?.title || modId}</b>\n`;
+        let displayTitle = module?.title || modId;
+        if (PBOTOS_SUBMODULES[modId]) {
+          displayTitle = `ПБОТОС/${PBOTOS_SUBMODULES[modId]}`;
+        } else if (modId === 'pbotos') {
+          displayTitle = 'ПБОТОС';
+        }
+
+        summary += `🔹 <b>${displayTitle}</b>\n`;
         
         if (recentScores.length > 0) {
           summary += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
         }
         summary += `   Пройдено раз: ${stats.count}\n`;
 
-        if (stats.latestEntry?.incorrectAnswers && stats.latestEntry.incorrectAnswers.length > 0) {
+        if (!modId.startsWith('pbotos') && stats.latestEntry?.incorrectAnswers && stats.latestEntry.incorrectAnswers.length > 0) {
           summary += `<blockquote expandable>`;
           summary += `<b>Ошибки в последнем тесте:</b>\n\n`;
           stats.latestEntry.incorrectAnswers.forEach((ans, idx) => {
@@ -127,6 +143,11 @@ const App: React.FC = () => {
 
       const lastEntry = fullHistory[0];
       summary += `🕒 <i>Последнее обновление: ${new Date().toLocaleString()}</i>`;
+
+      // Telegram message limit is 4096 characters. Truncate if necessary.
+      if (summary.length > 4000) {
+        summary = summary.substring(0, 3900) + "\n\n... [Сообщение обрезано из-за длины]";
+      }
 
       const response = await fetch('/api/telegram/send-summary', {
         method: 'POST',
@@ -451,7 +472,24 @@ const App: React.FC = () => {
                         </AnimatedContent>
                       ) : (
                         filteredHistory.map((entry, idx) => {
+                          const PBOTOS_SUBMODULES: Record<string, string> = {
+                            'pbotos-general': 'Общие вопросы ОТ',
+                            'pbotos-siz': 'СИЗ',
+                            'pbotos-harmful': 'Вредные и опасные ПФ',
+                            'pbotos-firstaid': 'Оказание первой помощи',
+                            'pbotos-a1': 'А1. Основы ПБ',
+                            'pbotos-b21': 'Б.2.1 Для объектов нефтяной промышленности',
+                          };
+
                           const module = MODULES.find(m => m.id === entry.moduleId);
+                          
+                          let displayTitle = module?.title || entry.moduleId || 'Общий тест';
+                          if (entry.moduleId && PBOTOS_SUBMODULES[entry.moduleId]) {
+                            displayTitle = `ПБОТОС/${PBOTOS_SUBMODULES[entry.moduleId]}`;
+                          } else if (entry.moduleId === 'pbotos') {
+                            displayTitle = 'ПБОТОС';
+                          }
+
                           const [correct] = entry.score.split('/').map(Number);
                           const isSuccess = correct >= 8;
                           // Show answers if user is admin OR if history answers are enabled for contestants
@@ -477,7 +515,7 @@ const App: React.FC = () => {
                                 <div className="flex justify-between items-start mb-3">
                                   <div className="flex flex-col">
                                     <span className="text-[8px] font-black text-indigo-500 uppercase tracking-widest mb-1">
-                                      {module?.title || 'Общий тест'} • Сессия {entry.session}
+                                      {displayTitle} • Сессия {entry.session}
                                     </span>
                                     <span className={`text-[10px] font-bold ${isDark ? 'text-white/50' : 'text-slate-400'}`}>{formattedDate}</span>
                                   </div>
