@@ -3,8 +3,9 @@ import { createClient } from "@supabase/supabase-js";
 import { QUIZ_QUESTIONS } from "./constants_data";
 
 const app = express();
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Используем встроенный парсер Vercel (bodyParser: true по умолчанию)
+// app.use(express.json({ limit: '10mb' }));
+// app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Инициализация Supabase с очисткой ключей
 const supabaseUrl = (process.env.SUPABASE_URL || "").trim();
@@ -344,16 +345,22 @@ app.post("/api/quiz/check", async (req, res) => {
 
 // API: Вход (Безопасная проверка пароля на сервере)
 app.post("/api/login", async (req, res) => {
+  console.log(`[API] Login attempt started at ${new Date().toISOString()}`);
   try {
+    if (!req.body) {
+      console.error("[API] Login failed: Request body is missing");
+      return res.status(400).json({ error: "Request body is missing" });
+    }
+
     const { role, password } = req.body;
-    console.log(`Login attempt: role=${role}, password=${password}`);
+    console.log(`[API] Login attempt: role=${role}, password=${password ? '****' : 'missing'}`);
     
     if (!role || !password) {
       return res.status(400).json({ error: "Role and password are required" });
     }
 
-    // Имитация задержки для предотвращения быстрого перебора (brute force)
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Удалена имитация задержки для предотвращения таймаутов на Vercel
+    // await new Promise(resolve => setTimeout(resolve, 500));
 
     // Если Supabase не настроен, используем временные дефолтные пароли (для отладки)
     const defaultPasswords: Record<string, string> = {
