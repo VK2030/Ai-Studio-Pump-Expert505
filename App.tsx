@@ -76,6 +76,25 @@ const App: React.FC = () => {
   const [historyFilter, setHistoryFilter] = useState<string | 'all'>('all');
   const [telegramStatus, setTelegramStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
 
+  // Автоматическая авторизация при загрузке, если роль сохранена и был выбран "Запомнить меня"
+  useEffect(() => {
+    const savedRole = localStorage.getItem('app_user_role');
+    const rememberMe = localStorage.getItem('app_remember_me') === 'true';
+    
+    if (savedRole && rememberMe) {
+      setUserRole(savedRole as 'contestant' | 'admin');
+      setIsAuthorized(true);
+      
+      // Если админ, пытаемся восстановить пароль из сессии для API запросов
+      if (savedRole === 'admin') {
+        const savedPassword = sessionStorage.getItem('app_admin_password');
+        if (savedPassword) {
+          setAdminPassword(savedPassword);
+        }
+      }
+    }
+  }, []);
+
   const sendHistoryToTelegram = async () => {
     if (fullHistory.length === 0) {
       alert("История пуста. Нечего отправлять.");
@@ -230,6 +249,16 @@ const App: React.FC = () => {
     
     setModuleProgress(latestProgress);
     setModuleRecentScores(recentScoresMap);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('app_user_role');
+    localStorage.removeItem('app_remember_me');
+    sessionStorage.removeItem('app_admin_password');
+    setUserRole(null);
+    setIsAuthorized(false);
+    setAdminPassword('');
+    setActiveTab('home');
   };
 
   useEffect(() => {
@@ -676,6 +705,24 @@ const App: React.FC = () => {
                             <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-30" fill="none" stroke="currentColor" strokeWidth="2">
                               <path d="M9 18l6-6-6-6" />
                             </svg>
+                          </button>
+                        </AnimatedContent>
+
+                        <AnimatedContent distance={30} delay={0.4} direction="vertical">
+                          <button 
+                            onClick={handleLogout}
+                            className={`w-full p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
+                              ${isDark ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-red-50 border-red-100 text-red-600'}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center
+                                ${isDark ? 'bg-red-500/20' : 'bg-red-100'}`}>
+                                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+                                </svg>
+                              </div>
+                              <span className="text-base font-semibold">Выйти из аккаунта</span>
+                            </div>
                           </button>
                         </AnimatedContent>
 

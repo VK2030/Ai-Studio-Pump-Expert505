@@ -3,9 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { QUIZ_QUESTIONS } from "./constants_data";
 
 const app = express();
-// Используем встроенный парсер Vercel (bodyParser: true по умолчанию)
-// app.use(express.json({ limit: '10mb' }));
-// app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Инициализация Supabase с очисткой ключей
 const supabaseUrl = (process.env.SUPABASE_URL || "").trim();
@@ -415,6 +414,35 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+// API: Ручная синхронизация данных (Admin)
+app.post("/api/admin/sync", async (req, res) => {
+  const adminPassword = req.headers['x-admin-password'];
+  
+  try {
+    // Проверка пароля админа
+    let correctPassword = '2026';
+    if (supabase) {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "admin_password")
+        .single();
+      if (data) correctPassword = data.value;
+    }
+
+    if (adminPassword !== String(correctPassword)) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    console.log("[API] Manual sync triggered by admin...");
+    await autoSyncQuestions();
+    res.json({ success: true, message: "Sync completed successfully" });
+  } catch (error: any) {
+    console.error("[API] Manual sync failed:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Автоматическая синхронизация при запуске сервера
 const autoSyncQuestions = async () => {
   if (!supabase) {
@@ -480,8 +508,22 @@ const autoSyncQuestions = async () => {
 app.get("/api/health", async (req, res) => {
   try {
     if (!supabase) return res.json({ status: "error", message: "Supabase not initialized" });
-    const { count, error } = await supabase.from("quiz_questions").select("*", { count: 'exact', head: true });
-    res.json({ status: "ok", questionCount: count, error });
+    
+    // Проверка наличия таблиц
+    const { data: tables, error: tablesError } = await supabase.rpc('get_tables'); // Может не сработать без RPC
+    
+    const { count: questionCount, error: qError } = await supabase.from("quiz_questions").select("*", { count: 'exact', head: true });
+    const { count: settingsCount, error: sError } = await supabase.from("app_settings").select("*", { count: 'exact', head: true });
+    
+    res.json({ 
+      status: "ok", 
+      questions: { count: questionCount, error: qError },
+      settings: { count: settingsCount, error: sError },
+      env: {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseServiceKey
+      }
+    });
   } catch (e: any) {
     res.json({ status: "error", message: e.message });
   }
