@@ -13,9 +13,14 @@ const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 if (!supabaseUrl) console.warn("SUPABASE_URL is missing in environment");
 if (!supabaseServiceKey) console.warn("SUPABASE_SERVICE_ROLE_KEY is missing in environment");
 
-const supabase = (supabaseUrl && supabaseServiceKey) 
-  ? createClient(supabaseUrl, supabaseServiceKey)
-  : null;
+let supabase: any = null;
+try {
+  if (supabaseUrl && supabaseServiceKey) {
+    supabase = createClient(supabaseUrl, supabaseServiceKey);
+  }
+} catch (error) {
+  console.error("Supabase initialization failed:", error);
+}
 
 // API: Простая проверка
 app.get("/api/test", (req, res) => {
@@ -179,7 +184,7 @@ app.post("/api/config", async (req, res) => {
       .single();
     
     const correctPassword = authData?.value || '2026';
-    if (adminPassword !== correctPassword) {
+    if (adminPassword !== String(correctPassword)) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -189,6 +194,31 @@ app.post("/api/config", async (req, res) => {
       
     if (error) throw error;
     res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API: Ручная синхронизация (Admin)
+app.post("/api/admin/sync", async (req, res) => {
+  try {
+    const adminPassword = req.headers['x-admin-password'];
+    if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
+
+    // Проверка пароля админа
+    const { data: authData } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "admin_password")
+      .single();
+    
+    const correctPassword = authData?.value || '2026';
+    if (adminPassword !== String(correctPassword)) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    await autoSyncQuestions();
+    res.json({ success: true, message: "Sync completed" });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -366,7 +396,9 @@ app.post("/api/login", async (req, res) => {
         debug: {
           supabaseInitialized: !!supabase,
           roleRequested: role,
-          usingDefault: correctPassword === defaultPasswords[role]
+          usingDefault: String(correctPassword) === String(defaultPasswords[role]),
+          hasSupabaseUrl: !!supabaseUrl,
+          hasSupabaseKey: !!supabaseServiceKey
         }
       });
     }
@@ -435,8 +467,8 @@ const autoSyncQuestions = async () => {
   }
 };
 
-// Запуск авто-синхронизации
-autoSyncQuestions();
+// Запуск авто-синхронизации (УДАЛЕНО для предотвращения таймаутов на Vercel)
+// autoSyncQuestions();
 
 app.get("/api/health", async (req, res) => {
   try {
