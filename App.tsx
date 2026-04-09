@@ -708,26 +708,26 @@ const App: React.FC = () => {
                           </button>
                         </AnimatedContent>
 
-                        <AnimatedContent distance={30} delay={0.4} direction="vertical">
-                          <button 
-                            onClick={handleLogout}
-                            className={`w-full p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
-                              ${isDark ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-red-50 border-red-100 text-red-600'}`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center
-                                ${isDark ? 'bg-red-500/20' : 'bg-red-100'}`}>
-                                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
-                                </svg>
-                              </div>
-                              <span className="text-base font-semibold">Выйти из аккаунта</span>
-                            </div>
-                          </button>
-                        </AnimatedContent>
-
                       </>
                     )}
+
+                    <AnimatedContent distance={30} delay={0.4} direction="vertical">
+                      <button 
+                        onClick={handleLogout}
+                        className={`w-full p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
+                          ${isDark ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-red-50 border-red-100 text-red-600'}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-2xl flex items-center justify-center
+                            ${isDark ? 'bg-red-500/20' : 'bg-red-100'}`}>
+                            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+                            </svg>
+                          </div>
+                          <span className="text-base font-semibold">Выйти из аккаунта</span>
+                        </div>
+                      </button>
+                    </AnimatedContent>
                   </div>
                 );
               case 'tasks':
@@ -881,7 +881,7 @@ const App: React.FC = () => {
                   </svg>
                 )} 
               />
-              <NavButton isDark={isDark} active={activeTab === 'tasks'} onClick={() => setActiveTab('tasks')} label="Задания" 
+              <NavButton isDark={isDark} active={activeTab === 'tasks'} onClick={() => setActiveTab('tasks')} label="Упражнения" 
                 icon={(active) => (
                   <svg viewBox="0 0 24 24" className={`w-5 h-5 transition-all ${active ? (isDark ? 'text-white' : 'text-slate-800') : (isDark ? 'text-white/30' : 'text-slate-400')}`} fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
                     <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
