@@ -5,7 +5,7 @@ import { ModuleData } from './types';
 export const MODULES: ModuleData[] = [
   {
     id: 'esp-selection-startup',
-    title: 'Подбор ЭЦН\nВывод скважины на режим',
+    title: 'Подбор ЭЦН\nВНР',
     subtitle: 'Методики расчета, выбора и запуска ЭЦН.',
     description: 'Комплексный раздел по подбору оборудования и технологии вывода скважины на расчетный режим.',
     icon: 'calc',
