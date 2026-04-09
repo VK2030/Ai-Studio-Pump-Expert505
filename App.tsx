@@ -510,11 +510,21 @@ const App: React.FC = () => {
                             'pbotos-b21': 'Б.2.1 Для объектов нефтяной промышленности',
                           };
 
+                          const LEGACY_MODULE_MAPPING: Record<string, string> = {
+                            'esp-selection': 'Подбор УЭЦН и ВНР',
+                            'esp-startup': 'Подбор УЭЦН и ВНР',
+                            'vnr': 'Подбор УЭЦН и ВНР',
+                            'esp-selection-startup': 'Подбор УЭЦН и ВНР'
+                          };
+
                           const module = MODULES.find(m => m.id === entry.moduleId);
                           
-                          let displayTitle = module?.title || entry.moduleId || 'Общий тест';
+                          let displayTitle = module?.title?.replace('\n', ' ') || entry.moduleId || 'Общий тест';
+                          
                           if (entry.moduleId && PBOTOS_SUBMODULES[entry.moduleId]) {
                             displayTitle = `ПБОТОС/${PBOTOS_SUBMODULES[entry.moduleId]}`;
+                          } else if (entry.moduleId && LEGACY_MODULE_MAPPING[entry.moduleId]) {
+                            displayTitle = LEGACY_MODULE_MAPPING[entry.moduleId];
                           } else if (entry.moduleId === 'pbotos') {
                             displayTitle = 'ПБОТОС';
                           }

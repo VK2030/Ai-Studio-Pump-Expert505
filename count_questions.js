@@ -3,7 +3,7 @@ const fs = require('fs');
 const content = fs.readFileSync('api/constants_data.ts', 'utf8');
 
 const modules = [
-  { id: 'esp-selection-startup', name: 'Подбор УЭЦН и запуск' },
+  { id: 'esp-selection-startup', name: 'Подбор УЭЦН и ВНР' },
   { id: 'failure-investigation', name: 'Расследование отказов' },
   { id: 'operating-factors', name: 'Факторы эксплуатации' },
   { id: 'pbotos-general', name: 'ПБ, ОТ и ОС: Общие вопросы' },
