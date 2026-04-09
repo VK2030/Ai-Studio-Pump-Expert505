@@ -104,8 +104,20 @@ app.delete("/api/history", async (req, res) => {
       .from("results")
       .delete({ count: 'exact' })
       .neq('id', -1);
+    
     if (error) throw error;
-    res.json({ success: true, deletedCount: count });
+
+    // Также очищаем счетчики просмотров вопросов
+    const { error: viewsError } = await supabase
+      .from("question_views")
+      .delete()
+      .neq('id', -1); // В Supabase .delete() требует фильтр, если не настроено иначе
+
+    if (viewsError) {
+      console.error("Failed to clear question_views:", viewsError);
+    }
+
+    res.json({ success: true, deletedCount: count, viewsCleared: !viewsError });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -200,7 +212,7 @@ app.post("/api/config", async (req, res) => {
   }
 });
 
-// API: Ручная синхронизация (Admin)
+// API: Ручная синхронизация настроек (Admin)
 app.post("/api/admin/sync", async (req, res) => {
   try {
     const adminPassword = req.headers['x-admin-password'];
@@ -218,39 +230,48 @@ app.post("/api/admin/sync", async (req, res) => {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    await autoSyncQuestions();
-    res.json({ success: true, message: "Sync completed" });
+    // Инициализация дефолтных паролей если их нет
+    const defaultSettings = [
+      { key: 'admin_password', value: '2026' },
+      { key: 'contestant_password', value: '7777' }
+    ];
+
+    for (const setting of defaultSettings) {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", setting.key)
+        .single();
+      
+      if (!data) {
+        await supabase.from("app_settings").insert([setting]);
+      }
+    }
+
+    res.json({ success: true, message: "Settings sync completed" });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// API: Получение вопросов модуля (с учетом просмотров пользователя)
+// API: Получение вопросов модуля (из локального файла constants_data.ts)
 app.get("/api/quiz/questions/:moduleId", async (req, res) => {
   try {
     const { moduleId } = req.params;
     const { userName } = req.query;
     
-    if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
+    // Динамический импорт для экономии памяти
+    const { QUIZ_QUESTIONS } = await import("./constants_data");
+    const questionsForModule = QUIZ_QUESTIONS[moduleId] || [];
+    
+    // Форматируем вопросы с ID
+    const formattedQuestions = questionsForModule.map((q, i) => ({
+      ...q,
+      id: `${moduleId}_${i}`,
+      viewCount: 0
+    }));
 
-    const { data: questions, error: questionsError } = await supabase
-      .from("quiz_questions")
-      .select("id, text, options")
-      .eq("module_id", moduleId)
-      .order("id", { ascending: true });
-
-    if (questionsError) throw questionsError;
-
-    if (!questions || questions.length === 0) {
-      // Динамический импорт только если данных нет в БД
-      const { QUIZ_QUESTIONS } = await import("./constants_data");
-      const fallback = QUIZ_QUESTIONS[moduleId] || [];
-      return res.json(fallback.map((q, i) => ({ ...q, id: `${moduleId}_${i}`, viewCount: 0 })));
-    }
-
-    console.log(`[API] Found ${questions.length} questions for ${moduleId}`);
-
-    if (userName && questions) {
+    if (userName && supabase) {
       const { data: views, error: viewsError } = await supabase
         .from("question_views")
         .select("question_id, view_count")
@@ -258,7 +279,7 @@ app.get("/api/quiz/questions/:moduleId", async (req, res) => {
       
       if (!viewsError && views) {
         const viewMap = new Map(views.map(v => [v.question_id, v.view_count]));
-        const enrichedQuestions = questions.map(q => ({
+        const enrichedQuestions = formattedQuestions.map(q => ({
           ...q,
           viewCount: viewMap.get(q.id) || 0
         }));
@@ -266,7 +287,7 @@ app.get("/api/quiz/questions/:moduleId", async (req, res) => {
       }
     }
 
-    res.json(questions || []);
+    res.json(formattedQuestions);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -308,22 +329,25 @@ app.post("/api/quiz/views/increment", async (req, res) => {
   }
 });
 
-// API: Проверка ответа (на сервере)
+// API: Проверка ответа (на сервере с использованием локального файла)
 app.post("/api/quiz/check", async (req, res) => {
   try {
     const { questionId, selectedOptions } = req.body;
-    if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
+    
+    // questionId имеет формат moduleId_index
+    const parts = questionId.split('_');
+    const moduleId = parts[0];
+    const index = parseInt(parts[1]);
 
-    const { data, error } = await supabase
-      .from("quiz_questions")
-      .select("correct")
-      .eq("id", questionId)
-      .single();
+    const { QUIZ_QUESTIONS } = await import("./constants_data");
+    const moduleQuestions = QUIZ_QUESTIONS[moduleId];
+    
+    if (!moduleQuestions || !moduleQuestions[index]) {
+      return res.status(404).json({ error: "Question not found" });
+    }
 
-    if (error) throw error;
-    if (!data) return res.status(404).json({ error: "Question not found" });
-
-    const correctIndices = data.correct as number[];
+    const question = moduleQuestions[index];
+    const correctIndices = question.correct as number[];
     const isCorrect = 
       selectedOptions.length === correctIndices.length &&
       selectedOptions.every((opt: number) => correctIndices.includes(opt));
@@ -409,118 +433,23 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// API: Ручная синхронизация данных (Admin)
-app.post("/api/admin/sync", async (req, res) => {
-  const adminPassword = req.headers['x-admin-password'];
-  
-  try {
-    // ... проверка пароля ...
-    if (adminPassword !== '2026') { // Упрощенная проверка для теста если база лежит
-       // Если в базе есть пароль, проверим его
-       if (supabase) {
-         const { data } = await supabase.from("app_settings").select("value").eq("key", "admin_password").single();
-         if (data && adminPassword !== String(data.value)) return res.status(403).json({ error: "Unauthorized" });
-       } else if (adminPassword !== '2026') {
-         return res.status(403).json({ error: "Unauthorized" });
-       }
-    }
-
-    // Динамический импорт для синхронизации
-    const { QUIZ_QUESTIONS } = await import("./constants_data");
-    
-    console.log("[API] Manual sync triggered...");
-    
-    // 1. Синхронизация вопросов
-    const rows: any[] = [];
-    for (const moduleId in QUIZ_QUESTIONS) {
-      QUIZ_QUESTIONS[moduleId].forEach((q: any, index: number) => {
-        rows.push({
-          id: `${moduleId}_${index}`,
-          module_id: moduleId,
-          text: q.text,
-          options: q.options,
-          correct: q.correct
-        });
-      });
-    }
-
-    if (supabase) {
-      const { error: questionsError } = await supabase
-        .from("quiz_questions")
-        .upsert(rows, { onConflict: 'id' });
-      if (questionsError) throw questionsError;
-    }
-
-    res.json({ success: true, message: `Sync completed: ${rows.length} questions` });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
+// API: Ручная синхронизация данных (Admin) - Удалена синхронизация вопросов
+app.post("/api/admin/sync-legacy", async (req, res) => {
+  res.json({ success: true, message: "Legacy sync is disabled. Questions are now local." });
 });
-
-// Вспомогательная функция (теперь без прямого использования QUIZ_QUESTIONS)
-const autoSyncQuestions = async () => {
-  if (!supabase) return;
-  try {
-    const { QUIZ_QUESTIONS } = await import("./constants_data");
-    
-    // 1. Синхронизация вопросов
-    const rows: any[] = [];
-    for (const moduleId in QUIZ_QUESTIONS) {
-      QUIZ_QUESTIONS[moduleId].forEach((q: any, index: number) => {
-        rows.push({
-          id: `${moduleId}_${index}`,
-          module_id: moduleId,
-          text: q.text,
-          options: q.options,
-          correct: q.correct
-        });
-      });
-    }
-
-    const { error: questionsError } = await supabase
-      .from("quiz_questions")
-      .upsert(rows, { onConflict: 'id' });
-
-    if (questionsError) throw questionsError;
-
-    // 2. Инициализация дефолтных паролей
-    const defaultSettings = [
-      { key: 'admin_password', value: '2026' },
-      { key: 'contestant_password', value: '7777' }
-    ];
-
-    for (const setting of defaultSettings) {
-      const { data } = await supabase
-        .from("app_settings")
-        .select("value")
-        .eq("key", setting.key)
-        .single();
-      
-      if (!data) {
-        await supabase.from("app_settings").insert([setting]);
-      }
-    }
-  } catch (error) {
-    console.error("❌ Auto-sync failed:", error);
-  }
-};
 
 // Запуск авто-синхронизации (УДАЛЕНО для предотвращения таймаутов на Vercel)
 // autoSyncQuestions();
 
+// API: Статус здоровья
 app.get("/api/health", async (req, res) => {
   try {
-    if (!supabase) return res.json({ status: "error", message: "Supabase not initialized" });
-    
-    // Проверка наличия таблиц
-    const { data: tables, error: tablesError } = await supabase.rpc('get_tables'); // Может не сработать без RPC
-    
-    const { count: questionCount, error: qError } = await supabase.from("quiz_questions").select("*", { count: 'exact', head: true });
-    const { count: settingsCount, error: sError } = await supabase.from("app_settings").select("*", { count: 'exact', head: true });
+    const { count: settingsCount, error: sError } = supabase 
+      ? await supabase.from("app_settings").select("*", { count: 'exact', head: true })
+      : { count: 0, error: null };
     
     res.json({ 
       status: "ok", 
-      questions: { count: questionCount, error: qError },
       settings: { count: settingsCount, error: sError },
       env: {
         hasUrl: !!supabaseUrl,
