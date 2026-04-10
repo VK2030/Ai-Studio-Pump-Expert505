@@ -179,13 +179,29 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
             ) : isLoading ? (
               <p className={`text-[10px] font-bold uppercase tracking-widest mt-4 animate-pulse ${isDark ? 'text-blue-100/40' : 'text-slate-400'}`}>Проверка...</p>
             ) : (
-              <button 
-                onClick={handleBack}
-                className={`mt-4 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 border
-                  ${isDark ? 'bg-white/5 border-white/10 text-white/30' : 'bg-slate-100 border-slate-200 text-slate-400'}`}
-              >
-                Вернуться к выбору
-              </button>
+              <div className="flex flex-col items-center gap-2 mt-4">
+                <button 
+                  onClick={handleBack}
+                  className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 border
+                    ${isDark ? 'bg-white/5 border-white/10 text-white/30' : 'bg-slate-100 border-slate-200 text-slate-400'}`}
+                >
+                  Вернуться к выбору
+                </button>
+                <button 
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/ping');
+                      const data = await res.json();
+                      alert(`Ping: ${JSON.stringify(data)}`);
+                    } catch (e: any) {
+                      alert(`Ping failed: ${e.message}`);
+                    }
+                  }}
+                  className="text-[8px] opacity-20 hover:opacity-100 transition-opacity"
+                >
+                  Diagnostic Ping
+                </button>
+              </div>
             )}
           </div>
         </AnimatedContent>
