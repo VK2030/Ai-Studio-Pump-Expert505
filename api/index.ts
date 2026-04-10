@@ -1,16 +1,9 @@
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
-
-console.log("[API] index.ts loading...");
+import { QUIZ_QUESTIONS } from "./questions_data";
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
-
-// Простейший тест без роутера
-app.get("/api/ping", (req, res) => {
-  console.log("[API] Ping hit");
-  res.send("pong");
-});
 
 const router = express.Router();
 
@@ -267,8 +260,6 @@ router.get("/quiz/questions/:moduleId", async (req, res) => {
     const { moduleId } = req.params;
     const { userName } = req.query;
     
-    // Динамический импорт для экономии памяти при холодном старте
-    const { QUIZ_QUESTIONS } = await import("./questions_data");
     const questionsForModule = QUIZ_QUESTIONS[moduleId] || [];
     
     // Форматируем вопросы с ID
@@ -341,8 +332,6 @@ router.post("/quiz/check", async (req, res) => {
   try {
     const { moduleId, questionIdx, selectedOptions } = req.body;
     
-    // Динамический импорт
-    const { QUIZ_QUESTIONS } = await import("./questions_data");
     const questionsForModule = QUIZ_QUESTIONS[moduleId] || [];
     const question = questionsForModule[questionIdx];
 
@@ -371,7 +360,6 @@ router.post("/quiz/check-legacy", async (req, res) => {
     const moduleId = parts[0];
     const index = parseInt(parts[1]);
 
-    const { QUIZ_QUESTIONS } = await import("./questions_data");
     const moduleQuestions = QUIZ_QUESTIONS[moduleId];
     
     if (!moduleQuestions || !moduleQuestions[index]) {
@@ -451,7 +439,6 @@ router.get("/health", async (req, res) => {
       ? await supabase.from("app_settings").select("*", { count: 'exact', head: true })
       : { count: 0, error: null };
     
-    const { QUIZ_QUESTIONS } = await import("./questions_data");
     const modulesLoaded = Object.keys(QUIZ_QUESTIONS);
     const totalQuestions = modulesLoaded.reduce((acc, key) => acc + QUIZ_QUESTIONS[key].length, 0);
 
