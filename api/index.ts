@@ -2,8 +2,15 @@ import express from "express";
 import { createClient } from "@supabase/supabase-js";
 import { QUIZ_QUESTIONS } from "./questions_data";
 
+console.log("[API] index.ts initializing...");
+
 const app = express();
 app.use(express.json({ limit: '1mb' }));
+
+// Простейший тест для проверки работоспособности функции
+app.get("/api/ping", (req, res) => {
+  res.send("pong");
+});
 
 const router = express.Router();
 
@@ -383,43 +390,55 @@ router.post("/quiz/check-legacy", async (req, res) => {
 
 // API: Вход (Безопасная проверка пароля на сервере)
 router.post("/login", async (req, res) => {
-  console.log(`[API] Login attempt: ${JSON.stringify(req.body)}`);
+  const requestId = Math.random().toString(36).substring(7);
+  console.log(`[API][${requestId}] Login attempt started`);
   try {
     const { role, password } = req.body || {};
+    console.log(`[API][${requestId}] Role: ${role}, Password provided: ${!!password}`);
     
     if (!role || !password) {
       return res.status(400).json({ error: "Role and password are required" });
     }
 
-    // Временная упрощенная проверка для отладки
     const defaultPasswords: Record<string, string> = {
       contestant: '7777',
       admin: '2026'
     };
 
     let correctPassword = defaultPasswords[role];
+    console.log(`[API][${requestId}] Default password for ${role}: ${correctPassword}`);
 
-    // Пробуем получить из Supabase если он есть
     try {
       if (supabase) {
-        const { data } = await supabase
+        console.log(`[API][${requestId}] Checking Supabase...`);
+        const { data, error } = await supabase
           .from("app_settings")
           .select("value")
           .eq("key", `${role}_password`)
           .single();
-        if (data?.value) correctPassword = data.value;
+        
+        if (error) {
+          console.error(`[API][${requestId}] Supabase error:`, error.message);
+        } else if (data?.value) {
+          correctPassword = data.value;
+          console.log(`[API][${requestId}] Supabase password found`);
+        }
+      } else {
+        console.log(`[API][${requestId}] Supabase not initialized`);
       }
-    } catch (e) {
-      console.warn("Supabase check failed, using default");
+    } catch (e: any) {
+      console.error(`[API][${requestId}] Supabase catch block:`, e.message);
     }
 
     if (String(password) === String(correctPassword)) {
+      console.log(`[API][${requestId}] Login success`);
       return res.json({ success: true, role });
     }
     
+    console.warn(`[API][${requestId}] Login failed: Invalid password`);
     return res.status(401).json({ success: false, error: "Invalid password" });
   } catch (error: any) {
-    console.error("Login error:", error);
+    console.error(`[API][${requestId}] CRITICAL LOGIN ERROR:`, error);
     return res.status(500).json({ error: error.message || "Internal Server Error" });
   }
 });
