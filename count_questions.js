@@ -1,6 +1,6 @@
 
 const fs = require('fs');
-const content = fs.readFileSync('api/constants_data.ts', 'utf8');
+const content = fs.readFileSync('api/_questions.ts', 'utf8');
 
 const modules = [
   { id: 'esp-selection-startup', name: 'Подбор УЭЦН и ВНР' },

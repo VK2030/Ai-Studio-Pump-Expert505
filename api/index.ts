@@ -1,11 +1,11 @@
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
-
-// Мы НЕ импортируем QUIZ_QUESTIONS здесь глобально, чтобы не перегружать память при логине
-// import { QUIZ_QUESTIONS } from "./constants_data";
+import { QUIZ_QUESTIONS } from "./_questions";
 
 const app = express();
 app.use(express.json({ limit: '1mb' })); // Уменьшили лимит для безопасности
+
+const router = express.Router();
 
 // Инициализация Supabase с очисткой ключей
 const supabaseUrl = (process.env.SUPABASE_URL || "").trim();
@@ -24,12 +24,12 @@ try {
 }
 
 // API: Простая проверка
-app.get("/api/test", (req, res) => {
+router.get("/test", (req, res) => {
   res.json({ message: "Server is alive" });
 });
 
 // API: Проверка статуса
-app.get("/api/debug/supabase", (req, res) => {
+router.get("/debug/supabase", (req, res) => {
   res.json({
     status: "ok",
     configured: !!(supabaseUrl && supabaseServiceKey),
@@ -41,7 +41,7 @@ app.get("/api/debug/supabase", (req, res) => {
 });
 
 // API: Получение истории
-app.get("/api/history", async (req, res) => {
+router.get("/history", async (req, res) => {
   try {
     if (!supabase) return res.json([]);
     const { data, error } = await supabase
@@ -57,7 +57,7 @@ app.get("/api/history", async (req, res) => {
 });
 
 // API: Сохранение результата
-app.post("/api/history", async (req, res) => {
+router.post("/history", async (req, res) => {
   try {
     const entry = req.body;
     if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
@@ -83,7 +83,7 @@ app.post("/api/history", async (req, res) => {
 });
 
 // API: Очистка (Admin)
-app.delete("/api/history", async (req, res) => {
+router.delete("/history", async (req, res) => {
   try {
     const adminPassword = req.headers['x-admin-password'];
     if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
@@ -124,7 +124,7 @@ app.delete("/api/history", async (req, res) => {
 });
 
 // API: Отправка в Telegram
-app.post("/api/telegram/send-summary", async (req, res) => {
+router.post("/telegram/send-summary", async (req, res) => {
   try {
     const { summary } = req.body;
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -159,7 +159,7 @@ app.post("/api/telegram/send-summary", async (req, res) => {
 });
 
 // API: Получение глобальных настроек
-app.get("/api/config", async (req, res) => {
+router.get("/config", async (req, res) => {
   try {
     if (!supabase) return res.json({ isHistoryAnswersEnabled: true });
     const { data, error } = await supabase
@@ -183,7 +183,7 @@ app.get("/api/config", async (req, res) => {
 });
 
 // API: Обновление глобальных настроек (Admin)
-app.post("/api/config", async (req, res) => {
+router.post("/config", async (req, res) => {
   try {
     const { key, value } = req.body;
     const adminPassword = req.headers['x-admin-password'];
@@ -213,7 +213,7 @@ app.post("/api/config", async (req, res) => {
 });
 
 // API: Ручная синхронизация настроек (Admin)
-app.post("/api/admin/sync", async (req, res) => {
+router.post("/admin/sync", async (req, res) => {
   try {
     const adminPassword = req.headers['x-admin-password'];
     if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
@@ -255,13 +255,12 @@ app.post("/api/admin/sync", async (req, res) => {
 });
 
 // API: Получение вопросов модуля (из локального файла constants_data.ts)
-app.get("/api/quiz/questions/:moduleId", async (req, res) => {
+router.get("/quiz/questions/:moduleId", async (req, res) => {
   try {
     const { moduleId } = req.params;
     const { userName } = req.query;
     
-    // Динамический импорт для экономии памяти
-    const { QUIZ_QUESTIONS } = await import("./constants_data");
+    // Используем статически импортированные вопросы
     const questionsForModule = QUIZ_QUESTIONS[moduleId] || [];
     
     // Форматируем вопросы с ID
@@ -294,7 +293,7 @@ app.get("/api/quiz/questions/:moduleId", async (req, res) => {
 });
 
 // API: Инкремент просмотров вопросов
-app.post("/api/quiz/views/increment", async (req, res) => {
+router.post("/quiz/views/increment", async (req, res) => {
   try {
     const { userName, questionIds } = req.body;
     if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
@@ -330,7 +329,7 @@ app.post("/api/quiz/views/increment", async (req, res) => {
 });
 
 // API: Проверка ответа (на сервере с использованием локального файла)
-app.post("/api/quiz/check", async (req, res) => {
+router.post("/quiz/check", async (req, res) => {
   try {
     const { questionId, selectedOptions } = req.body;
     
@@ -339,7 +338,6 @@ app.post("/api/quiz/check", async (req, res) => {
     const moduleId = parts[0];
     const index = parseInt(parts[1]);
 
-    const { QUIZ_QUESTIONS } = await import("./constants_data");
     const moduleQuestions = QUIZ_QUESTIONS[moduleId];
     
     if (!moduleQuestions || !moduleQuestions[index]) {
@@ -362,7 +360,7 @@ app.post("/api/quiz/check", async (req, res) => {
 });
 
 // API: Вход (Безопасная проверка пароля на сервере)
-app.post("/api/login", async (req, res) => {
+router.post("/login", async (req, res) => {
   console.log(`[API] Login attempt started at ${new Date().toISOString()}`);
   try {
     if (!req.body) {
@@ -434,7 +432,7 @@ app.post("/api/login", async (req, res) => {
 });
 
 // API: Ручная синхронизация данных (Admin) - Удалена синхронизация вопросов
-app.post("/api/admin/sync-legacy", async (req, res) => {
+router.post("/admin/sync-legacy", async (req, res) => {
   res.json({ success: true, message: "Legacy sync is disabled. Questions are now local." });
 });
 
@@ -442,15 +440,22 @@ app.post("/api/admin/sync-legacy", async (req, res) => {
 // autoSyncQuestions();
 
 // API: Статус здоровья
-app.get("/api/health", async (req, res) => {
+router.get("/health", async (req, res) => {
   try {
     const { count: settingsCount, error: sError } = supabase 
       ? await supabase.from("app_settings").select("*", { count: 'exact', head: true })
       : { count: 0, error: null };
     
+    const modulesLoaded = Object.keys(QUIZ_QUESTIONS);
+    const totalQuestions = modulesLoaded.reduce((acc, key) => acc + QUIZ_QUESTIONS[key].length, 0);
+
     res.json({ 
       status: "ok", 
       settings: { count: settingsCount, error: sError },
+      questions: {
+        modules: modulesLoaded,
+        total: totalQuestions
+      },
       env: {
         hasUrl: !!supabaseUrl,
         hasKey: !!supabaseServiceKey
@@ -460,5 +465,7 @@ app.get("/api/health", async (req, res) => {
     res.json({ status: "error", message: e.message });
   }
 });
+
+app.use("/api", router);
 
 export default app;
