@@ -1,9 +1,16 @@
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
-import { QUIZ_QUESTIONS } from "./_questions";
+
+console.log("[API] index.ts loading...");
 
 const app = express();
-app.use(express.json({ limit: '1mb' })); // Уменьшили лимит для безопасности
+app.use(express.json({ limit: '1mb' }));
+
+// Простейший тест без роутера
+app.get("/api/ping", (req, res) => {
+  console.log("[API] Ping hit");
+  res.send("pong");
+});
 
 const router = express.Router();
 
@@ -254,13 +261,14 @@ router.post("/admin/sync", async (req, res) => {
   }
 });
 
-// API: Получение вопросов модуля (из локального файла constants_data.ts)
+// API: Получение вопросов модуля (из локального файла questions_data.ts)
 router.get("/quiz/questions/:moduleId", async (req, res) => {
   try {
     const { moduleId } = req.params;
     const { userName } = req.query;
     
-    // Используем статически импортированные вопросы
+    // Динамический импорт для экономии памяти при холодном старте
+    const { QUIZ_QUESTIONS } = await import("./questions_data");
     const questionsForModule = QUIZ_QUESTIONS[moduleId] || [];
     
     // Форматируем вопросы с ID
@@ -328,8 +336,33 @@ router.post("/quiz/views/increment", async (req, res) => {
   }
 });
 
-// API: Проверка ответа (на сервере с использованием локального файла)
+// API: Проверка ответов
 router.post("/quiz/check", async (req, res) => {
+  try {
+    const { moduleId, questionIdx, selectedOptions } = req.body;
+    
+    // Динамический импорт
+    const { QUIZ_QUESTIONS } = await import("./questions_data");
+    const questionsForModule = QUIZ_QUESTIONS[moduleId] || [];
+    const question = questionsForModule[questionIdx];
+
+    if (!question) {
+      return res.status(404).json({ error: "Question not found" });
+    }
+
+    const isCorrect = JSON.stringify(selectedOptions.sort()) === JSON.stringify(question.correct.sort());
+    
+    res.json({
+      isCorrect,
+      correctOptions: question.correct
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API: Проверка ответа (на сервере с использованием локального файла)
+router.post("/quiz/check-legacy", async (req, res) => {
   try {
     const { questionId, selectedOptions } = req.body;
     
@@ -338,6 +371,7 @@ router.post("/quiz/check", async (req, res) => {
     const moduleId = parts[0];
     const index = parseInt(parts[1]);
 
+    const { QUIZ_QUESTIONS } = await import("./questions_data");
     const moduleQuestions = QUIZ_QUESTIONS[moduleId];
     
     if (!moduleQuestions || !moduleQuestions[index]) {
@@ -361,73 +395,44 @@ router.post("/quiz/check", async (req, res) => {
 
 // API: Вход (Безопасная проверка пароля на сервере)
 router.post("/login", async (req, res) => {
-  console.log(`[API] Login attempt started at ${new Date().toISOString()}`);
+  console.log(`[API] Login attempt: ${JSON.stringify(req.body)}`);
   try {
-    if (!req.body) {
-      console.error("[API] Login failed: Request body is missing");
-      return res.status(400).json({ error: "Request body is missing" });
-    }
-
-    const { role, password } = req.body;
-    console.log(`[API] Login attempt: role=${role}, password=${password ? '****' : 'missing'}`);
+    const { role, password } = req.body || {};
     
     if (!role || !password) {
       return res.status(400).json({ error: "Role and password are required" });
     }
 
-    // Удалена имитация задержки для предотвращения таймаутов на Vercel
-    // await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Если Supabase не настроен, используем временные дефолтные пароли (для отладки)
+    // Временная упрощенная проверка для отладки
     const defaultPasswords: Record<string, string> = {
       contestant: '7777',
       admin: '2026'
     };
 
     let correctPassword = defaultPasswords[role];
-    console.log(`Default password for ${role}: ${correctPassword}`);
 
-    if (supabase) {
-      console.log(`Checking Supabase for ${role}_password...`);
-      const { data, error } = await supabase
-        .from("app_settings")
-        .select("value")
-        .eq("key", `${role}_password`)
-        .single();
-      
-      if (error) {
-        console.error(`Supabase error fetching ${role}_password:`, error.message);
-      } else if (data) {
-        correctPassword = data.value;
-        console.log(`Supabase password found for ${role}: ${correctPassword}`);
-      } else {
-        console.log(`No custom password found in Supabase for ${role}, using default.`);
+    // Пробуем получить из Supabase если он есть
+    try {
+      if (supabase) {
+        const { data } = await supabase
+          .from("app_settings")
+          .select("value")
+          .eq("key", `${role}_password`)
+          .single();
+        if (data?.value) correctPassword = data.value;
       }
-    } else {
-      console.warn("Supabase not initialized, using default passwords.");
+    } catch (e) {
+      console.warn("Supabase check failed, using default");
     }
 
-    if (password === String(correctPassword)) {
-      console.log(`Login successful for ${role}`);
-      res.json({ success: true, role });
-    } else {
-      console.warn(`Login failed for ${role}: expected ${correctPassword}, got ${password}`);
-      // Возвращаем более детальную ошибку для отладки (временно)
-      res.status(401).json({ 
-        success: false, 
-        error: "Invalid password",
-        debug: {
-          supabaseInitialized: !!supabase,
-          roleRequested: role,
-          usingDefault: String(correctPassword) === String(defaultPasswords[role]),
-          hasSupabaseUrl: !!supabaseUrl,
-          hasSupabaseKey: !!supabaseServiceKey
-        }
-      });
+    if (String(password) === String(correctPassword)) {
+      return res.json({ success: true, role });
     }
+    
+    return res.status(401).json({ success: false, error: "Invalid password" });
   } catch (error: any) {
-    console.error("Login endpoint error:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Login error:", error);
+    return res.status(500).json({ error: error.message || "Internal Server Error" });
   }
 });
 
@@ -446,6 +451,7 @@ router.get("/health", async (req, res) => {
       ? await supabase.from("app_settings").select("*", { count: 'exact', head: true })
       : { count: 0, error: null };
     
+    const { QUIZ_QUESTIONS } = await import("./questions_data");
     const modulesLoaded = Object.keys(QUIZ_QUESTIONS);
     const totalQuestions = modulesLoaded.reduce((acc, key) => acc + QUIZ_QUESTIONS[key].length, 0);
 
@@ -467,5 +473,16 @@ router.get("/health", async (req, res) => {
 });
 
 app.use("/api", router);
+app.use("/", router); // Fallback для разных способов проброса путей на Vercel
+
+// Глобальный обработчик ошибок
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error("GLOBAL ERROR:", err);
+  res.status(500).json({ 
+    error: "Internal Server Error", 
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+});
 
 export default app;
