@@ -1,12 +1,15 @@
 import { supabase } from "../../_lib/supabase";
-import { QUIZ_QUESTIONS } from "../../_lib/questions";
+import fs from "fs";
+import path from "path";
 
 export default async function handler(req: any, res: any) {
   const { moduleId } = req.query;
   const { userName } = req.query;
 
   try {
-    const questionsForModule = QUIZ_QUESTIONS[moduleId] || [];
+    const questionsPath = path.join(process.cwd(), "api", "_lib", "questions.json");
+    const questionsData = JSON.parse(fs.readFileSync(questionsPath, "utf8"));
+    const questionsForModule = questionsData[moduleId] || [];
     
     // Форматируем вопросы с ID
     const formattedQuestions = questionsForModule.map((q: any, i: number) => ({

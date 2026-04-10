@@ -1,4 +1,5 @@
-import { QUIZ_QUESTIONS } from "../_lib/questions";
+import fs from "fs";
+import path from "path";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
@@ -8,7 +9,9 @@ export default async function handler(req: any, res: any) {
   try {
     const { moduleId, questionIdx, selectedOptions } = req.body;
     
-    const questionsForModule = QUIZ_QUESTIONS[moduleId] || [];
+    const questionsPath = path.join(process.cwd(), "api", "_lib", "questions.json");
+    const questionsData = JSON.parse(fs.readFileSync(questionsPath, "utf8"));
+    const questionsForModule = questionsData[moduleId] || [];
     const question = questionsForModule[questionIdx];
 
     if (!question) {

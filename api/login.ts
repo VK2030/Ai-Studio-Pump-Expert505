@@ -1,4 +1,6 @@
+console.log("[API] login.ts loading...");
 import { supabase } from "./_lib/supabase";
+console.log("[API] login.ts: supabase imported");
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {

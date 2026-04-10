@@ -1,5 +1,6 @@
 import { supabase, supabaseUrl, supabaseServiceKey } from "./_lib/supabase";
-import { QUIZ_QUESTIONS } from "./_lib/questions";
+import fs from "fs";
+import path from "path";
 
 export default async function handler(req: any, res: any) {
   try {
@@ -7,8 +8,10 @@ export default async function handler(req: any, res: any) {
       ? await supabase.from("app_settings").select("*", { count: 'exact', head: true })
       : { count: 0, error: null };
     
-    const modulesLoaded = Object.keys(QUIZ_QUESTIONS);
-    const totalQuestions = modulesLoaded.reduce((acc, key) => acc + QUIZ_QUESTIONS[key].length, 0);
+    const questionsPath = path.join(process.cwd(), "api", "_lib", "questions.json");
+    const questionsData = JSON.parse(fs.readFileSync(questionsPath, "utf8"));
+    const modulesLoaded = Object.keys(questionsData);
+    const totalQuestions = modulesLoaded.reduce((acc, key) => acc + questionsData[key].length, 0);
 
     res.json({ 
       status: "ok", 
