@@ -119,45 +119,80 @@ const App: React.FC = () => {
 
       let summary = `<b>📊 Сводный отчет о результатах тестирования</b>\n\n`;
       
-      Object.entries(statsByModule).forEach(([modId, stats]) => {
-        const PBOTOS_SUBMODULES: Record<string, string> = {
-          'pbotos-general': 'Общие вопросы ОТ',
-          'pbotos-siz': 'СИЗ',
-          'pbotos-harmful': 'Вредные и опасные ПФ',
-          'pbotos-firstaid': 'Оказание первой помощи',
-          'pbotos-a1': 'А1. Основы ПБ',
-          'pbotos-b21': 'Б.2.1 Для объектов нефтяной промышленности',
-        };
+      const PBOTOS_SUBMODULES: Record<string, string> = {
+        'pbotos-general': 'Общие вопросы ОТ',
+        'pbotos-siz': 'СИЗ',
+        'pbotos-harmful': 'Вредные и опасные ПФ',
+        'pbotos-firstaid': 'Оказание первой помощи',
+        'pbotos-a1': 'А1. Основы ПБ',
+        'pbotos-b21': 'Б.2.1 Для объектов нефтяной промышленности',
+      };
 
-        const module = MODULES.find(m => m.id === modId);
-        const recentScores = moduleRecentScores[modId] || [];
+      // Проходим по модулям в заданном порядке (из constants.tsx)
+      MODULES.forEach(module => {
+        const modId = module.id;
         
-        let displayTitle = module?.title || modId;
-        if (PBOTOS_SUBMODULES[modId]) {
-          displayTitle = `ПБОТОС/${PBOTOS_SUBMODULES[modId]}`;
-        } else if (modId === 'pbotos') {
-          displayTitle = 'ПБОТОС';
-        }
+        if (modId === 'pbotos') {
+          // Сначала выводим основной ПБОТОС если есть
+          if (statsByModule['pbotos']) {
+            const stats = statsByModule['pbotos'];
+            const recentScores = moduleRecentScores['pbotos'] || [];
+            summary += `🔹 <b>ПБОТОС</b>\n`;
+            if (recentScores.length > 0) {
+              summary += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
+            }
+            summary += `   Пройдено раз: ${stats.count}\n\n`;
+          }
 
-        summary += `🔹 <b>${displayTitle}</b>\n`;
-        
-        if (recentScores.length > 0) {
-          summary += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
-        }
-        summary += `   Пройдено раз: ${stats.count}\n`;
-
-        if (!modId.startsWith('pbotos') && stats.latestEntry?.incorrectAnswers && stats.latestEntry.incorrectAnswers.length > 0) {
-          summary += `<blockquote expandable>`;
-          summary += `<b>Ошибки в последнем тесте:</b>\n\n`;
-          stats.latestEntry.incorrectAnswers.forEach((ans, idx) => {
-            summary += `<b>${idx + 1}. ${ans.question}</b>\n`;
-            summary += `❌ Ваш ответ: ${ans.userAnswer}\n`;
-            summary += `✅ Правильный: ${ans.correctAnswer}\n\n`;
+          // Затем подразделы ПБОТОС
+          Object.entries(PBOTOS_SUBMODULES).forEach(([subId, subTitle]) => {
+            if (statsByModule[subId]) {
+              const stats = statsByModule[subId];
+              const recentScores = moduleRecentScores[subId] || [];
+              summary += `🔹 <b>ПБОТОС/${subTitle}</b>\n`;
+              if (recentScores.length > 0) {
+                summary += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
+              }
+              summary += `   Пройдено раз: ${stats.count}\n`;
+              
+              if (stats.latestEntry?.incorrectAnswers && stats.latestEntry.incorrectAnswers.length > 0) {
+                summary += `<blockquote expandable>`;
+                summary += `<b>Ошибки в последнем тесте:</b>\n\n`;
+                stats.latestEntry.incorrectAnswers.forEach((ans, idx) => {
+                  summary += `<b>${idx + 1}. ${ans.question}</b>\n`;
+                  summary += `❌ Ваш ответ: ${ans.userAnswer}\n`;
+                  summary += `✅ Правильный: ${ans.correctAnswer}\n\n`;
+                });
+                summary += `</blockquote>`;
+              }
+              summary += `\n`;
+            }
           });
-          summary += `</blockquote>`;
+        } else {
+          // Обычные модули
+          if (statsByModule[modId]) {
+            const stats = statsByModule[modId];
+            const recentScores = moduleRecentScores[modId] || [];
+            
+            summary += `🔹 <b>${module.title}</b>\n`;
+            if (recentScores.length > 0) {
+              summary += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
+            }
+            summary += `   Пройдено раз: ${stats.count}\n`;
+
+            if (stats.latestEntry?.incorrectAnswers && stats.latestEntry.incorrectAnswers.length > 0) {
+              summary += `<blockquote expandable>`;
+              summary += `<b>Ошибки в последнем тесте:</b>\n\n`;
+              stats.latestEntry.incorrectAnswers.forEach((ans, idx) => {
+                summary += `<b>${idx + 1}. ${ans.question}</b>\n`;
+                summary += `❌ Ваш ответ: ${ans.userAnswer}\n`;
+                summary += `✅ Правильный: ${ans.correctAnswer}\n\n`;
+              });
+              summary += `</blockquote>`;
+            }
+            summary += `\n`;
+          }
         }
-        
-        summary += `\n`;
       });
 
       const lastEntry = fullHistory[0];
