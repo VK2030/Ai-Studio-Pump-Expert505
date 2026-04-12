@@ -1,17 +1,13 @@
 {
   "version": 2,
-  "framework": "vite",
   "rewrites": [
     {
-      "source": "/((?!api/).*)",
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
+    {
+      "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "vercel-node@latest",
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  }
+  ]
 }

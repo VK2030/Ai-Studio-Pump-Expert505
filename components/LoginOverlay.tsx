@@ -106,7 +106,7 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
             </div>
 
             <SplitText
-              text="Выберите аккаунт"
+              text="Выберите аккаунт (v1.0.5)"
               className={`text-xl font-black mb-10 uppercase tracking-tighter text-center ${isDark ? 'text-white' : 'text-slate-900'}`}
               delay={50}
               duration={1.25}
@@ -190,16 +190,16 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
                 <button 
                   onClick={async () => {
                     try {
-                      const res = await fetch('/api/ping');
+                      const res = await fetch('/api/login');
                       const data = await res.json();
-                      alert(`Ping: ${JSON.stringify(data)}`);
+                      alert(`API Status: ${JSON.stringify(data)}`);
                     } catch (e: any) {
-                      alert(`Ping failed: ${e.message}`);
+                      alert(`API check failed: ${e.message}`);
                     }
                   }}
-                  className="text-[8px] opacity-20 hover:opacity-100 transition-opacity"
+                  className="mt-4 text-[10px] text-blue-500 font-bold underline"
                 >
-                  Diagnostic Ping
+                  Проверить связь с сервером (v1.0.5)
                 </button>
               </div>
             )}

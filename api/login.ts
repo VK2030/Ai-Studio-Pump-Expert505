@@ -1,4 +1,14 @@
+// import { createClient } from "@supabase/supabase-js";
+
 export default async function handler(req: any, res: any) {
+  // Simple GET for testing
+  if (req.method === 'GET') {
+    return res.status(200).json({ 
+      message: "Login API is alive. Use POST to login.",
+      version: "1.0.5" 
+    });
+  }
+
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -43,13 +53,12 @@ export default async function handler(req: any, res: any) {
 
     let correctPassword = defaultPasswords[role];
 
-    // Initialize Supabase inside the handler to catch errors
+    /* Supabase disabled for debugging
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (supabaseUrl && supabaseKey) {
       try {
-        const { createClient } = await import("@supabase/supabase-js");
         const supabase = createClient(supabaseUrl, supabaseKey);
         const { data, error } = await supabase
           .from("app_settings")
@@ -59,26 +68,20 @@ export default async function handler(req: any, res: any) {
         
         if (!error && data?.value) {
           correctPassword = data.value;
-          console.log(`[API][${requestId}] Password fetched from Supabase`);
-        } else if (error) {
-          console.warn(`[API][${requestId}] Supabase query error (using default):`, error.message);
         }
       } catch (supabaseErr: any) {
-        console.error(`[API][${requestId}] Supabase init/query crash:`, supabaseErr.message);
+        console.error(`[API][${requestId}] Supabase error:`, supabaseErr.message);
       }
-    } else {
-      console.log(`[API][${requestId}] Supabase env vars missing, using default passwords`);
     }
+    */
 
     if (String(password) === String(correctPassword)) {
-      console.log(`[API][${requestId}] Login success for role: ${role}`);
-      return res.status(200).json({ success: true, role });
+      return res.status(200).json({ success: true, role, version: "1.0.5" });
     }
     
-    console.warn(`[API][${requestId}] Login failed: Invalid password for role: ${role}`);
     return res.status(401).json({ success: false, error: "Invalid password" });
   } catch (error: any) {
-    console.error(`[API][${requestId}] CRITICAL LOGIN ERROR:`, error);
+    console.error(`[API][${requestId}] CRITICAL ERROR:`, error);
     return res.status(500).json({ 
       error: "Internal Server Error", 
       message: error.message,
