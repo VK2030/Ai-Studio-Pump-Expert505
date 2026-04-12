@@ -1,11 +1,11 @@
-// import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req: any, res: any) {
   // Simple GET for testing
   if (req.method === 'GET') {
     return res.status(200).json({ 
       message: "Login API is alive. Use POST to login.",
-      version: "1.0.5" 
+      version: "1.0.6" 
     });
   }
 
@@ -53,7 +53,6 @@ export default async function handler(req: any, res: any) {
 
     let correctPassword = defaultPasswords[role];
 
-    /* Supabase disabled for debugging
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -73,10 +72,9 @@ export default async function handler(req: any, res: any) {
         console.error(`[API][${requestId}] Supabase error:`, supabaseErr.message);
       }
     }
-    */
 
     if (String(password) === String(correctPassword)) {
-      return res.status(200).json({ success: true, role, version: "1.0.5" });
+      return res.status(200).json({ success: true, role, version: "1.0.6" });
     }
     
     return res.status(401).json({ success: false, error: "Invalid password" });

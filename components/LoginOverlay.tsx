@@ -106,7 +106,7 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
             </div>
 
             <SplitText
-              text="Выберите аккаунт (v1.0.5)"
+              text="Выберите аккаунт (v1.0.6)"
               className={`text-xl font-black mb-10 uppercase tracking-tighter text-center ${isDark ? 'text-white' : 'text-slate-900'}`}
               delay={50}
               duration={1.25}
@@ -199,7 +199,7 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
                   }}
                   className="mt-4 text-[10px] text-blue-500 font-bold underline"
                 >
-                  Проверить связь с сервером (v1.0.5)
+                  Проверить связь с сервером (v1.0.6)
                 </button>
               </div>
             )}

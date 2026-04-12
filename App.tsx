@@ -400,7 +400,7 @@ const App: React.FC = () => {
                               </svg>
                             </div>
                             <div className="flex flex-col items-start">
-                              <span className="text-[9px] uppercase tracking-widest text-indigo-500 font-black">Раздел (v1.0.5)</span>
+                              <span className="text-[9px] uppercase tracking-widest text-indigo-500 font-black">Раздел (v1.0.6)</span>
                               <span className="font-bold text-sm">Тестирование</span>
                             </div>
                           </div>
