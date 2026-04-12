@@ -101,6 +101,13 @@ const App: React.FC = () => {
       return;
     }
 
+    const escapeHTML = (text: string) => {
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    };
+
     setTelegramStatus('sending');
     try {
       // Группируем результаты по модулям
@@ -129,79 +136,70 @@ const App: React.FC = () => {
       };
 
       // Проходим по модулям в заданном порядке (из constants.tsx)
-      MODULES.forEach(module => {
+      for (const module of MODULES) {
         const modId = module.id;
+        let section = '';
         
         if (modId === 'pbotos') {
           // Сначала выводим основной ПБОТОС если есть
           if (statsByModule['pbotos']) {
             const stats = statsByModule['pbotos'];
             const recentScores = moduleRecentScores['pbotos'] || [];
-            summary += `🔹 <b>ПБОТОС</b>\n`;
+            section += `🔹 <b>ПБОТОС</b>\n`;
             if (recentScores.length > 0) {
-              summary += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
+              section += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
             }
-            summary += `   Пройдено раз: ${stats.count}\n\n`;
+            section += `   Пройдено раз: ${stats.count}\n\n`;
           }
 
           // Затем подразделы ПБОТОС
-          Object.entries(PBOTOS_SUBMODULES).forEach(([subId, subTitle]) => {
+          for (const [subId, subTitle] of Object.entries(PBOTOS_SUBMODULES)) {
             if (statsByModule[subId]) {
               const stats = statsByModule[subId];
               const recentScores = moduleRecentScores[subId] || [];
-              summary += `🔹 <b>ПБОТОС/${subTitle}</b>\n`;
+              section += `🔹 <b>ПБОТОС/${subTitle}</b>\n`;
               if (recentScores.length > 0) {
-                summary += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
+                section += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
               }
-              summary += `   Пройдено раз: ${stats.count}\n`;
-              
-              if (stats.latestEntry?.incorrectAnswers && stats.latestEntry.incorrectAnswers.length > 0) {
-                summary += `<blockquote expandable>`;
-                summary += `<b>Ошибки в последнем тесте:</b>\n\n`;
-                stats.latestEntry.incorrectAnswers.forEach((ans, idx) => {
-                  summary += `<b>${idx + 1}. ${ans.question}</b>\n`;
-                  summary += `❌ Ваш ответ: ${ans.userAnswer}\n`;
-                  summary += `✅ Правильный: ${ans.correctAnswer}\n\n`;
-                });
-                summary += `</blockquote>`;
-              }
-              summary += `\n`;
+              section += `   Пройдено раз: ${stats.count}\n`;
+              section += `\n`;
             }
-          });
+          }
         } else {
           // Обычные модули
           if (statsByModule[modId]) {
             const stats = statsByModule[modId];
             const recentScores = moduleRecentScores[modId] || [];
             
-            summary += `🔹 <b>${module.title}</b>\n`;
+            section += `🔹 <b>${module.title}</b>\n`;
             if (recentScores.length > 0) {
-              summary += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
+              section += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
             }
-            summary += `   Пройдено раз: ${stats.count}\n`;
+            section += `   Пройдено раз: ${stats.count}\n`;
 
             if (stats.latestEntry?.incorrectAnswers && stats.latestEntry.incorrectAnswers.length > 0) {
-              summary += `<blockquote expandable>`;
-              summary += `<b>Ошибки в последнем тесте:</b>\n\n`;
+              section += `<blockquote expandable>`;
+              section += `<b>Ошибки в последнем тесте:</b>\n\n`;
               stats.latestEntry.incorrectAnswers.forEach((ans, idx) => {
-                summary += `<b>${idx + 1}. ${ans.question}</b>\n`;
-                summary += `❌ Ваш ответ: ${ans.userAnswer}\n`;
-                summary += `✅ Правильный: ${ans.correctAnswer}\n\n`;
+                section += `<b>${idx + 1}. ${escapeHTML(ans.question)}</b>\n`;
+                section += `❌ Ваш ответ: ${escapeHTML(ans.userAnswer)}\n`;
+                section += `✅ Правильный: ${escapeHTML(ans.correctAnswer)}\n\n`;
               });
-              summary += `</blockquote>`;
+              section += `</blockquote>`;
             }
-            summary += `\n`;
+            section += `\n`;
           }
         }
-      });
 
-      const lastEntry = fullHistory[0];
-      summary += `🕒 <i>Последнее обновление: ${new Date().toLocaleString()}</i>`;
-
-      // Telegram message limit is 4096 characters. Truncate if necessary.
-      if (summary.length > 4000) {
-        summary = summary.substring(0, 3900) + "\n\n... [Сообщение обрезано из-за длины]";
+        // Проверяем лимит перед добавлением секции
+        if (summary.length + section.length > 3800) {
+          summary += `\n⚠️ <i>Часть данных не вошла в отчет из-за ограничений Telegram</i>\n`;
+          break;
+        }
+        summary += section;
       }
+
+      summary += `🕒 <i>Последнее обновление: ${new Date().toLocaleString()}</i>`;
 
       const response = await fetch('/api/telegram/send-summary', {
         method: 'POST',
