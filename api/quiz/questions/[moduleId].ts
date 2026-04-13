@@ -19,18 +19,24 @@ export default async function handler(req: any, res: any) {
     }));
 
     if (userName && supabase) {
-      const { data: views, error: viewsError } = await supabase
-        .from("question_views")
-        .select("question_id, view_count")
-        .eq("user_name", userName);
-      
-      if (!viewsError && views) {
-        const viewMap = new Map(views.map((v: any) => [v.question_id, v.view_count]));
-        const enrichedQuestions = formattedQuestions.map((q: any) => ({
-          ...q,
-          viewCount: viewMap.get(q.id) || 0
-        }));
-        return res.json(enrichedQuestions);
+      try {
+        const { data: views, error: viewsError } = await supabase
+          .from("question_views")
+          .select("question_id, view_count")
+          .eq("user_name", userName);
+        
+        if (viewsError) {
+          console.error("Supabase error fetching question views:", viewsError);
+        } else if (views) {
+          const viewMap = new Map(views.map((v: any) => [v.question_id, v.view_count]));
+          const enrichedQuestions = formattedQuestions.map((q: any) => ({
+            ...q,
+            viewCount: viewMap.get(q.id) || 0
+          }));
+          return res.json(enrichedQuestions);
+        }
+      } catch (e) {
+        console.error("Exception fetching question views from Supabase:", e);
       }
     }
 

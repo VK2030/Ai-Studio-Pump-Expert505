@@ -3,12 +3,18 @@ import { supabase } from "./_lib/supabase";
 export default async function handler(req: any, res: any) {
   if (req.method === 'GET') {
     try {
-      if (!supabase) return res.json({ isHistoryAnswersEnabled: true });
+      if (!supabase) {
+        console.warn("Supabase client is null in /api/config. Returning default config.");
+        return res.json({ isHistoryAnswersEnabled: true });
+      }
       const { data, error } = await supabase
         .from("app_settings")
         .select("*");
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error fetching config:", error);
+        throw error;
+      }
       
       const config: Record<string, any> = {};
       data.forEach((item: any) => {
@@ -19,7 +25,8 @@ export default async function handler(req: any, res: any) {
       
       res.json(config);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      console.error("Internal Server Error in /api/config:", error);
+      res.status(500).json({ error: error.message || "Internal Server Error" });
     }
   } else if (req.method === 'POST') {
     try {

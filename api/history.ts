@@ -3,16 +3,24 @@ import { supabase } from "./_lib/supabase";
 export default async function handler(req: any, res: any) {
   if (req.method === 'GET') {
     try {
-      if (!supabase) return res.json([]);
+      if (!supabase) {
+        console.warn("Supabase client is null. Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
+        return res.json([]);
+      }
       const { data, error } = await supabase
         .from("results")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(100);
-      if (error) throw error;
+      
+      if (error) {
+        console.error("Supabase error fetching history:", error);
+        throw error;
+      }
       res.json(data || []);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      console.error("Internal Server Error in /api/history:", error);
+      res.status(500).json({ error: error.message || "Internal Server Error" });
     }
   } else if (req.method === 'POST') {
     try {
