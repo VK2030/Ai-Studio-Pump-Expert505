@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AppSection, ModuleData, QuizQuestion } from './types';
+import { AppSection, ModuleData, QuizQuestion, TelegramSchedule } from './types';
 import { MODULES, QUIZ_QUESTIONS } from './constants';
 import GlassButton from './components/GlassButton';
 import ModuleDetail from './components/ModuleDetail';
@@ -43,6 +43,11 @@ const App: React.FC = () => {
   const [fullHistory, setFullHistory] = useState<QuizHistoryEntry[]>([]);
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [showTelegramSettings, setShowTelegramSettings] = useState<boolean>(false);
+  const [telegramSchedule, setTelegramSchedule] = useState<TelegramSchedule>({
+    enabled: false,
+    days: [],
+    time: '09:00'
+  });
   
   const [isTimerEnabled, setIsTimerEnabled] = useState<boolean>(() => {
     const saved = localStorage.getItem('app_timer_enabled');
@@ -248,6 +253,13 @@ const App: React.FC = () => {
         if (config.isHistoryAnswersEnabled !== undefined) {
           setIsHistoryAnswersEnabled(config.isHistoryAnswersEnabled);
           localStorage.setItem('app_history_answers_enabled', String(config.isHistoryAnswersEnabled));
+        }
+        if (config.telegram_schedule) {
+          setTelegramSchedule({
+            enabled: config.telegram_schedule.enabled ?? false,
+            days: Array.isArray(config.telegram_schedule.days) ? config.telegram_schedule.days : [],
+            time: config.telegram_schedule.time ?? '09:00'
+          });
         }
       }
     } catch (error) {
@@ -1004,6 +1016,8 @@ const App: React.FC = () => {
               onSendNow={sendHistoryToTelegram}
               telegramStatus={telegramStatus}
               adminPassword={adminPassword}
+              schedule={telegramSchedule}
+              onScheduleChange={setTelegramSchedule}
             />
           </motion.div>
         )}

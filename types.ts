@@ -21,3 +21,9 @@ export interface QuizQuestion {
   options: string[];
   correct: number[]; // Changed from number to number[]
 }
+
+export interface TelegramSchedule {
+  enabled: boolean;
+  days: number[]; // 0-6 (Sun-Sat)
+  time: string; // HH:MM
+}

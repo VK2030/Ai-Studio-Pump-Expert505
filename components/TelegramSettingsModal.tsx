@@ -3,11 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedContent from './AnimatedContent';
 
-interface TelegramSchedule {
-  enabled: boolean;
-  days: number[]; // 0-6 (Sun-Sat)
-  time: string; // HH:MM
-}
+import { TelegramSchedule } from '../types';
 
 interface TelegramSettingsModalProps {
   isDark: boolean;
@@ -15,6 +11,8 @@ interface TelegramSettingsModalProps {
   onSendNow: () => void;
   telegramStatus: 'idle' | 'sending' | 'success' | 'error';
   adminPassword?: string;
+  schedule: TelegramSchedule;
+  onScheduleChange: (schedule: TelegramSchedule) => void;
 }
 
 const DAYS = [
@@ -32,35 +30,11 @@ const TelegramSettingsModal: React.FC<TelegramSettingsModalProps> = ({
   onClose, 
   onSendNow, 
   telegramStatus,
-  adminPassword 
+  adminPassword,
+  schedule,
+  onScheduleChange
 }) => {
-  const [schedule, setSchedule] = useState<TelegramSchedule>({
-    enabled: false,
-    days: [],
-    time: '09:00'
-  });
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    const loadSchedule = async () => {
-      try {
-        const response = await fetch('/api/config');
-        if (response.ok) {
-          const config = await response.json();
-          if (config.telegram_schedule) {
-            setSchedule({
-              enabled: config.telegram_schedule.enabled ?? false,
-              days: Array.isArray(config.telegram_schedule.days) ? config.telegram_schedule.days : [],
-              time: config.telegram_schedule.time ?? '09:00'
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Failed to load telegram schedule:", error);
-      }
-    };
-    loadSchedule();
-  }, []);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -87,14 +61,14 @@ const TelegramSettingsModal: React.FC<TelegramSettingsModalProps> = ({
   };
 
   const toggleDay = (dayId: number) => {
-    setSchedule(prev => {
-      const currentDays = Array.isArray(prev.days) ? prev.days : [];
-      return {
-        ...prev,
-        days: currentDays.includes(dayId) 
-          ? currentDays.filter(d => d !== dayId)
-          : [...currentDays, dayId]
-      };
+    const currentDays = Array.isArray(schedule.days) ? schedule.days : [];
+    const newDays = currentDays.includes(dayId) 
+      ? currentDays.filter(d => d !== dayId)
+      : [...currentDays, dayId];
+    
+    onScheduleChange({
+      ...schedule,
+      days: newDays
     });
   };
 
@@ -168,7 +142,7 @@ const TelegramSettingsModal: React.FC<TelegramSettingsModalProps> = ({
                 </span>
               </div>
               <button 
-                onClick={() => setSchedule(prev => ({ ...prev, enabled: !prev.enabled }))}
+                onClick={() => onScheduleChange({ ...schedule, enabled: !schedule.enabled })}
                 className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
                   ${schedule.enabled ? (isDark ? 'bg-indigo-500' : 'bg-indigo-600') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
               >
@@ -207,7 +181,7 @@ const TelegramSettingsModal: React.FC<TelegramSettingsModalProps> = ({
                     <input 
                       type="time" 
                       value={schedule.time}
-                      onChange={(e) => setSchedule(prev => ({ ...prev, time: e.target.value }))}
+                      onChange={(e) => onScheduleChange({ ...schedule, time: e.target.value })}
                       className={`w-full p-4 rounded-2xl border text-lg font-black outline-none transition-all
                         ${isDark 
                           ? 'bg-white/5 border-white/10 text-white focus:border-indigo-500/50' 
