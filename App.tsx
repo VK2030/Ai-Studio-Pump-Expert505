@@ -647,9 +647,9 @@ const App: React.FC = () => {
                 );
               case 'profile':
                 return (
-                  <div className="flex flex-col p-6 h-full overflow-y-auto space-y-4 pb-24">
+                  <div className="flex flex-col p-4 h-full overflow-y-auto space-y-3 pb-24">
                     <AnimatedContent distance={30} delay={0.1} direction="vertical">
-                      <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
+                      <div className={`p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
                         ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                         <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Светлая тема</span>
                         <button 
@@ -675,7 +675,7 @@ const App: React.FC = () => {
                         </AnimatedContent>
 
                         <AnimatedContent distance={30} delay={0.2} direction="vertical">
-                          <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
+                          <div className={`p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
                             ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                             <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Таймер ответа 30 сек.</span>
                             <button 
@@ -692,7 +692,7 @@ const App: React.FC = () => {
                         </AnimatedContent>
 
                         <AnimatedContent distance={30} delay={0.25} direction="vertical">
-                          <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
+                          <div className={`p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
                             ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                             <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Подсвечивать корректность</span>
                             <button 
@@ -709,7 +709,7 @@ const App: React.FC = () => {
                         </AnimatedContent>
 
                         <AnimatedContent distance={30} delay={0.3} direction="vertical">
-                          <div className={`p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
+                          <div className={`p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
                             ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                             <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Правильный ответ в истории</span>
                             <button 
@@ -729,7 +729,7 @@ const App: React.FC = () => {
                           <button 
                             onClick={sendHistoryToTelegram}
                             disabled={telegramStatus === 'sending'}
-                            className={`w-full p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
+                            className={`w-full p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
                               ${isDark ? 'bg-indigo-500/10 border-indigo-500/20 text-white' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}`}
                           >
                             <div className="flex items-center gap-3">
@@ -757,7 +757,7 @@ const App: React.FC = () => {
                     <AnimatedContent distance={30} delay={0.4} direction="vertical">
                       <button 
                         onClick={handleLogout}
-                        className={`w-full p-6 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
+                        className={`w-full p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
                           ${isDark ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-red-50 border-red-100 text-red-600'}`}
                       >
                         <div className="flex items-center gap-3">

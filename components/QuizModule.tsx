@@ -510,6 +510,18 @@ const QuizModule: React.FC<QuizModuleProps> = ({
                 </AnimatedContent>
               );
             })}
+
+            <AnimatedContent distance={30} delay={PBOTOS_SUBMODULES.length * 0.05} direction="vertical">
+              <div className="pt-2">
+                <button 
+                  onClick={onClose} 
+                  className={`w-full py-4 flex items-center justify-center gap-2 rounded-2xl font-bold text-xs uppercase tracking-[0.15em] transition-all active:scale-[0.98] border
+                  ${isDark ? 'bg-white/5 border-white/10 text-white/40 active:text-white' : 'bg-white border-slate-200 text-slate-400 active:text-slate-900'}`}>
+                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  Вернуться назад
+                </button>
+              </div>
+            </AnimatedContent>
           </div>
         </div>
       );
