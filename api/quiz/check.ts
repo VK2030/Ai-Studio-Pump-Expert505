@@ -1,5 +1,4 @@
-import fs from "fs";
-import path from "path";
+import questionsData from "../_lib/questions.json";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
@@ -9,14 +8,11 @@ export default async function handler(req: any, res: any) {
   try {
     const { moduleId, questionIdx, selectedOptions } = req.body;
     
-    const questionsPath = path.join(process.cwd(), "api", "_lib", "questions.json");
-    if (!fs.existsSync(questionsPath)) {
-      console.error(`[API] Questions file NOT FOUND at: ${questionsPath}`);
-      return res.status(404).json({ error: "Questions file not found" });
+    if (!questionsData) {
+      return res.status(500).json({ error: "Questions data missing" });
     }
 
-    const questionsData = JSON.parse(fs.readFileSync(questionsPath, "utf8"));
-    const questionsForModule = questionsData[moduleId] || [];
+    const questionsForModule = (questionsData as any)[moduleId] || [];
     const question = questionsForModule[questionIdx];
 
     if (!question) {

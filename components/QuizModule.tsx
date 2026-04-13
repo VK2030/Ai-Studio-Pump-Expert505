@@ -166,6 +166,13 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         }
         throw new Error(`${response.status}: ${errMsg}`);
       }
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Expected JSON but got:", text.substring(0, 100));
+        throw new Error(`Server returned non-JSON response (${contentType || 'unknown'}). This usually means the API route is not found or falling back to HTML.`);
+      }
+
       const questionsForModule = await response.json();
       
       if (questionsForModule.length === 0) {

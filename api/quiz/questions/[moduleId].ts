@@ -1,6 +1,5 @@
 import { supabase } from "../../_lib/supabase.js";
-import fs from "fs";
-import path from "path";
+import questionsData from "../../_lib/questions.json";
 
 console.log("[API] questions handler loaded");
 
@@ -9,16 +8,12 @@ export default async function handler(req: any, res: any) {
   const { userName } = req.query;
 
   try {
-    const questionsPath = path.join(process.cwd(), "api", "_lib", "questions.json");
-    console.log(`[API] Loading questions from: ${questionsPath}`);
-    
-    if (!fs.existsSync(questionsPath)) {
-      console.error(`[API] Questions file NOT FOUND at: ${questionsPath}`);
-      return res.status(404).json({ error: "Questions file not found" });
+    if (!questionsData) {
+      console.error(`[API] Questions data is missing`);
+      return res.status(500).json({ error: "Questions data missing" });
     }
 
-    const questionsData = JSON.parse(fs.readFileSync(questionsPath, "utf8"));
-    const questionsForModule = questionsData[moduleId] || [];
+    const questionsForModule = (questionsData as any)[moduleId] || [];
     console.log(`[API] Found ${questionsForModule.length} questions for module: ${moduleId}`);
     
     // Форматируем вопросы с ID
