@@ -63,14 +63,24 @@ export default async function handler(req: any, res: any) {
       return res.json({ status: "skipped", reason: "Wrong day", currentDay, scheduledDays: schedule.days });
     }
 
-    // Check if we are within the 10-minute window (since cron runs every 10 mins)
+    // Check if we are within the window (since cron runs every 10 mins)
     const nowInMinutes = currentHour * 60 + currentMinute;
     const schedInMinutes = schedHour * 60 + schedMinute;
     
-    // Allow a window of 10 minutes
-    const diff = nowInMinutes - schedInMinutes;
-    if (diff < 0 || diff >= 10) {
-      return res.json({ status: "skipped", reason: "Wrong time", now: `${currentHour}:${currentMinute}`, scheduled: schedule.time });
+    // Calculate difference in minutes, handling day wrap-around
+    let diff = nowInMinutes - schedInMinutes;
+    if (diff < -1200) diff += 1440; // Handle case where it's 00:05 and scheduled for 23:55
+    
+    // Allow a window of 12 minutes to ensure we catch it even if cron is slightly delayed
+    // but not too wide to avoid double sends (last_sent check handles that too)
+    if (diff < 0 || diff >= 12) {
+      return res.json({ 
+        status: "skipped", 
+        reason: "Wrong time", 
+        now: `${currentHour}:${currentMinute}`, 
+        scheduled: schedule.time,
+        diffMinutes: diff
+      });
     }
 
     // 3. Check Last Sent to avoid duplicates in the same window
