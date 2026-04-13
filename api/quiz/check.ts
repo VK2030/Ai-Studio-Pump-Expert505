@@ -1,4 +1,6 @@
-import questionsData from "./questions/questions.json" assert { type: "json" };
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const questionsData = require("./questions/questions.json");
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {

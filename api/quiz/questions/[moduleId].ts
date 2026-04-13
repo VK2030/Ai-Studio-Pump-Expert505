@@ -1,5 +1,7 @@
 import { supabase } from "../../_lib/supabase.js";
-import questionsData from "./questions.json" assert { type: "json" };
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const questionsData = require("./questions.json");
 
 console.log("[API] questions handler starting");
 
