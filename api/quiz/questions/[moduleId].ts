@@ -1,11 +1,13 @@
 import { supabase } from "../../_lib/supabase.js";
 import questionsData from "../../_lib/questions.json";
 
-console.log("[API] questions handler loaded");
+console.log("[API] questions handler starting");
 
 export default async function handler(req: any, res: any) {
   const { moduleId } = req.query;
   const { userName } = req.query;
+
+  console.log(`[API] Request for module: ${moduleId}, user: ${userName}`);
 
   try {
     if (!questionsData) {
