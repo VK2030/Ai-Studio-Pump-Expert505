@@ -11,6 +11,7 @@ import SulfateGame from './components/SulfateGame';
 import SplitText from './components/SplitText';
 
 import CloudStatus from './components/CloudStatus';
+import TelegramSettingsModal from './components/TelegramSettingsModal';
 
 interface QuizHistoryEntry {
   date: string;
@@ -41,6 +42,7 @@ const App: React.FC = () => {
   const [moduleRecentScores, setModuleRecentScores] = useState<Record<string, number[]>>({});
   const [fullHistory, setFullHistory] = useState<QuizHistoryEntry[]>([]);
   const [activeGame, setActiveGame] = useState<string | null>(null);
+  const [showTelegramSettings, setShowTelegramSettings] = useState<boolean>(false);
   
   const [isTimerEnabled, setIsTimerEnabled] = useState<boolean>(() => {
     const saved = localStorage.getItem('app_timer_enabled');
@@ -727,8 +729,7 @@ const App: React.FC = () => {
 
                         <AnimatedContent distance={30} delay={0.35} direction="vertical">
                           <button 
-                            onClick={sendHistoryToTelegram}
-                            disabled={telegramStatus === 'sending'}
+                            onClick={() => setShowTelegramSettings(true)}
                             className={`w-full p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
                               ${isDark ? 'bg-indigo-500/10 border-indigo-500/20 text-white' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}`}
                           >
@@ -739,11 +740,7 @@ const App: React.FC = () => {
                                   <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" />
                                 </svg>
                               </div>
-                              <span className="text-base font-semibold">
-                                {telegramStatus === 'sending' ? 'Отправка...' : 
-                                 telegramStatus === 'success' ? 'Отправлено!' : 
-                                 telegramStatus === 'error' ? 'Ошибка отправки' : 'Отчет в Telegram'}
-                              </span>
+                              <span className="text-base font-semibold">Отчет в Telegram</span>
                             </div>
                             <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-30" fill="none" stroke="currentColor" strokeWidth="2">
                               <path d="M9 18l6-6-6-6" />
@@ -987,6 +984,27 @@ const App: React.FC = () => {
             className="fixed inset-0 z-[70]"
           >
             <SulfateGame isDark={isDark} syncStatus={syncStatus} onClose={() => setActiveGame(null)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showTelegramSettings && (
+          <motion.div
+            key="telegram-settings"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className={`fixed inset-0 z-[150] flex items-center justify-center p-4 backdrop-blur-xl
+              ${isDark ? 'bg-black/60' : 'bg-slate-900/40'}`}
+          >
+            <TelegramSettingsModal 
+              isDark={isDark} 
+              onClose={() => setShowTelegramSettings(false)}
+              onSendNow={sendHistoryToTelegram}
+              telegramStatus={telegramStatus}
+              adminPassword={adminPassword}
+            />
           </motion.div>
         )}
       </AnimatePresence>
