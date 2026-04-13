@@ -1,4 +1,4 @@
-import { supabase, supabaseUrl, supabaseServiceKey } from "./_lib/supabase";
+import { supabase, supabaseUrl, supabaseServiceKey } from "./_lib/supabase.js";
 import fs from "fs";
 import path from "path";
 
