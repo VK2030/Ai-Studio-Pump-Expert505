@@ -10,6 +10,11 @@ export default async function handler(req: any, res: any) {
     const { moduleId, questionIdx, selectedOptions } = req.body;
     
     const questionsPath = path.join(process.cwd(), "api", "_lib", "questions.json");
+    if (!fs.existsSync(questionsPath)) {
+      console.error(`[API] Questions file NOT FOUND at: ${questionsPath}`);
+      return res.status(404).json({ error: "Questions file not found" });
+    }
+
     const questionsData = JSON.parse(fs.readFileSync(questionsPath, "utf8"));
     const questionsForModule = questionsData[moduleId] || [];
     const question = questionsForModule[questionIdx];

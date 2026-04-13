@@ -2,14 +2,24 @@ import { supabase } from "../../_lib/supabase.js";
 import fs from "fs";
 import path from "path";
 
+console.log("[API] questions handler loaded");
+
 export default async function handler(req: any, res: any) {
   const { moduleId } = req.query;
   const { userName } = req.query;
 
   try {
     const questionsPath = path.join(process.cwd(), "api", "_lib", "questions.json");
+    console.log(`[API] Loading questions from: ${questionsPath}`);
+    
+    if (!fs.existsSync(questionsPath)) {
+      console.error(`[API] Questions file NOT FOUND at: ${questionsPath}`);
+      return res.status(404).json({ error: "Questions file not found" });
+    }
+
     const questionsData = JSON.parse(fs.readFileSync(questionsPath, "utf8"));
     const questionsForModule = questionsData[moduleId] || [];
+    console.log(`[API] Found ${questionsForModule.length} questions for module: ${moduleId}`);
     
     // Форматируем вопросы с ID
     const formattedQuestions = questionsForModule.map((q: any, i: number) => ({
@@ -26,7 +36,7 @@ export default async function handler(req: any, res: any) {
           .eq("user_name", userName);
         
         if (viewsError) {
-          console.error("Supabase error fetching question views:", viewsError);
+          console.error("Supabase error fetching question views:", JSON.stringify(viewsError));
         } else if (views) {
           const viewMap = new Map(views.map((v: any) => [v.question_id, v.view_count]));
           const enrichedQuestions = formattedQuestions.map((q: any) => ({
@@ -35,13 +45,17 @@ export default async function handler(req: any, res: any) {
           }));
           return res.json(enrichedQuestions);
         }
-      } catch (e) {
+      } catch (e: any) {
         console.error("Exception fetching question views from Supabase:", e);
       }
     }
 
     res.json(formattedQuestions);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.error("Internal Server Error in /api/quiz/questions:", error);
+    res.status(500).json({ 
+      error: "Internal Server Error", 
+      message: error.message || String(error)
+    });
   }
 }

@@ -155,7 +155,17 @@ const QuizModule: React.FC<QuizModuleProps> = ({
 
     try {
       const response = await fetch(`/api/quiz/questions/${targetId}?userName=${encodeURIComponent(userName)}`);
-      if (!response.ok) throw new Error('Failed to fetch questions');
+      if (!response.ok) {
+        const errText = await response.text();
+        let errMsg = 'Failed to fetch questions';
+        try {
+          const errJson = JSON.parse(errText);
+          errMsg = errJson.error || errMsg;
+        } catch (e) {
+          errMsg = errText || errMsg;
+        }
+        throw new Error(`${response.status}: ${errMsg}`);
+      }
       const questionsForModule = await response.json();
       
       if (questionsForModule.length === 0) {
@@ -200,9 +210,9 @@ const QuizModule: React.FC<QuizModuleProps> = ({
       setCorrectAnswersCount(0);
       setIncorrectAnswers([]);
       setScreen('quiz');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error starting quiz:", error);
-      alert('Ошибка при загрузке вопросов. Попробуйте позже.');
+      alert(`Ошибка при загрузке вопросов: ${error.message}`);
     } finally {
       setIsLoadingQuestions(false);
     }

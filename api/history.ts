@@ -1,5 +1,7 @@
 import { supabase } from "./_lib/supabase.js";
 
+console.log("[API] history.ts loaded");
+
 export default async function handler(req: any, res: any) {
   if (req.method === 'GET') {
     try {
@@ -14,13 +16,21 @@ export default async function handler(req: any, res: any) {
         .limit(100);
       
       if (error) {
-        console.error("Supabase error fetching history:", error);
-        throw error;
+        console.error("Supabase error fetching history:", JSON.stringify(error));
+        return res.status(500).json({ 
+          error: "Supabase Error", 
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
       }
       res.json(data || []);
     } catch (error: any) {
       console.error("Internal Server Error in /api/history:", error);
-      res.status(500).json({ error: error.message || "Internal Server Error" });
+      res.status(500).json({ 
+        error: "Internal Server Error", 
+        message: error.message || String(error)
+      });
     }
   } else if (req.method === 'POST') {
     try {

@@ -1,5 +1,7 @@
 import { supabase } from "./_lib/supabase.js";
 
+console.log("[API] config.ts loaded");
+
 export default async function handler(req: any, res: any) {
   if (req.method === 'GET') {
     try {
@@ -12,8 +14,13 @@ export default async function handler(req: any, res: any) {
         .select("*");
       
       if (error) {
-        console.error("Supabase error fetching config:", error);
-        throw error;
+        console.error("Supabase error fetching config:", JSON.stringify(error));
+        return res.status(500).json({ 
+          error: "Supabase Error", 
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
       }
       
       const config: Record<string, any> = {};
@@ -26,7 +33,10 @@ export default async function handler(req: any, res: any) {
       res.json(config);
     } catch (error: any) {
       console.error("Internal Server Error in /api/config:", error);
-      res.status(500).json({ error: error.message || "Internal Server Error" });
+      res.status(500).json({ 
+        error: "Internal Server Error", 
+        message: error.message || String(error)
+      });
     }
   } else if (req.method === 'POST') {
     try {
