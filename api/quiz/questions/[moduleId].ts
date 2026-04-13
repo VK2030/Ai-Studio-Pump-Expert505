@@ -1,5 +1,5 @@
 import { supabase } from "../../_lib/supabase.js";
-import questionsData from "../../_lib/questions.json";
+import questionsData from "./questions.json" assert { type: "json" };
 
 console.log("[API] questions handler starting");
 

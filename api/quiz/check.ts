@@ -1,4 +1,4 @@
-import questionsData from "../_lib/questions.json";
+import questionsData from "./questions/questions.json" assert { type: "json" };
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
