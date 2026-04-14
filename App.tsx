@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AppSection, ModuleData, QuizQuestion, TelegramSchedule } from './types';
+import { AppSection, ModuleData, QuizQuestion } from './types';
 import { MODULES, QUIZ_QUESTIONS } from './constants';
 import GlassButton from './components/GlassButton';
 import ModuleDetail from './components/ModuleDetail';
@@ -11,7 +11,6 @@ import SulfateGame from './components/SulfateGame';
 import SplitText from './components/SplitText';
 
 import CloudStatus from './components/CloudStatus';
-import TelegramSettingsModal from './components/TelegramSettingsModal';
 
 interface QuizHistoryEntry {
   date: string;
@@ -42,12 +41,6 @@ const App: React.FC = () => {
   const [moduleRecentScores, setModuleRecentScores] = useState<Record<string, number[]>>({});
   const [fullHistory, setFullHistory] = useState<QuizHistoryEntry[]>([]);
   const [activeGame, setActiveGame] = useState<string | null>(null);
-  const [showTelegramSettings, setShowTelegramSettings] = useState<boolean>(false);
-  const [telegramSchedule, setTelegramSchedule] = useState<TelegramSchedule>({
-    enabled: false,
-    days: [],
-    time: '09:00'
-  });
   
   const [isTimerEnabled, setIsTimerEnabled] = useState<boolean>(() => {
     const saved = localStorage.getItem('app_timer_enabled');
@@ -81,7 +74,6 @@ const App: React.FC = () => {
   });
 
   const [historyFilter, setHistoryFilter] = useState<string | 'all'>('all');
-  const [telegramStatus, setTelegramStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
 
   // Автоматическая авторизация при загрузке, если роль сохранена и был выбран "Запомнить меня"
   useEffect(() => {
@@ -101,133 +93,6 @@ const App: React.FC = () => {
       }
     }
   }, []);
-
-  const sendHistoryToTelegram = async () => {
-    if (fullHistory.length === 0) {
-      alert("История пуста. Нечего отправлять.");
-      return;
-    }
-
-    const escapeHTML = (text: string) => {
-      return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-    };
-
-    setTelegramStatus('sending');
-    try {
-      // Группируем результаты по модулям
-      const statsByModule: Record<string, { count: number, totalScore: number, latestEntry?: QuizHistoryEntry }> = {};
-      fullHistory.forEach(entry => {
-        const modId = entry.moduleId || 'unknown';
-        if (!statsByModule[modId]) {
-          statsByModule[modId] = { count: 0, totalScore: 0, latestEntry: entry };
-        }
-        
-        const scoreParts = entry.score.split('/');
-        const score = parseInt(scoreParts[0]) || 0;
-        statsByModule[modId].count += 1;
-        statsByModule[modId].totalScore += score;
-      });
-
-      let summary = `<b>📊 Сводный отчет о результатах тестирования</b>\n\n`;
-      
-      const PBOTOS_SUBMODULES: Record<string, string> = {
-        'pbotos-general': 'Общие вопросы ОТ',
-        'pbotos-siz': 'СИЗ',
-        'pbotos-harmful': 'Вредные и опасные ПФ',
-        'pbotos-firstaid': 'Оказание первой помощи',
-        'pbotos-a1': 'А1. Основы ПБ',
-        'pbotos-b21': 'Б.2.1 Для объектов нефтяной промышленности',
-      };
-
-      // Проходим по модулям в заданном порядке (из constants.tsx)
-      for (const module of MODULES) {
-        const modId = module.id;
-        let section = '';
-        
-        if (modId === 'pbotos') {
-          // Сначала выводим основной ПБОТОС если есть
-          if (statsByModule['pbotos']) {
-            const stats = statsByModule['pbotos'];
-            const recentScores = moduleRecentScores['pbotos'] || [];
-            section += `🔹 <b>ПБОТОС</b>\n`;
-            if (recentScores.length > 0) {
-              section += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
-            }
-            section += `   Пройдено раз: ${stats.count}\n\n`;
-          }
-
-          // Затем подразделы ПБОТОС
-          for (const [subId, subTitle] of Object.entries(PBOTOS_SUBMODULES)) {
-            if (statsByModule[subId]) {
-              const stats = statsByModule[subId];
-              const recentScores = moduleRecentScores[subId] || [];
-              section += `🔹 <b>ПБОТОС/${subTitle}</b>\n`;
-              if (recentScores.length > 0) {
-                section += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
-              }
-              section += `   Пройдено раз: ${stats.count}\n`;
-              section += `\n`;
-            }
-          }
-        } else {
-          // Обычные модули
-          if (statsByModule[modId]) {
-            const stats = statsByModule[modId];
-            const recentScores = moduleRecentScores[modId] || [];
-            
-            section += `🔹 <b>${module.title}</b>\n`;
-            if (recentScores.length > 0) {
-              section += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
-            }
-            section += `   Пройдено раз: ${stats.count}\n`;
-
-            if (stats.latestEntry?.incorrectAnswers && stats.latestEntry.incorrectAnswers.length > 0) {
-              section += `<blockquote expandable>`;
-              section += `<b>Ошибки в последнем тесте:</b>\n\n`;
-              stats.latestEntry.incorrectAnswers.forEach((ans, idx) => {
-                section += `<b>${idx + 1}. ${escapeHTML(ans.question)}</b>\n`;
-                section += `❌ Ваш ответ: ${escapeHTML(ans.userAnswer)}\n`;
-                section += `✅ Правильный: ${escapeHTML(ans.correctAnswer)}\n\n`;
-              });
-              section += `</blockquote>`;
-            }
-            section += `\n`;
-          }
-        }
-
-        // Проверяем лимит перед добавлением секции
-        if (summary.length + section.length > 3800) {
-          summary += `\n⚠️ <i>Часть данных не вошла в отчет из-за ограничений Telegram</i>\n`;
-          break;
-        }
-        summary += section;
-      }
-
-      summary += `🕒 <i>Последнее обновление: ${new Date().toLocaleString()}</i>`;
-
-      const response = await fetch('/api/telegram/send-summary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ summary }),
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Failed to send');
-      }
-      
-      setTelegramStatus('success');
-      setTimeout(() => setTelegramStatus('idle'), 3000);
-    } catch (error: any) {
-      console.error(error);
-      alert(`Ошибка отправки: ${error.message}`);
-      setTelegramStatus('error');
-      setTimeout(() => setTelegramStatus('idle'), 3000);
-    }
-  };
 
   const loadData = async () => {
     setSyncStatus('syncing');
@@ -253,13 +118,6 @@ const App: React.FC = () => {
         if (config.isHistoryAnswersEnabled !== undefined) {
           setIsHistoryAnswersEnabled(config.isHistoryAnswersEnabled);
           localStorage.setItem('app_history_answers_enabled', String(config.isHistoryAnswersEnabled));
-        }
-        if (config.telegram_schedule) {
-          setTelegramSchedule({
-            enabled: config.telegram_schedule.enabled ?? false,
-            days: Array.isArray(config.telegram_schedule.days) ? config.telegram_schedule.days : [],
-            time: config.telegram_schedule.time ?? '09:00'
-          });
         }
       }
     } catch (error) {
@@ -739,27 +597,6 @@ const App: React.FC = () => {
                           </div>
                         </AnimatedContent>
 
-                        <AnimatedContent distance={30} delay={0.35} direction="vertical">
-                          <button 
-                            onClick={() => setShowTelegramSettings(true)}
-                            className={`w-full p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
-                              ${isDark ? 'bg-indigo-500/10 border-indigo-500/20 text-white' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center
-                                ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'}`}>
-                                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" />
-                                </svg>
-                              </div>
-                              <span className="text-base font-semibold">Отчет в Telegram</span>
-                            </div>
-                            <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-30" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M9 18l6-6-6-6" />
-                            </svg>
-                          </button>
-                        </AnimatedContent>
-
                       </>
                     )}
 
@@ -996,29 +833,6 @@ const App: React.FC = () => {
             className="fixed inset-0 z-[70]"
           >
             <SulfateGame isDark={isDark} syncStatus={syncStatus} onClose={() => setActiveGame(null)} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showTelegramSettings && (
-          <motion.div
-            key="telegram-settings"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className={`fixed inset-0 z-[150] flex items-center justify-center p-4 backdrop-blur-xl
-              ${isDark ? 'bg-black/60' : 'bg-slate-900/40'}`}
-          >
-            <TelegramSettingsModal 
-              isDark={isDark} 
-              onClose={() => setShowTelegramSettings(false)}
-              onSendNow={sendHistoryToTelegram}
-              telegramStatus={telegramStatus}
-              adminPassword={adminPassword}
-              schedule={telegramSchedule}
-              onScheduleChange={setTelegramSchedule}
-            />
           </motion.div>
         )}
       </AnimatePresence>

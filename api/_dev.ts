@@ -6,7 +6,6 @@ import configHandler from "./config.js";
 import questionsHandler from "./quiz/questions/[moduleId].js";
 import checkHandler from "./quiz/check.js";
 import viewsHandler from "./quiz/views/increment.js";
-import telegramHandler from "./telegram/send-summary.js";
 import syncHandler from "./admin/sync.js";
 import healthHandler from "./health.js";
 
@@ -40,7 +39,6 @@ app.get("/api/quiz/questions/:moduleId", (req, res) => {
 });
 app.post("/api/quiz/check", adapt(checkHandler));
 app.post("/api/quiz/views/increment", adapt(viewsHandler));
-app.post("/api/telegram/send-summary", adapt(telegramHandler));
 app.post("/api/admin/sync", adapt(syncHandler));
 app.get("/api/health", adapt(healthHandler));
 
