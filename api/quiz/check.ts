@@ -1,6 +1,6 @@
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-const questionsData = require("./questions/questions.json");
+const questionsData = require("../_lib/questions.json");
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
