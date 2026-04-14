@@ -41,6 +41,7 @@ const App: React.FC = () => {
   const [moduleRecentScores, setModuleRecentScores] = useState<Record<string, number[]>>({});
   const [fullHistory, setFullHistory] = useState<QuizHistoryEntry[]>([]);
   const [activeGame, setActiveGame] = useState<string | null>(null);
+  const [telegramStatus, setTelegramStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   
   const [isTimerEnabled, setIsTimerEnabled] = useState<boolean>(() => {
     const saved = localStorage.getItem('app_timer_enabled');
@@ -93,6 +94,150 @@ const App: React.FC = () => {
       }
     }
   }, []);
+
+  const sendHistoryToTelegram = async () => {
+    if (fullHistory.length === 0) {
+      alert("История пуста. Нечего отправлять.");
+      return;
+    }
+
+    const escapeHTML = (text: string) => {
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    };
+
+    setTelegramStatus('sending');
+    try {
+      // Группируем результаты по модулям
+      const statsByModule: Record<string, { count: number, totalScore: number, latestEntry?: QuizHistoryEntry }> = {};
+      fullHistory.forEach(entry => {
+        const modId = entry.moduleId || 'unknown';
+        if (!statsByModule[modId]) {
+          statsByModule[modId] = { count: 0, totalScore: 0, latestEntry: entry };
+        }
+        
+        const scoreParts = entry.score.split('/');
+        const score = parseInt(scoreParts[0]) || 0;
+        statsByModule[modId].count += 1;
+        statsByModule[modId].totalScore += score;
+      });
+
+      const PBOTOS_COUNTS: Record<string, number> = {
+        'pbotos-general': 139,
+        'pbotos-siz': 60,
+        'pbotos-harmful': 197,
+        'pbotos-firstaid': 71,
+        'pbotos-a1': 807,
+        'pbotos-b21': 200,
+      };
+
+      const today = new Date().toLocaleDateString('ru-RU');
+      let summary = `<b>📊 Сводный отчет о результатах тестирования на ${today}</b>\n\n`;
+      
+      const PBOTOS_SUBMODULES: Record<string, string> = {
+        'pbotos-general': 'Общие вопросы ОТ',
+        'pbotos-siz': 'СИЗ',
+        'pbotos-harmful': 'Вредные и опасные ПФ',
+        'pbotos-firstaid': 'Оказание первой помощи',
+        'pbotos-a1': 'А1. Основы ПБ',
+        'pbotos-b21': 'Б.2.1 Для объектов нефтяной промышленности',
+      };
+
+      // Проходим по модулям в заданном порядке (из constants.tsx)
+      for (const module of MODULES) {
+        const modId = module.id;
+        let section = '';
+        
+        if (modId === 'pbotos') {
+          // Сначала выводим основной ПБОТОС если есть
+          if (statsByModule['pbotos']) {
+            const stats = statsByModule['pbotos'];
+            const recentScores = moduleRecentScores['pbotos'] || [];
+            section += `🔹 <b>ПБОТОС</b>\n`;
+            if (recentScores.length > 0) {
+              section += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
+            }
+            section += `\n`;
+          }
+
+          // Затем подразделы ПБОТОС
+          for (const [subId, subTitle] of Object.entries(PBOTOS_SUBMODULES)) {
+            if (statsByModule[subId]) {
+              const stats = statsByModule[subId];
+              const recentScores = moduleRecentScores[subId] || [];
+              section += `🔹 <b>ПБОТОС/${subTitle}</b>\n`;
+              if (recentScores.length > 0) {
+                section += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
+              }
+              
+              // Получаем количество вопросов из последнего теста
+              const lastEntry = stats.latestEntry;
+              if (lastEntry) {
+                const scoreParts = lastEntry.score.split('/');
+                const questionsInTest = parseInt(scoreParts[1]) || 0;
+                const totalInDb = PBOTOS_COUNTS[subId] || 0;
+                section += `   Пройдено вопросов: ${questionsInTest} из ${totalInDb}\n`;
+              }
+              section += `\n`;
+            }
+          }
+        } else {
+          // Обычные модули
+          if (statsByModule[modId]) {
+            const stats = statsByModule[modId];
+            const recentScores = moduleRecentScores[modId] || [];
+            
+            section += `🔹 <b>${module.title}</b>\n`;
+            if (recentScores.length > 0) {
+              section += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
+            }
+
+            if (stats.latestEntry?.incorrectAnswers && stats.latestEntry.incorrectAnswers.length > 0) {
+              section += `<blockquote expandable>`;
+              section += `<b>Ошибки в последнем тесте:</b>\n\n`;
+              stats.latestEntry.incorrectAnswers.forEach((ans, idx) => {
+                section += `<b>${idx + 1}. ${escapeHTML(ans.question)}</b>\n`;
+                section += `❌ Ваш ответ: ${escapeHTML(ans.userAnswer)}\n`;
+                section += `✅ Правильный: ${escapeHTML(ans.correctAnswer)}\n\n`;
+              });
+              section += `</blockquote>`;
+            }
+            section += `\n`;
+          }
+        }
+
+        // Проверяем лимит перед добавлением секции
+        if (summary.length + section.length > 3800) {
+          summary += `\n⚠️ <i>Часть данных не вошла в отчет из-за ограничений Telegram</i>\n`;
+          break;
+        }
+        summary += section;
+      }
+
+      summary += `🕒 <i>Последнее обновление: ${new Date().toLocaleString()}</i>`;
+
+      const response = await fetch('/api/telegram/send-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ summary }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Failed to send');
+      }
+      
+      setTelegramStatus('success');
+      setTimeout(() => setTelegramStatus('idle'), 3000);
+    } catch (error: any) {
+      console.error(error);
+      alert(`Ошибка отправки: ${error.message}`);
+      setTelegramStatus('error');
+      setTimeout(() => setTelegramStatus('idle'), 3000);
+    }
+  };
 
   const loadData = async () => {
     setSyncStatus('syncing');
@@ -595,6 +740,48 @@ const App: React.FC = () => {
                               />
                             </button>
                           </div>
+                        </AnimatedContent>
+
+                        <AnimatedContent distance={30} delay={0.35} direction="vertical">
+                          <button 
+                            onClick={sendHistoryToTelegram}
+                            disabled={telegramStatus === 'sending'}
+                            className={`w-full p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
+                              ${isDark ? 'bg-indigo-500/10 border-indigo-500/20 text-white' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}
+                              ${telegramStatus === 'sending' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center
+                                ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'}`}>
+                                {telegramStatus === 'sending' ? (
+                                  <svg className="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                ) : telegramStatus === 'success' ? (
+                                  <svg viewBox="0 0 24 24" className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" strokeWidth="3">
+                                    <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                ) : telegramStatus === 'error' ? (
+                                  <svg viewBox="0 0 24 24" className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="3">
+                                    <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                ) : (
+                                  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" />
+                                  </svg>
+                                )}
+                              </div>
+                              <span className="text-base font-semibold">
+                                {telegramStatus === 'sending' ? 'Отправка...' : 
+                                 telegramStatus === 'success' ? 'Отправлено!' : 
+                                 telegramStatus === 'error' ? 'Ошибка!' : 'Отправить отчет в Telegram'}
+                              </span>
+                            </div>
+                            <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-30" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M9 18l6-6-6-6" />
+                            </svg>
+                          </button>
                         </AnimatedContent>
 
                       </>
