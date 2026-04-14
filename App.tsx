@@ -708,7 +708,7 @@ const App: React.FC = () => {
                         <AnimatedContent distance={30} delay={0.25} direction="vertical">
                           <div className={`p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
                             ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                            <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Подсвечивать корректность</span>
+                            <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Подсвечивать корректность после ответа</span>
                             <button 
                               onClick={toggleHighlight}
                               className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
