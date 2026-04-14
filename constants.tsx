@@ -5,7 +5,7 @@ import { ModuleData } from './types';
 export const MODULES: ModuleData[] = [
   {
     id: 'esp-selection-startup',
-    title: 'Подбор ЭЦН и ВНР',
+    title: 'Подбор УЭЦН и ВНР',
     subtitle: 'Методики расчета, выбора и запуска ЭЦН.',
     description: 'Комплексный раздел по подбору оборудования и технологии вывода скважины на расчетный режим.',
     icon: 'calc',
@@ -13,7 +13,7 @@ export const MODULES: ModuleData[] = [
   },
   {
     id: 'failure-investigation',
-    title: 'Расследование отказов ЭЦН',
+    title: 'Расследование отказов УЭЦН',
     subtitle: 'Анализ причин неисправностей и предотвращение.',
     description: 'Методика расследования: от анализа СУ до осмотра оборудования на поверхности.',
     icon: 'search',

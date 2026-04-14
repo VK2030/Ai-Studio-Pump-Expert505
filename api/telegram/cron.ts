@@ -5,8 +5,8 @@ const require = createRequire(import.meta.url);
 
 // Copy of MODULES from constants.tsx to avoid complex imports in serverless function
 const MODULES = [
-  { id: 'esp-selection-startup', title: 'Подбор ЭЦН и ВНР' },
-  { id: 'failure-investigation', title: 'Расследование отказов ЭЦН' },
+  { id: 'esp-selection-startup', title: 'Подбор УЭЦН и ВНР' },
+  { id: 'failure-investigation', title: 'Расследование отказов УЭЦН' },
   { id: 'operating-factors', title: 'Осложняющие факторы' },
   { id: 'pbotos', title: 'ПБОТОС' }
 ];
