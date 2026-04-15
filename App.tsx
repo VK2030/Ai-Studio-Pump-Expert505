@@ -419,6 +419,12 @@ const App: React.FC = () => {
 
   const isDark = theme === 'dark';
 
+  const [showAdminOnlyAlert, setShowAdminOnlyAlert] = useState(false);
+
+  const handleAdminOnlyClick = () => {
+    setShowAdminOnlyAlert(true);
+  };
+
   const renderContent = () => {
     const key = `${activeTab}-${selectedModule ? 'modal' : 'main'}-${activeGame ? 'game' : 'none'}`;
 
@@ -682,110 +688,107 @@ const App: React.FC = () => {
                       </div>
                     </AnimatedContent>
 
-                    {userRole === 'admin' && (
-                      <>
+                    <AnimatedContent distance={20} delay={0.18} direction="vertical">
+                      <p className={`text-[10px] font-black uppercase tracking-widest px-6 pt-2 pb-1 ${isDark ? 'text-white/30' : 'text-slate-400'}`}>
+                        Отображение для конкурсанта
+                      </p>
+                    </AnimatedContent>
 
-                        <AnimatedContent distance={20} delay={0.18} direction="vertical">
-                          <p className={`text-[10px] font-black uppercase tracking-widest px-6 pt-2 pb-1 ${isDark ? 'text-white/30' : 'text-slate-400'}`}>
-                            Отображение для конкурсанта
-                          </p>
-                        </AnimatedContent>
+                    <AnimatedContent distance={30} delay={0.2} direction="vertical">
+                      <div className={`p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
+                        ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}
+                        ${userRole !== 'admin' ? 'opacity-40' : ''}`}>
+                        <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Таймер ответа 30 сек.</span>
+                        <button 
+                          onClick={userRole === 'admin' ? toggleTimer : handleAdminOnlyClick}
+                          className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
+                            ${isTimerEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
+                        >
+                          <div 
+                            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
+                              ${isTimerEnabled ? 'left-7' : 'left-1'}`}
+                          />
+                        </button>
+                      </div>
+                    </AnimatedContent>
 
-                        <AnimatedContent distance={30} delay={0.2} direction="vertical">
-                          <div className={`p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
-                            ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                            <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Таймер ответа 30 сек.</span>
-                            <button 
-                              onClick={toggleTimer}
-                              className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
-                                ${isTimerEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
-                            >
-                              <div 
-                                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
-                                  ${isTimerEnabled ? 'left-7' : 'left-1'}`}
-                              />
-                            </button>
+                    <AnimatedContent distance={30} delay={0.25} direction="vertical">
+                      <div className={`p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
+                        ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}
+                        ${userRole !== 'admin' ? 'opacity-40' : ''}`}>
+                        <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Подсвечивать корректность после ответа</span>
+                        <button 
+                          onClick={userRole === 'admin' ? toggleHighlight : handleAdminOnlyClick}
+                          className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
+                            ${isHighlightEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
+                        >
+                          <div 
+                            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
+                              ${isHighlightEnabled ? 'left-7' : 'left-1'}`}
+                          />
+                        </button>
+                      </div>
+                    </AnimatedContent>
+
+                    <AnimatedContent distance={30} delay={0.3} direction="vertical">
+                      <div className={`p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
+                        ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}
+                        ${userRole !== 'admin' ? 'opacity-40' : ''}`}>
+                        <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Правильный ответ в истории</span>
+                        <button 
+                          onClick={userRole === 'admin' ? toggleHistoryAnswers : handleAdminOnlyClick}
+                          className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
+                            ${isHistoryAnswersEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
+                        >
+                          <div 
+                            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
+                              ${isHistoryAnswersEnabled ? 'left-7' : 'left-1'}`}
+                          />
+                        </button>
+                      </div>
+                    </AnimatedContent>
+
+                    <AnimatedContent distance={30} delay={0.35} direction="vertical">
+                      <button 
+                        onClick={sendHistoryToTelegram}
+                        disabled={telegramStatus === 'sending'}
+                        className={`w-full p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
+                          ${isDark ? 'bg-indigo-500/10 border-indigo-500/20 text-white' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}
+                          ${telegramStatus === 'sending' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-2xl flex items-center justify-center
+                            ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'}`}>
+                            {telegramStatus === 'sending' ? (
+                              <svg className="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            ) : telegramStatus === 'success' ? (
+                              <svg viewBox="0 0 24 24" className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" strokeWidth="3">
+                                <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            ) : telegramStatus === 'error' ? (
+                              <svg viewBox="0 0 24 24" className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="3">
+                                <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            ) : (
+                              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" />
+                              </svg>
+                            )}
                           </div>
-                        </AnimatedContent>
-
-                        <AnimatedContent distance={30} delay={0.25} direction="vertical">
-                          <div className={`p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
-                            ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                            <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Подсвечивать корректность после ответа</span>
-                            <button 
-                              onClick={toggleHighlight}
-                              className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
-                                ${isHighlightEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
-                            >
-                              <div 
-                                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
-                                  ${isHighlightEnabled ? 'left-7' : 'left-1'}`}
-                              />
-                            </button>
-                          </div>
-                        </AnimatedContent>
-
-                        <AnimatedContent distance={30} delay={0.3} direction="vertical">
-                          <div className={`p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
-                            ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                            <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Правильный ответ в истории</span>
-                            <button 
-                              onClick={toggleHistoryAnswers}
-                              className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
-                                ${isHistoryAnswersEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
-                            >
-                              <div 
-                                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm
-                                  ${isHistoryAnswersEnabled ? 'left-7' : 'left-1'}`}
-                              />
-                            </button>
-                          </div>
-                        </AnimatedContent>
-
-                        <AnimatedContent distance={30} delay={0.35} direction="vertical">
-                          <button 
-                            onClick={sendHistoryToTelegram}
-                            disabled={telegramStatus === 'sending'}
-                            className={`w-full p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
-                              ${isDark ? 'bg-indigo-500/10 border-indigo-500/20 text-white' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}
-                              ${telegramStatus === 'sending' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center
-                                ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'}`}>
-                                {telegramStatus === 'sending' ? (
-                                  <svg className="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                  </svg>
-                                ) : telegramStatus === 'success' ? (
-                                  <svg viewBox="0 0 24 24" className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" strokeWidth="3">
-                                    <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                ) : telegramStatus === 'error' ? (
-                                  <svg viewBox="0 0 24 24" className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="3">
-                                    <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                ) : (
-                                  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" />
-                                  </svg>
-                                )}
-                              </div>
-                              <span className="text-base font-semibold">
-                                {telegramStatus === 'sending' ? 'Отправка...' : 
-                                 telegramStatus === 'success' ? 'Отправлено!' : 
-                                 telegramStatus === 'error' ? 'Ошибка!' : 'Отправить отчет в Telegram'}
-                              </span>
-                            </div>
-                            <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-30" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M9 18l6-6-6-6" />
-                            </svg>
-                          </button>
-                        </AnimatedContent>
-
-                      </>
-                    )}
+                          <span className="text-base font-semibold">
+                            {telegramStatus === 'sending' ? 'Отправка...' : 
+                             telegramStatus === 'success' ? 'Отправлено!' : 
+                             telegramStatus === 'error' ? 'Ошибка!' : 'Отправить отчет в Telegram'}
+                          </span>
+                        </div>
+                        <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-30" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M9 18l6-6-6-6" />
+                        </svg>
+                      </button>
+                    </AnimatedContent>
 
                     <AnimatedContent distance={30} delay={0.4} direction="vertical">
                       <button 
@@ -825,7 +828,7 @@ const App: React.FC = () => {
                           </span>
                         </div>
                         
-                        <h3 className={`text-xl font-black mb-2 uppercase tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Типы минеральных солей</h3>
+                        <h3 className={`text-xl font-black mb-2 uppercase tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Минеральные соли при эксплуатации</h3>
                         <p className={`text-xs mb-6 leading-relaxed ${isDark ? 'text-white/40' : 'text-slate-500'}`}>
                         Интерактивное упражнение на поиск минеральных солей
                         </p>
@@ -855,6 +858,46 @@ const App: React.FC = () => {
       <div className="absolute top-4 right-4 z-[120]">
         <CloudStatus status={syncStatus} />
       </div>
+      <AnimatePresence>
+        {showAdminOnlyAlert && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center px-6 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className={`w-full max-w-xs p-8 rounded-[2.5rem] border text-center shadow-2xl
+                ${isDark ? 'bg-[#0f172a] border-white/10' : 'bg-white border-slate-200'}`}
+            >
+              <div className={`w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-6
+                ${isDark ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-50 text-indigo-500'}`}>
+                <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </div>
+              <h3 className={`text-lg font-black uppercase tracking-tight mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                Доступ ограничен
+              </h3>
+              <p className={`text-xs font-medium leading-relaxed mb-8 ${isDark ? 'text-white/40' : 'text-slate-500'}`}>
+                Доступ к настройкам у администратора
+              </p>
+              <button 
+                onClick={() => setShowAdminOnlyAlert(false)}
+                className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg active:scale-[0.98] transition-all
+                  ${isDark ? 'bg-indigo-500 hover:bg-indigo-600 text-white shadow-indigo-500/20' : 'bg-slate-900 hover:bg-slate-800 text-white shadow-slate-200'}`}
+              >
+                ОК
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence mode="wait">
         {!isAuthorized ? (
           <motion.div
