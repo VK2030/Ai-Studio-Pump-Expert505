@@ -8,8 +8,14 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { moduleId, questionIdx, selectedOptions } = req.body;
+    let { moduleId, questionIdx, questionId, selectedOptions } = req.body;
     
+    if (questionId && !moduleId) {
+      const parts = questionId.split('_');
+      questionIdx = parseInt(parts.pop() || '0');
+      moduleId = parts.join('_');
+    }
+
     if (!questionsData) {
       return res.status(500).json({ error: "Questions data missing" });
     }
@@ -18,6 +24,7 @@ export default async function handler(req: any, res: any) {
     const question = questionsForModule[questionIdx];
 
     if (!question) {
+      console.error(`[API] Question not found: module=${moduleId}, idx=${questionIdx}, id=${questionId}`);
       return res.status(404).json({ error: "Question not found" });
     }
 
@@ -25,7 +32,7 @@ export default async function handler(req: any, res: any) {
     
     res.json({
       isCorrect,
-      correctOptions: question.correct
+      correctIndices: question.correct
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

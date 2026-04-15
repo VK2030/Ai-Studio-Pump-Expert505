@@ -126,11 +126,11 @@ const App: React.FC = () => {
 
       const PBOTOS_COUNTS: Record<string, number> = {
         'pbotos-general': 139,
-        'pbotos-siz': 60,
-        'pbotos-harmful': 197,
-        'pbotos-firstaid': 71,
-        'pbotos-a1': 807,
-        'pbotos-b21': 200,
+        'pbotos-siz': 241,
+        'pbotos-harmful': 221,
+        'pbotos-firstaid': 70,
+        'pbotos-a1': 211,
+        'pbotos-b21': 405,
       };
 
       const today = new Date().toLocaleDateString('ru-RU');
