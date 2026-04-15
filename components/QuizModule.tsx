@@ -64,12 +64,12 @@ const QuizModule: React.FC<QuizModuleProps> = ({
 
   const currentModule = MODULES.find(m => m.id === moduleId);
   const PBOTOS_SUBMODULES = [
-    { id: 'pbotos-general', title: 'Общие вопросы ОТ' },
-    { id: 'pbotos-siz', title: 'СИЗ' },
-    { id: 'pbotos-harmful', title: 'Вредные и опасные ПФ' },
-    { id: 'pbotos-firstaid', title: 'Оказание первой помощи' },
-    { id: 'pbotos-a1', title: 'А1. Основы ПБ' },
-    { id: 'pbotos-b21', title: 'Б.2.1 Для объектов нефтяной промышленности' },
+    { id: 'pbotos-general', title: 'Общие вопросы ОТ', questionCount: 139 },
+    { id: 'pbotos-siz', title: 'СИЗ', questionCount: 241 },
+    { id: 'pbotos-harmful', title: 'Вредные и опасные ПФ', questionCount: 221 },
+    { id: 'pbotos-firstaid', title: 'Оказание первой помощи', questionCount: 70 },
+    { id: 'pbotos-a1', title: 'А1. Основы ПБ', questionCount: 211 },
+    { id: 'pbotos-b21', title: 'Б.2.1 Для объектов нефтяной промышленности', questionCount: 405 },
   ];
   const currentSubModule = PBOTOS_SUBMODULES.find(s => s.id === activeSubModuleId);
   const moduleTitle = activeSubModuleId ? currentSubModule?.title : (currentModule?.title || 'Тестирование');
@@ -504,7 +504,12 @@ const QuizModule: React.FC<QuizModuleProps> = ({
                     <div className={`absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-3xl -mr-8 -mt-8 transition-opacity group-hover:opacity-100 opacity-0`}></div>
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex flex-col gap-1">
-                        <span className={`text-sm font-bold leading-tight ${isDark ? 'text-white/90' : 'text-slate-800'}`}>{sub.title}</span>
+                        <div className="flex items-baseline gap-2">
+                          <span className={`text-sm font-bold leading-tight ${isDark ? 'text-white/90' : 'text-slate-800'}`}>{sub.title}</span>
+                          <span className={`text-[10px] font-medium ${isDark ? 'text-white/30' : 'text-slate-400'}`}>
+                            ({sub.questionCount} {sub.questionCount % 10 === 1 && sub.questionCount % 100 !== 11 ? 'вопрос' : (sub.questionCount % 10 >= 2 && sub.questionCount % 10 <= 4 && (sub.questionCount % 100 < 10 || sub.questionCount % 100 >= 20) ? 'вопроса' : 'вопросов')})
+                          </span>
+                        </div>
                         {recentScores.length > 0 && (
                           <div className="flex flex-col gap-0.5 items-start mt-1">
                             <span className={`text-[8px] uppercase font-black tracking-wider ${isDark ? 'text-white/20' : 'text-slate-400'}`}>
