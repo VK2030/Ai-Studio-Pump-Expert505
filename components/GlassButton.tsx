@@ -7,11 +7,12 @@ interface GlassButtonProps {
   iconType: string;
   progress?: number;
   recentScores?: number[];
+  questionCount?: number;
   onClick: () => void;
   theme?: 'dark' | 'light';
 }
 
-const GlassButton: React.FC<GlassButtonProps> = ({ title, iconType, progress = 0, recentScores = [], onClick, theme = 'dark' }) => {
+const GlassButton: React.FC<GlassButtonProps> = ({ title, iconType, progress = 0, recentScores = [], questionCount, onClick, theme = 'dark' }) => {
   const isDark = theme === 'dark';
 
   const renderIcon = () => {
@@ -130,6 +131,12 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, iconType, progress = 0
           ${isDark ? 'text-white/90' : 'text-slate-900'}`}>
           {title}
         </h3>
+        {questionCount !== undefined && (
+          <span className={`text-[10px] font-medium leading-none mt-1 block
+            ${isDark ? 'text-white/30' : 'text-slate-400'}`}>
+            {questionCount} {questionCount % 10 === 1 && questionCount % 100 !== 11 ? 'вопрос' : (questionCount % 10 >= 2 && questionCount % 10 <= 4 && (questionCount % 100 < 10 || questionCount % 100 >= 20) ? 'вопроса' : 'вопросов')}
+          </span>
+        )}
       </div>
       
       <div className="absolute bottom-2 left-4 right-4 z-10 text-left">

@@ -12,6 +12,18 @@ import SplitText from './components/SplitText';
 
 import CloudStatus from './components/CloudStatus';
 
+const GLOBAL_QUESTION_COUNTS: Record<string, number> = {
+  'esp-selection-startup': 20,
+  'failure-investigation': 96,
+  'operating-factors': 96,
+  'pbotos-general': 139,
+  'pbotos-siz': 241,
+  'pbotos-harmful': 221,
+  'pbotos-firstaid': 70,
+  'pbotos-a1': 211,
+  'pbotos-b21': 405,
+};
+
 interface QuizHistoryEntry {
   date: string;
   session: number;
@@ -124,15 +136,6 @@ const App: React.FC = () => {
         statsByModule[modId].totalScore += score;
       });
 
-      const PBOTOS_COUNTS: Record<string, number> = {
-        'pbotos-general': 139,
-        'pbotos-siz': 241,
-        'pbotos-harmful': 221,
-        'pbotos-firstaid': 70,
-        'pbotos-a1': 211,
-        'pbotos-b21': 405,
-      };
-
       const today = new Date().toLocaleDateString('ru-RU');
       let summary = `<b>📊 Сводный отчет о результатах тестирования на ${today}</b>\n\n`;
       
@@ -177,7 +180,7 @@ const App: React.FC = () => {
               if (lastEntry) {
                 const scoreParts = lastEntry.score.split('/');
                 const questionsInTest = parseInt(scoreParts[1]) || 0;
-                const totalInDb = PBOTOS_COUNTS[subId] || 0;
+                const totalInDb = GLOBAL_QUESTION_COUNTS[subId] || 0;
                 section += `   Пройдено вопросов: ${questionsInTest} из ${totalInDb}\n`;
               }
               section += `\n`;
@@ -192,6 +195,17 @@ const App: React.FC = () => {
             section += `🔹 <b>${module.title}</b>\n`;
             if (recentScores.length > 0) {
               section += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
+            }
+
+            // Добавляем информацию о количестве вопросов
+            const lastEntry = stats.latestEntry;
+            if (lastEntry) {
+              const scoreParts = lastEntry.score.split('/');
+              const questionsInTest = parseInt(scoreParts[1]) || 0;
+              const totalInDb = GLOBAL_QUESTION_COUNTS[modId] || 0;
+              if (totalInDb > 0) {
+                section += `   Пройдено вопросов: ${questionsInTest} из ${totalInDb}\n`;
+              }
             }
 
             if (stats.latestEntry?.incorrectAnswers && stats.latestEntry.incorrectAnswers.length > 0) {
@@ -477,6 +491,7 @@ const App: React.FC = () => {
                             iconType={m.icon}
                             progress={moduleProgress[m.id] || 0}
                             recentScores={moduleRecentScores[m.id] || []}
+                            questionCount={GLOBAL_QUESTION_COUNTS[m.id]}
                             onClick={() => setSelectedModule(m)}
                             theme={theme}
                           />
@@ -815,22 +830,10 @@ const App: React.FC = () => {
                     <AnimatedContent distance={30} delay={0.1} direction="vertical">
                       <div className={`p-6 rounded-[2.5rem] border flex flex-col backdrop-blur-md relative overflow-hidden group
                         ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                        <div className="flex items-start justify-between mb-4">
-                          <div className={`w-14 h-14 rounded-3xl flex items-center justify-center border transition-colors
-                            ${isDark ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-500'}`}>
-                            <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
-                              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-                            </svg>
-                          </div>
-                          <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest
-                            ${isDark ? 'bg-white/5 text-white/40 border border-white/10' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}>
-                            Мини-игра
-                          </span>
-                        </div>
+                        <h3 className={`text-xl font-black uppercase tracking-tight mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Минеральные соли при эксплуатации</h3>
                         
-                        <h3 className={`text-xl font-black mb-2 uppercase tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Минеральные соли при эксплуатации</h3>
                         <p className={`text-xs mb-6 leading-relaxed ${isDark ? 'text-white/40' : 'text-slate-500'}`}>
-                        Интерактивное упражнение на поиск минеральных солей
+                        Интерактивное упражнение
                         </p>
                         
                         <button 
@@ -957,18 +960,35 @@ const App: React.FC = () => {
                       tag="h1"
                     />
                   ) : activeTab === 'tasks' ? (
-                    <SplitText
-                      key="tasks-header"
-                      text="Упражнения"
-                      className={`${isDark ? 'text-white' : 'text-slate-900'} text-2xl font-black uppercase tracking-tighter leading-tight pt-1`}
-                      delay={50}
-                      duration={1.25}
-                      ease="power3.out"
-                      from={{ opacity: 0, y: 40 }}
-                      to={{ opacity: 1, y: 0 }}
-                      textAlign="left"
-                      tag="h1"
-                    />
+                    <div className="flex items-center justify-between">
+                      <SplitText
+                        key="tasks-header"
+                        text="Упражнения"
+                        className={`${isDark ? 'text-white' : 'text-slate-900'} text-2xl font-black uppercase tracking-tighter leading-tight pt-1`}
+                        delay={50}
+                        duration={1.25}
+                        ease="power3.out"
+                        from={{ opacity: 0, y: 40 }}
+                        to={{ opacity: 1, y: 0 }}
+                        textAlign="left"
+                        display="inline-block"
+                        tag="h1"
+                      />
+                      <motion.div 
+                        initial={{ opacity: 0, y: 40, scale: 0.8 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ 
+                          duration: 1.25, 
+                          delay: 0,
+                          ease: [0.22, 1, 0.36, 1] // Smooth easeOut (similar to power3.out)
+                        }}
+                        className={`w-12 h-12 rounded-2xl flex-shrink-0 flex items-center justify-center border transition-colors
+                        ${isDark ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-500'}`}>
+                        <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                        </svg>
+                      </motion.div>
+                    </div>
                   ) : (
                     <SplitText
                       key="home-header"

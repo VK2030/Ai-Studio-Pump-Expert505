@@ -17,6 +17,7 @@ interface SplitTextProps {
   threshold?: number;
   rootMargin?: string;
   textAlign?: 'left' | 'center' | 'right';
+  display?: string;
   // Use React.ElementType to resolve "Cannot find namespace 'JSX'" error
   tag?: React.ElementType;
   onLetterAnimationComplete?: () => void;
@@ -33,6 +34,7 @@ const SplitText: React.FC<SplitTextProps> = ({
   threshold = 0.1,
   rootMargin = '-100px',
   textAlign = 'center',
+  display = 'block',
   tag: Tag = 'p',
   onLetterAnimationComplete
 }) => {
@@ -84,7 +86,7 @@ const SplitText: React.FC<SplitTextProps> = ({
       style={{ 
         textAlign, 
         overflow: 'hidden', 
-        display: 'block'
+        display
       }}
     >
       {elements.map((char, i) => (
