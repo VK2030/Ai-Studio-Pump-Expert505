@@ -503,10 +503,10 @@ const QuizModule: React.FC<QuizModuleProps> = ({
                   >
                     <div className={`absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-3xl -mr-8 -mt-8 transition-opacity group-hover:opacity-100 opacity-0`}></div>
                     <div className="flex items-center justify-between gap-4">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-baseline gap-2">
+                      <div className="flex flex-col gap-1 flex-1 min-w-0">
+                        <div className="flex items-baseline justify-between gap-2">
                           <span className={`text-sm font-bold leading-tight ${isDark ? 'text-white/90' : 'text-slate-800'}`}>{sub.title}</span>
-                          <span className={`text-[10px] font-medium ${isDark ? 'text-white/30' : 'text-slate-400'}`}>
+                          <span className={`text-[10px] font-medium whitespace-nowrap shrink-0 ${isDark ? 'text-white/30' : 'text-slate-400'}`}>
                             ({sub.questionCount} {sub.questionCount % 10 === 1 && sub.questionCount % 100 !== 11 ? 'вопрос' : (sub.questionCount % 10 >= 2 && sub.questionCount % 10 <= 4 && (sub.questionCount % 100 < 10 || sub.questionCount % 100 >= 20) ? 'вопроса' : 'вопросов')})
                           </span>
                         </div>
