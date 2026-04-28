@@ -616,7 +616,9 @@ const QuizModule: React.FC<QuizModuleProps> = ({
                 </div>
                )}
             </div>
-            <div className={`px-2 py-0.5 rounded-md border text-[9px] font-bold uppercase ${isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>{moduleTitle}</div>
+            <div className={`px-2 py-0.5 rounded-md border text-[9px] font-bold uppercase ${isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+              {activeSubModuleId === 'pbotos-b21' ? 'Б.2.1' : moduleTitle}
+            </div>
           </div>
           
           <div className={`w-full h-[2px] rounded-full overflow-hidden mb-1 ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
