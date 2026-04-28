@@ -24,6 +24,15 @@ const GLOBAL_QUESTION_COUNTS: Record<string, number> = {
   'pbotos-b21': 405,
 };
 
+const PBOTOS_SUBMODULES: Record<string, string> = {
+  'pbotos-general': 'Общие вопросы ОТ',
+  'pbotos-siz': 'СИЗ',
+  'pbotos-harmful': 'Вредные и опасные ПФ',
+  'pbotos-firstaid': 'Оказание первой помощи',
+  'pbotos-a1': 'А1. Основы ПБ',
+  'pbotos-b21': 'Б.2.1 Для объектов нефтяной промышленности',
+};
+
 interface QuizHistoryEntry {
   date: string;
   session: number;
@@ -139,15 +148,6 @@ const App: React.FC = () => {
       const today = new Date().toLocaleDateString('ru-RU');
       let summary = `<b>📊 Сводный отчет о результатах тестирования на ${today}</b>\n\n`;
       
-      const PBOTOS_SUBMODULES: Record<string, string> = {
-        'pbotos-general': 'Общие вопросы ОТ',
-        'pbotos-siz': 'СИЗ',
-        'pbotos-harmful': 'Вредные и опасные ПФ',
-        'pbotos-firstaid': 'Оказание первой помощи',
-        'pbotos-a1': 'А1. Основы ПБ',
-        'pbotos-b21': 'Б.2.1 Для объектов нефтяной промышленности',
-      };
-
       // Проходим по модулям в заданном порядке (из constants.tsx)
       for (const module of MODULES) {
         const modId = module.id;
@@ -292,9 +292,18 @@ const App: React.FC = () => {
     const recentScoresMap: Record<string, number[]> = {};
     
     MODULES.forEach(module => {
-      // Calculate progress (last result)
-      const moduleEntries = history.filter((h: QuizHistoryEntry) => h.moduleId === module.id);
-      const lastEntry = moduleEntries[0]; // history is usually sorted by date desc
+      // For pbotos, we want to consider all submodules too
+      let moduleEntries: QuizHistoryEntry[] = [];
+      if (module.id === 'pbotos') {
+        const pbotosSubIds = Object.keys(PBOTOS_SUBMODULES);
+        moduleEntries = history.filter((h: QuizHistoryEntry) => 
+          h.moduleId === 'pbotos' || (h.moduleId && pbotosSubIds.includes(h.moduleId))
+        );
+      } else {
+        moduleEntries = history.filter((h: QuizHistoryEntry) => h.moduleId === module.id);
+      }
+
+      const lastEntry = moduleEntries[0]; // history is sorted by date desc
       
       if (lastEntry && lastEntry.score) {
         const [correct, total] = lastEntry.score.split('/').map(Number);
@@ -527,9 +536,14 @@ const App: React.FC = () => {
                   </div>
                 );
               case 'history':
-                const filteredHistory = historyFilter === 'all' 
-                  ? fullHistory 
-                  : fullHistory.filter(h => h.moduleId === historyFilter);
+                const filteredHistory = (() => {
+                  if (historyFilter === 'all') return fullHistory;
+                  if (historyFilter === 'pbotos-all') {
+                    const pbotosSubIds = Object.keys(PBOTOS_SUBMODULES);
+                    return fullHistory.filter(h => h.moduleId === 'pbotos' || (h.moduleId && pbotosSubIds.includes(h.moduleId)));
+                  }
+                  return fullHistory.filter(h => h.moduleId === historyFilter);
+                })();
 
                 return (
                   <div className="flex-1 flex flex-col overflow-hidden px-4">
@@ -544,7 +558,8 @@ const App: React.FC = () => {
                       >
                         Все разделы
                       </button>
-                      {MODULES.map(m => (
+
+                      {MODULES.map(m => m.id !== 'pbotos' && (
                         <button 
                           key={m.id}
                           onClick={() => setHistoryFilter(m.id)}
@@ -554,6 +569,18 @@ const App: React.FC = () => {
                               : (isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-white border-slate-200 text-slate-400')}`}
                         >
                           {m.title}
+                        </button>
+                      ))}
+                      {Object.entries(PBOTOS_SUBMODULES).map(([subId, subTitle]) => (
+                        <button 
+                          key={subId}
+                          onClick={() => setHistoryFilter(subId)}
+                          className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap
+                            ${historyFilter === subId 
+                              ? (isDark ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-white') 
+                              : (isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-white border-slate-200 text-slate-400')}`}
+                        >
+                          ПБОТОС / {subId === 'pbotos-b21' ? 'Б.2.1' : subTitle}
                         </button>
                       ))}
                     </div>
@@ -572,15 +599,6 @@ const App: React.FC = () => {
                         </AnimatedContent>
                       ) : (
                         filteredHistory.map((entry, idx) => {
-                          const PBOTOS_SUBMODULES: Record<string, string> = {
-                            'pbotos-general': 'Общие вопросы ОТ',
-                            'pbotos-siz': 'СИЗ',
-                            'pbotos-harmful': 'Вредные и опасные ПФ',
-                            'pbotos-firstaid': 'Оказание первой помощи',
-                            'pbotos-a1': 'А1. Основы ПБ',
-                            'pbotos-b21': 'Б.2.1 Для объектов нефтяной промышленности',
-                          };
-
                           const LEGACY_MODULE_MAPPING: Record<string, string> = {
                             'esp-selection': 'Подбор УЭЦН и ВНР',
                             'esp-startup': 'Подбор УЭЦН и ВНР',
@@ -593,7 +611,7 @@ const App: React.FC = () => {
                           let displayTitle = module?.title?.replace('\n', ' ') || entry.moduleId || 'Общий тест';
                           
                           if (entry.moduleId && PBOTOS_SUBMODULES[entry.moduleId]) {
-                            displayTitle = `ПБОТОС/${PBOTOS_SUBMODULES[entry.moduleId]}`;
+                            displayTitle = `ПБОТОС / ${PBOTOS_SUBMODULES[entry.moduleId]}`;
                           } else if (entry.moduleId && LEGACY_MODULE_MAPPING[entry.moduleId]) {
                             displayTitle = LEGACY_MODULE_MAPPING[entry.moduleId];
                           } else if (entry.moduleId === 'pbotos') {
