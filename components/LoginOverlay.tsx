@@ -187,20 +187,6 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
                 >
                   Вернуться к выбору
                 </button>
-                <button 
-                  onClick={async () => {
-                    try {
-                      const res = await fetch('/api/login');
-                      const data = await res.json();
-                      alert(`API Status: ${JSON.stringify(data)}`);
-                    } catch (e: any) {
-                      alert(`API check failed: ${e.message}`);
-                    }
-                  }}
-                  className="mt-4 text-[10px] text-blue-500 font-bold underline"
-                >
-                  Проверить связь с сервером
-                </button>
               </div>
             )}
           </div>

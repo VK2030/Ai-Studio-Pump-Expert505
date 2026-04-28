@@ -692,7 +692,7 @@ const App: React.FC = () => {
                         <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Светлая тема</span>
                         <button 
                           onClick={toggleTheme}
-                          className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
+                          className={`relative w-12 h-6 shrink-0 rounded-full transition-all duration-300 outline-none
                             ${!isDark ? 'bg-slate-800' : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
                         >
                           <div 
@@ -716,7 +716,7 @@ const App: React.FC = () => {
                         <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Таймер ответа 30 сек.</span>
                         <button 
                           onClick={userRole === 'admin' ? toggleTimer : handleAdminOnlyClick}
-                          className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
+                          className={`relative w-12 h-6 shrink-0 rounded-full transition-all duration-300 outline-none
                             ${isTimerEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
                         >
                           <div 
@@ -734,7 +734,7 @@ const App: React.FC = () => {
                         <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Подсвечивать корректность после ответа</span>
                         <button 
                           onClick={userRole === 'admin' ? toggleHighlight : handleAdminOnlyClick}
-                          className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
+                          className={`relative w-12 h-6 shrink-0 rounded-full transition-all duration-300 outline-none
                             ${isHighlightEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
                         >
                           <div 
@@ -752,7 +752,7 @@ const App: React.FC = () => {
                         <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Правильный ответ в истории</span>
                         <button 
                           onClick={userRole === 'admin' ? toggleHistoryAnswers : handleAdminOnlyClick}
-                          className={`relative w-12 h-6 rounded-full transition-all duration-300 outline-none
+                          className={`relative w-12 h-6 shrink-0 rounded-full transition-all duration-300 outline-none
                             ${isHistoryAnswersEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
                         >
                           <div 
