@@ -61,6 +61,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   
   const [timeLeft, setTimeLeft] = useState(30);
   const timerRef = useRef<any | null>(null);
+  const handleTimeOutRef = useRef<() => void>(() => {});
 
   const currentModule = MODULES.find(m => m.id === moduleId);
   const PBOTOS_SUBMODULES = [
@@ -225,6 +226,12 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     }
   };
 
+  const handleTimeOut = () => { confirmAnswer(true); };
+
+  useEffect(() => {
+    handleTimeOutRef.current = handleTimeOut;
+  }, [handleTimeOut]);
+
   useEffect(() => {
     if (screen === 'quiz' && !isAnswerConfirmed && isTimerEnabled && !showExitConfirm) {
       setTimeLeft(30);
@@ -232,7 +239,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         setTimeLeft((prev) => {
           if (prev <= 1) {
             if (timerRef.current) clearInterval(timerRef.current);
-            handleTimeOut();
+            handleTimeOutRef.current();
             return 0;
           }
           return prev - 1;
@@ -241,8 +248,6 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [currentQuestionIdx, screen, isAnswerConfirmed, isTimerEnabled, showExitConfirm]);
-
-  const handleTimeOut = () => { confirmAnswer(true); };
 
   useEffect(() => {
     if (screen === 'quiz' && sessionQuestions.length > 0) {
@@ -301,7 +306,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         
         setIncorrectAnswers(prev => [...prev, { 
           question: q.text, 
-          userAnswer: isTimeout ? "Время истекло" : (selectedOptionTexts.join(', ') || "Нет ответа"), 
+          userAnswer: selectedOptionTexts.length > 0 ? selectedOptionTexts.join(', ') : (isTimeout ? "Время истекло" : "Нет ответа"), 
           correctAnswer: correctOptionTexts.join(', ') 
         }]);
       }
