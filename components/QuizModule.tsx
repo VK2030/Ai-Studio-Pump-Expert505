@@ -295,27 +295,30 @@ const QuizModule: React.FC<QuizModuleProps> = ({
       setCorrectIndicesForCurrentQuestion(correctIndices);
       setIsAnswerConfirmed(true);
       
+      let finalCorrectCount = correctAnswersCount;
+      let finalIncorrectAnswers = [...incorrectAnswers];
+
       if (isCorrect) {
-        setCorrectAnswersCount(prev => prev + 1);
+        finalCorrectCount += 1;
+        setCorrectAnswersCount(finalCorrectCount);
       } else {
-        // Если ответ неверный, нам нужны тексты правильных ответов для истории
-        // В идеале сервер должен возвращать их, если мы хотим их показать
-        // Но пока мы можем использовать локальные опции, если они совпадают
         const correctOptionTexts = correctIndices ? correctIndices.map((idx: number) => q.options[idx]) : ["(Скрыто)"];
         const selectedOptionTexts = selectedOptions.map(idx => shuffledOptions[idx]);
         
-        setIncorrectAnswers(prev => [...prev, { 
+        const newIncorrect = { 
           question: q.text, 
           userAnswer: selectedOptionTexts.length > 0 ? selectedOptionTexts.join(', ') : (isTimeout ? "Время истекло" : "Нет ответа"), 
           correctAnswer: correctOptionTexts.join(', ') 
-        }]);
+        };
+        finalIncorrectAnswers.push(newIncorrect);
+        setIncorrectAnswers(finalIncorrectAnswers);
       }
 
       setTimeout(() => {
         if (currentQuestionIdx < sessionQuestions.length - 1) {
           setCurrentQuestionIdx(prev => prev + 1);
         } else {
-          finishQuiz();
+          finishQuiz(finalCorrectCount, finalIncorrectAnswers);
         }
         setIsCheckingAnswer(false);
       }, 1500);
@@ -328,30 +331,31 @@ const QuizModule: React.FC<QuizModuleProps> = ({
 
   const finishQuizRef = useRef(false);
 
-  const finishQuiz = async () => {
+  const finishQuiz = async (countOverride?: number, incorrectOverride?: QuizHistoryEntry['incorrectAnswers']) => {
     if (finishQuizRef.current) return;
     finishQuizRef.current = true;
     
+    const finalCount = countOverride !== undefined ? countOverride : correctAnswersCount;
+    const finalIncorrect = incorrectOverride !== undefined ? incorrectOverride : incorrectAnswers;
+
     const targetId = activeSubModuleId || moduleId;
     const newEntry: QuizHistoryEntry = {
       date: new Date().toISOString(),
       session: currentSession, 
-      score: `${correctAnswersCount}/${sessionQuestions.length}`, 
+      score: `${finalCount}/${sessionQuestions.length}`, 
       moduleId: targetId, 
-      incorrectAnswers: incorrectAnswers
+      incorrectAnswers: finalIncorrect
     };
     
-    // Save to local state and localStorage immediately for responsiveness
     const updatedHistory = [newEntry, ...history];
     setHistory(updatedHistory);
     localStorage.setItem('quizHistory', JSON.stringify(updatedHistory));
     setCurrentSession(prev => prev + 1);
     window.dispatchEvent(new Event('storage'));
     setScreen('results');
+
     if (userRole === 'contestant') {
       setSaveStatus('saving');
-    
-
       try {
         const response = await fetch('/api/history', {
           method: 'POST',
@@ -359,7 +363,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
           body: JSON.stringify({
             ...newEntry,
             user: localStorage.getItem('app_user_name') || 'Contestant',
-            correct_answers: correctAnswersCount
+            correct_answers: finalCount
           })
         });
         if (response.ok) {
@@ -376,7 +380,6 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         setSaveStatus('error');
       }
     } else {
-      // For admins, we just skip saving but show a neutral status
       setSaveStatus('success'); 
     }
   };
