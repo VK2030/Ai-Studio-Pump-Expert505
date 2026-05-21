@@ -9,6 +9,7 @@ import viewsHandler from "./quiz/views/increment.js";
 import syncHandler from "./admin/sync.js";
 import telegramHandler from "./telegram/send-summary.js";
 import healthHandler from "./health.js";
+import testSupabaseHandler from "./test-supabase.js";
 
 const app = express();
 app.use(cors());
@@ -56,6 +57,7 @@ app.post("/api/quiz/views/increment", adapt(viewsHandler));
 app.post("/api/admin/sync", adapt(syncHandler));
 app.post("/api/telegram/send-summary", adapt(telegramHandler));
 app.get("/api/health", adapt(healthHandler));
+app.get("/api/test-supabase", adapt(testSupabaseHandler));
 
 // Fallback for legacy or other paths
 app.use("/api/*", (req, res) => {

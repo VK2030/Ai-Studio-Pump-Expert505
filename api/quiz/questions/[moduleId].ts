@@ -1,5 +1,11 @@
 import { supabase } from "../../_lib/supabase.js";
 import { createRequire } from "module";
+import dns from "node:dns";
+
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
 const require = createRequire(import.meta.url);
 const questionsData = require("../../_lib/questions.json");
 
