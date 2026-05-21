@@ -16,6 +16,10 @@ export default async function handler(req: any, res: any) {
         .limit(100);
       
       if (error) {
+        if (error.message && (error.message.includes("fetch failed") || error.code === 'ENOTFOUND')) {
+          console.warn("[API] Supabase is unreachable. Returning empty history array.");
+          return res.json([]);
+        }
         console.error("Supabase error fetching history:", JSON.stringify(error));
         return res.status(500).json({ 
           error: "Supabase Error", 
@@ -66,6 +70,15 @@ export default async function handler(req: any, res: any) {
       res.json(data);
     } catch (error: any) {
       console.error("[API] POST /api/history exception:", error);
+      
+      // Handle network errors gracefully without crashing the app or annoying the user
+      if (error.message && (error.message.includes("fetch failed") || error.code === 'ENOTFOUND')) {
+        console.warn("[API] Supabase is unreachable. Failing gracefully to avoid disrupting the user.");
+        return res.status(503).json({ 
+          error: "Cloud sync unavailable. Progress saved locally."
+        });
+      }
+
       res.status(500).json({ 
         error: error.message || "Internal Server Error",
         details: error.details || null,

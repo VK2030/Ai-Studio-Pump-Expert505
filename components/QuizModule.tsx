@@ -384,12 +384,12 @@ const QuizModule: React.FC<QuizModuleProps> = ({
           } catch (e) {
             console.error("Failed to parse error response:", e);
           }
-          alert('⚠️ Ошибка сохранения в облако: ' + errMsg);
+          // Removing alert to prevent annoyance, gracefully degrading
           setSaveStatus('error');
         }
       } catch (error: any) {
         console.error("Failed to save history to cloud:", error);
-        alert('⚠️ Ошибка сети при сохранении: ' + (error.message || 'Нет связи с сервером'));
+        // Removing alert to prevent annoyance, gracefully degrading
         setSaveStatus('error');
       }
     } else {

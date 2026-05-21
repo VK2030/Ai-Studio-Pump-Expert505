@@ -14,6 +14,10 @@ export default async function handler(req: any, res: any) {
         .select("*");
       
       if (error) {
+        if (error.message && (error.message.includes("fetch failed") || error.code === 'ENOTFOUND')) {
+          console.warn("[API] Supabase is unreachable. Returning default config.");
+          return res.json({ isHistoryAnswersEnabled: true });
+        }
         console.error("Supabase error fetching config:", JSON.stringify(error));
         return res.status(500).json({ 
           error: "Supabase Error", 
