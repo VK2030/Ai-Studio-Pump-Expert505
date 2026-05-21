@@ -25,8 +25,21 @@ const adapt = (handler: any) => async (req: any, res: any) => {
   try {
     await handler(req, res);
   } catch (err: any) {
-    console.error("Handler Error:", err);
-    res.status(500).json({ error: err.message });
+    console.error(`[API ERROR] ${req.method} ${req.url}:`, err);
+    
+    // Check if it's a fetch error to improve diagnostics
+    if (err.message && err.message.includes('fetch failed')) {
+      console.error("[DIAGNOSTIC] This fetch error likely occurred during a Supabase request from the server-side.");
+      console.error("[DIAGNOSTIC] Check if SUPABASE_URL is correct and accessible from this environment.");
+    }
+
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        error: err.message || "Unknown error",
+        path: req.url,
+        method: req.method
+      });
+    }
   }
 };
 

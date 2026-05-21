@@ -369,14 +369,27 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         if (response.ok) {
           setSaveStatus('success');
         } else {
-          const errData = await response.json();
-          console.error("Server error during save:", errData);
-          alert('⚠️ Ошибка сохранения в облако: ' + (errData.error || 'Неизвестная ошибка'));
+          let errMsg = 'Неизвестная ошибка';
+          try {
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+              const errData = await response.json();
+              errMsg = errData.error || errData.message || errMsg;
+              console.error("Server error during save:", errData);
+            } else {
+              const text = await response.text();
+              console.error("Server returned non-JSON error:", text.substring(0, 200));
+              errMsg = `Ошибка сервера (${response.status})`;
+            }
+          } catch (e) {
+            console.error("Failed to parse error response:", e);
+          }
+          alert('⚠️ Ошибка сохранения в облако: ' + errMsg);
           setSaveStatus('error');
         }
       } catch (error: any) {
         console.error("Failed to save history to cloud:", error);
-        alert('⚠️ Ошибка сети при сохранении: ' + error.message);
+        alert('⚠️ Ошибка сети при сохранении: ' + (error.message || 'Нет связи с сервером'));
         setSaveStatus('error');
       }
     } else {
