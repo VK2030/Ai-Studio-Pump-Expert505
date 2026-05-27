@@ -61,8 +61,9 @@ app.use((req: any, res: any, next: any) => {
       cleanPath = cleanPath.substring(4);
     }
     
-    const queryIndex = req.url.indexOf('?');
-    const queryString = queryIndex !== -1 && !req.url.substring(queryIndex).startsWith('?_path=') ? req.url.substring(queryIndex) : '';
+    const urlObj = new URL(req.url, 'http://localhost');
+    urlObj.searchParams.delete('_path');
+    const queryString = urlObj.search ? urlObj.search : '';
     req.url = `/api/${cleanPath}${queryString}`;
     console.log(`[API] Rewritten req.url to ${req.url}`);
   }
