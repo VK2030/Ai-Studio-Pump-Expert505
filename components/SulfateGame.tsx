@@ -479,10 +479,6 @@ const SulfateGame: React.FC<SulfateGameProps> = ({ onClose, isDark = true, syncS
           <div className="max-w-xs mx-auto flex flex-col items-center">
             {collectedAnswers.length > 0 && (
               <div className="text-center mb-6 flex flex-wrap justify-center items-center gap-1.5 w-[140%] -ml-[20%]">
-                <span className={`text-[10px] font-black uppercase tracking-[0.1em] px-2 py-1 rounded border mr-2
-                  ${isDark ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-green-50 border-green-200 text-green-600'}`}>
-                  {sessions[currentSessionIndex] ? TOPICS[sessions[currentSessionIndex]].title : ''}
-                </span>
                 {collectedAnswers.map((answer, i) => (
                   <span key={i} className="text-lg font-black text-green-500 drop-shadow-md whitespace-nowrap">
                     {formatFormula(answer)}{i < collectedAnswers.length - 1 && <span className="ml-[1px]">,</span>}
