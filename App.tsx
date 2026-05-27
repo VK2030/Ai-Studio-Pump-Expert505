@@ -52,9 +52,7 @@ const App: React.FC = () => {
   });
 
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
-  const [userRole, setUserRole] = useState<'contestant' | 'admin' | null>(() => {
-    return localStorage.getItem('app_user_role') as 'contestant' | 'admin' | null;
-  });
+  const [userRole, setUserRole] = useState<'contestant' | 'admin' | null>(null);
 
   const [activeTab, setActiveTab] = useState<AppSection>('home');
   const [selectedModule, setSelectedModule] = useState<ModuleData | null>(null);
@@ -97,23 +95,10 @@ const App: React.FC = () => {
 
   const [historyFilter, setHistoryFilter] = useState<string | 'all'>('all');
 
-  // Автоматическая авторизация при загрузке, если роль сохранена и был выбран "Запомнить меня"
+  // Гарантируем чистоту сессии и сброс сохраненной авторизации при каждой загрузке страницы
   useEffect(() => {
-    const savedRole = localStorage.getItem('app_user_role');
-    const rememberMe = localStorage.getItem('app_remember_me') === 'true';
-    
-    if (savedRole && rememberMe) {
-      setUserRole(savedRole as 'contestant' | 'admin');
-      setIsAuthorized(true);
-      
-      // Если админ, пытаемся восстановить пароль из сессии для API запросов
-      if (savedRole === 'admin') {
-        const savedPassword = sessionStorage.getItem('app_admin_password');
-        if (savedPassword) {
-          setAdminPassword(savedPassword);
-        }
-      }
-    }
+    localStorage.removeItem('app_user_role');
+    localStorage.removeItem('app_remember_me');
   }, []);
 
   const sendHistoryToTelegram = async () => {
@@ -350,7 +335,6 @@ const App: React.FC = () => {
 
   const handleAuthorize = (role: 'contestant' | 'admin', password?: string) => {
     setUserRole(role);
-    localStorage.setItem('app_user_role', role);
     if (role === 'admin' && password) {
       setAdminPassword(password);
       sessionStorage.setItem('app_admin_password', password);

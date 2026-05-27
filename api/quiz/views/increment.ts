@@ -26,7 +26,7 @@ export default async function handler(req: any, res: any) {
     
     if (selectError) throw selectError;
 
-    const viewMap = new Map(existingViews?.map((v: any) => [v.question_id, v.view_count]) || []);
+    const viewMap = new Map<any, number>(existingViews?.map((v: any) => [v.question_id, Number(v.view_count) || 0]) || []);
     
     const upsertData = questionIds.map(qId => ({
       user_name: userName,

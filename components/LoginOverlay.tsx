@@ -18,7 +18,6 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
   const [pin, setPin] = useState<string>('');
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
   const isDark = theme === 'dark';
 
@@ -54,11 +53,6 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
         const result = await response.json();
         
         if (response.ok && result.success) {
-          if (rememberMe) {
-            localStorage.setItem('app_remember_me', 'true');
-          } else {
-            localStorage.removeItem('app_remember_me');
-          }
           onAuthorized(selectedAccount, value);
         } else {
           setIsError(true);
@@ -155,7 +149,7 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
               Вход как {selectedAccount === 'admin' ? 'администратор' : 'конкурсант'}
             </p>
 
-            <div className="relative flex gap-3 mb-4">
+            <div className="relative flex gap-3 mb-6">
               <input ref={inputRef} type="tel" pattern="[0-9]*" inputMode="numeric" value={pin} onChange={handleChange} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-default" autoFocus disabled={isLoading} />
               {[0, 1, 2, 3].map((index) => (
                 <div key={index} className={`w-12 h-16 rounded-xl border-2 flex items-center justify-center transition-all duration-300 
@@ -164,14 +158,6 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
                   {pin.length > index && <div className={`w-2 h-2 rounded-full animate-in zoom-in duration-200 ${isDark ? 'bg-white' : 'bg-blue-600'}`}></div>}
                 </div>
               ))}
-            </div>
-
-            <div className="flex items-center gap-2 mb-6 cursor-pointer select-none" onClick={() => setRememberMe(!rememberMe)}>
-              <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all
-                ${rememberMe ? 'bg-blue-500 border-blue-500' : (isDark ? 'border-white/20' : 'border-slate-300')}`}>
-                {rememberMe && <svg viewBox="0 0 24 24" className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth="4"><polyline points="20 6 9 17 4 12" /></svg>}
-              </div>
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-blue-100/40' : 'text-slate-400'}`}>Запомнить меня</span>
             </div>
             
             {isError ? (
