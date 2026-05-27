@@ -471,39 +471,25 @@ const SulfateGame: React.FC<SulfateGameProps> = ({ onClose, isDark = true, syncS
           </button>
         </header>
 
-        <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col gap-4 pointer-events-none z-30">
-          {collectedAnswers.length > 0 && (
-            <AnimatePresence>
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex flex-col gap-3"
-              >
-                <div className={`text-xs font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-lg border w-fit backdrop-blur-md
-                  ${isDark ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-green-50 border-green-200 text-green-600'}`}>
-                  {sessions[currentSessionIndex] ? TOPICS[sessions[currentSessionIndex]].title : ''}
-                </div>
-                <div className="flex flex-col gap-2">
-                  {collectedAnswers.map((answer, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="text-2xl font-black text-green-500 drop-shadow-md"
-                    >
-                      {formatFormula(answer)} 
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          )}
-        </div>
+
 
         <div className="flex-1" />
 
         <footer className={`p-8 pb-12 bg-gradient-to-t ${isDark ? 'from-[#081221] via-[#081221]/90 to-transparent' : 'from-slate-50 via-slate-50/90 to-transparent'}`}>
           <div className="max-w-xs mx-auto flex flex-col items-center">
+            {collectedAnswers.length > 0 && (
+              <div className="text-center mb-6 flex flex-wrap justify-center items-center gap-1.5 w-[140%] -ml-[20%]">
+                <span className={`text-[10px] font-black uppercase tracking-[0.1em] px-2 py-1 rounded border mr-2
+                  ${isDark ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-green-50 border-green-200 text-green-600'}`}>
+                  {sessions[currentSessionIndex] ? TOPICS[sessions[currentSessionIndex]].title : ''}
+                </span>
+                {collectedAnswers.map((answer, i) => (
+                  <span key={i} className="text-lg font-black text-green-500 drop-shadow-md whitespace-nowrap">
+                    {formatFormula(answer)}{i < collectedAnswers.length - 1 && <span className="ml-[1px]">,</span>}
+                  </span>
+                ))}
+              </div>
+            )}
             <div className="text-center mb-4">
               <span className={`text-2xl font-black uppercase tracking-tight leading-none ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
                 {sessions[currentSessionIndex] ? TOPICS[sessions[currentSessionIndex]].title : ''}
