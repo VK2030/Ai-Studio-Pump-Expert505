@@ -16,9 +16,21 @@ app.use(cors());
 
 // Safe body parser for Vercel Serverless environment
 app.use((req: any, res: any, next: any) => {
-  if (req.body && (typeof req.body === 'object' || Buffer.isBuffer(req.body))) {
-    console.log(`[API] Body already parsed by Vercel/serverless platform:`, typeof req.body);
-    next();
+  if (req.body) {
+    if (Buffer.isBuffer(req.body)) {
+      next();
+    } else if (typeof req.body === 'string') {
+      try {
+        req.body = JSON.parse(req.body);
+      } catch (e) {
+        console.warn("[API] Failed to parse string body in middleware:", e);
+      }
+      next();
+    } else if (typeof req.body === 'object' && Object.keys(req.body).length > 0) {
+      next();
+    } else {
+      express.json({ limit: '1mb' })(req, res, next);
+    }
   } else {
     express.json({ limit: '1mb' })(req, res, next);
   }

@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabaseUrl, supabaseServiceKey, supabase as globalSupabase } from "../_lib/supabase.js";
 
 export default async function handler(req: any, res: any) {
   // Simple GET for testing
@@ -32,7 +32,15 @@ export default async function handler(req: any, res: any) {
 
   try {
     let body = req.body;
-    if (typeof body === 'string') {
+    
+    // Handle Buffer from Vercel Serverless
+    if (Buffer.isBuffer(body)) {
+      try {
+        body = JSON.parse(body.toString('utf8'));
+      } catch (e) {
+        console.warn(`[API][${requestId}] Failed to parse body buffer:`, e);
+      }
+    } else if (typeof body === 'string') {
       try {
         body = JSON.parse(body);
       } catch (e) {
@@ -54,13 +62,9 @@ export default async function handler(req: any, res: any) {
 
     let correctPassword = defaultPasswords[role];
 
-    const supabaseUrl = (process.env.SUPABASE_URL || "").trim();
-    const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
-
-    if (supabaseUrl && supabaseKey) {
+    if (globalSupabase) {
       try {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        const { data, error } = await supabase
+        const { data, error } = await globalSupabase
           .from("app_settings")
           .select("value")
           .eq("key", `${role}_password`)
@@ -78,7 +82,15 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({ success: true, role, version: "1.0.6" });
     }
     
-    return res.status(401).json({ success: false, error: "Invalid password" });
+    return res.status(401).json({ 
+      success: false, 
+      error: "Invalid password",
+      diagnostics: {
+        supabaseConfigured: !!supabaseUrl && !!supabaseKey,
+        usingDefault: correctPassword === defaultPasswords[role],
+        role: role
+      }
+    });
   } catch (error: any) {
     console.error(`[API][${requestId}] CRITICAL ERROR:`, error);
     return res.status(500).json({ 
