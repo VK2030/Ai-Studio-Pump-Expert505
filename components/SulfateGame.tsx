@@ -475,17 +475,17 @@ const SulfateGame: React.FC<SulfateGameProps> = ({ onClose, isDark = true, syncS
 
         <div className="flex-1" />
 
-        <footer className={`p-8 pb-12 bg-gradient-to-t ${isDark ? 'from-[#081221] via-[#081221]/90 to-transparent' : 'from-slate-50 via-slate-50/90 to-transparent'}`}>
-          <div className="max-w-xs mx-auto flex flex-col items-center">
-            {collectedAnswers.length > 0 && (
-              <div className="text-center mb-6 flex flex-wrap justify-center items-center gap-1.5 w-[140%] -ml-[20%]">
-                {collectedAnswers.map((answer, i) => (
-                  <span key={i} className="text-lg font-black text-green-500 drop-shadow-md whitespace-nowrap">
-                    {formatFormula(answer)}{i < collectedAnswers.length - 1 && <span className="ml-[1px]">,</span>}
-                  </span>
-                ))}
-              </div>
-            )}
+        <footer className={`p-8 pb-12 bg-gradient-to-t ${isDark ? 'from-[#081221] via-[#081221]/90 to-transparent' : 'from-slate-50 via-slate-50/90 to-transparent'} flex flex-col items-center`}>
+          {collectedAnswers.length > 0 && (
+            <div className="w-full max-w-2xl px-4 mb-6 flex flex-wrap justify-center items-center gap-y-2 gap-x-1.5">
+              {collectedAnswers.map((answer, i) => (
+                <span key={i} className="text-lg font-black text-green-500 drop-shadow-md whitespace-nowrap">
+                  {formatFormula(answer)}{i < collectedAnswers.length - 1 && <span>,</span>}
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="max-w-xs w-full flex flex-col items-center">
             <div className="text-center mb-4">
               <span className={`text-2xl font-black uppercase tracking-tight leading-none ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
                 {sessions[currentSessionIndex] ? TOPICS[sessions[currentSessionIndex]].title : ''}
