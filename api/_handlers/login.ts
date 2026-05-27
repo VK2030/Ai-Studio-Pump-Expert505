@@ -86,7 +86,7 @@ export default async function handler(req: any, res: any) {
       success: false, 
       error: "Invalid password",
       diagnostics: {
-        supabaseConfigured: !!supabaseUrl && !!supabaseKey,
+        supabaseConfigured: !!supabaseUrl && !!supabaseServiceKey,
         usingDefault: correctPassword === defaultPasswords[role],
         role: role
       }
