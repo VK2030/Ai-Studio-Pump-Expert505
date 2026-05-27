@@ -43,7 +43,8 @@ export default async function handler(req: any, res: any) {
     const { role, password } = body || {};
     
     if (!role || !password) {
-      return res.status(400).json({ error: "Role and password are required" });
+      console.error(`[API][${requestId}] Missing role or password. Received body:`, JSON.stringify(body || {}), `Headers:`, JSON.stringify(req.headers));
+      return res.status(400).json({ error: "Role and password are required", receivedKeys: Object.keys(body || {}) });
     }
 
     const defaultPasswords: Record<string, string> = {

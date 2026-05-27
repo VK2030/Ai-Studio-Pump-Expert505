@@ -13,7 +13,16 @@ import testSupabaseHandler from "./_handlers/test-supabase.js";
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '1mb' }));
+
+// Safe body parser for Vercel Serverless environment
+app.use((req: any, res: any, next: any) => {
+  if (req.body && (typeof req.body === 'object' || Buffer.isBuffer(req.body))) {
+    console.log(`[API] Body already parsed by Vercel/serverless platform:`, typeof req.body);
+    next();
+  } else {
+    express.json({ limit: '1mb' })(req, res, next);
+  }
+});
 
 // Vercel URL Compatibility Middleware
 app.use((req, res, next) => {
