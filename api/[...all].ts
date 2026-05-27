@@ -41,6 +41,34 @@ app.use((req, res, next) => {
   next();
 });
 
+// Vercel URL Compatibility Middleware
+app.use((req: any, res: any, next: any) => {
+  let _path = req.query?._path || req.headers['x-matched-path'];
+  
+  if (!_path) {
+    const match = req.url.match(/[?&]_path=([^&]+)/);
+    if (match) {
+      _path = decodeURIComponent(match[1]);
+    }
+  }
+
+  if (_path) {
+    let cleanPath = typeof _path === 'string' ? _path : _path[0];
+    if (cleanPath.startsWith('/')) {
+      cleanPath = cleanPath.substring(1);
+    }
+    if (cleanPath.startsWith('api/')) {
+      cleanPath = cleanPath.substring(4);
+    }
+    
+    const queryIndex = req.url.indexOf('?');
+    const queryString = queryIndex !== -1 && !req.url.substring(queryIndex).startsWith('?_path=') ? req.url.substring(queryIndex) : '';
+    req.url = `/api/${cleanPath}${queryString}`;
+    console.log(`[API] Rewritten req.url to ${req.url}`);
+  }
+  next();
+});
+
 // Helper to adapt Vercel handler to Express
 const adapt = (handler: any) => async (req: any, res: any) => {
   try {
@@ -65,19 +93,24 @@ const adapt = (handler: any) => async (req: any, res: any) => {
 };
 
 // Routes
-app.post("/api/login", adapt(loginHandler));
-app.all("/api/history", adapt(historyHandler));
-app.all("/api/config", adapt(configHandler));
-app.get("/api/quiz/questions/:moduleId", (req, res) => {
-  req.query.moduleId = req.params.moduleId;
-  return adapt(questionsHandler)(req, res);
-});
-app.post("/api/quiz/check", adapt(checkHandler));
-app.post("/api/quiz/views/increment", adapt(viewsHandler));
-app.post("/api/admin/sync", adapt(syncHandler));
-app.post("/api/telegram/send-summary", adapt(telegramHandler));
-app.get("/api/health", adapt(healthHandler));
-app.get("/api/test-supabase", adapt(testSupabaseHandler));
+const registerRoutes = (app: any, prefix = "") => {
+  app.post(`${prefix}/login`, adapt(loginHandler));
+  app.all(`${prefix}/history`, adapt(historyHandler));
+  app.all(`${prefix}/config`, adapt(configHandler));
+  app.get(`${prefix}/quiz/questions/:moduleId`, (req: any, res: any) => {
+    req.query.moduleId = req.params.moduleId;
+    return adapt(questionsHandler)(req, res);
+  });
+  app.post(`${prefix}/quiz/check`, adapt(checkHandler));
+  app.post(`${prefix}/quiz/views/increment`, adapt(viewsHandler));
+  app.post(`${prefix}/admin/sync`, adapt(syncHandler));
+  app.post(`${prefix}/telegram/send-summary`, adapt(telegramHandler));
+  app.get(`${prefix}/health`, adapt(healthHandler));
+  app.get(`${prefix}/test-supabase`, adapt(testSupabaseHandler));
+};
+
+registerRoutes(app, "/api");
+registerRoutes(app, "");
 
 // Fallback for legacy or other paths
 app.use("/api/*", (req, res) => {
