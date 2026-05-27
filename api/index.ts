@@ -15,6 +15,33 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
+// Vercel URL Compatibility Middleware
+app.use((req, res, next) => {
+  let _path = req.query._path || req.headers['x-matched-path'];
+  
+  if (!_path) {
+    const match = req.url.match(/[?&]_path=([^&]+)/);
+    if (match) {
+      _path = decodeURIComponent(match[1]);
+    }
+  }
+
+  if (_path) {
+    let cleanPath = typeof _path === 'string' ? _path : _path[0];
+    if (cleanPath.startsWith('/')) {
+      cleanPath = cleanPath.substring(1);
+    }
+    if (cleanPath.startsWith('api/')) {
+      cleanPath = cleanPath.substring(4);
+    }
+    
+    const queryIndex = req.url.indexOf('?');
+    const queryString = queryIndex !== -1 ? req.url.substring(queryIndex) : '';
+    req.url = `/api/${cleanPath}${queryString}`;
+  }
+  next();
+});
+
 // Request logger
 app.use((req, res, next) => {
   console.log(`[API] ${req.method} ${req.url}`);
