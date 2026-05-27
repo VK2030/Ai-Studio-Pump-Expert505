@@ -13,7 +13,7 @@ import SplitText from './components/SplitText';
 import CloudStatus from './components/CloudStatus';
 
 const GLOBAL_QUESTION_COUNTS: Record<string, number> = {
-  'esp-selection-startup': 50,
+  'esp-selection-startup': 110,
   'failure-investigation': 96,
   'operating-factors': 96,
   'pbotos-general': 139,
