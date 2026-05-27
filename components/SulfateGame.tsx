@@ -62,6 +62,16 @@ const SulfateGame: React.FC<SulfateGameProps> = ({ onClose, isDark = true, syncS
   const [totalErrors, setTotalErrors] = useState(0);
   const [showWrong, setShowWrong] = useState(false);
   const [canvasShake, setCanvasShake] = useState(false);
+  const [collectedAnswers, setCollectedAnswers] = useState<string[]>([]);
+
+  const formatFormula = (formula: string) => {
+    return formula.split(/([0-9]+)/).map((part, index) => {
+      if (/[0-9]+/.test(part)) {
+        return <sub key={index} className="text-[0.6em] relative -bottom-1">{part}</sub>;
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
 
   const sessions = Object.keys(TOPICS) as Array<keyof typeof TOPICS>;
   const totalTasksCount = sessions.reduce((sum, key) => sum + TOPICS[key].tasks.length, 0);
@@ -278,6 +288,7 @@ const SulfateGame: React.FC<SulfateGameProps> = ({ onClose, isDark = true, syncS
     setCurrentSessionIndex(0);
     setCurrentTaskIndex(0);
     setTimeLeft(GAME_TIME);
+    setCollectedAnswers([]);
     setGameState('playing');
     if (currentSessionIndex === 0) {
       spawn();
@@ -372,6 +383,7 @@ const SulfateGame: React.FC<SulfateGameProps> = ({ onClose, isDark = true, syncS
           setTimeout(() => setCanvasShake(false), 150);
           
           setTotalCompleted(prev => prev + 1);
+          setCollectedAnswers(prev => [...prev, b.text]);
           setTimeout(() => {
             if (currentTaskIndex < topic.tasks.length - 1) {
               setCurrentTaskIndex(prev => prev + 1);
@@ -380,6 +392,7 @@ const SulfateGame: React.FC<SulfateGameProps> = ({ onClose, isDark = true, syncS
               setCurrentSessionIndex(prev => prev + 1);
               setCurrentTaskIndex(0);
               setTimeLeft(GAME_TIME);
+              setCollectedAnswers([]);
             } else {
               setGameState('gameOver');
             }
@@ -457,6 +470,35 @@ const SulfateGame: React.FC<SulfateGameProps> = ({ onClose, isDark = true, syncS
             Выход
           </button>
         </header>
+
+        <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col gap-4 pointer-events-none z-30">
+          {collectedAnswers.length > 0 && (
+            <AnimatePresence>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex flex-col gap-3"
+              >
+                <div className={`text-xs font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-lg border w-fit backdrop-blur-md
+                  ${isDark ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-green-50 border-green-200 text-green-600'}`}>
+                  {sessions[currentSessionIndex] ? TOPICS[sessions[currentSessionIndex]].title : ''}
+                </div>
+                <div className="flex flex-col gap-2">
+                  {collectedAnswers.map((answer, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="text-2xl font-black text-green-500 drop-shadow-md"
+                    >
+                      {formatFormula(answer)} 
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          )}
+        </div>
 
         <div className="flex-1" />
 
