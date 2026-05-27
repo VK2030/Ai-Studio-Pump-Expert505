@@ -70,15 +70,19 @@ export default async function handler(req: any, res: any) {
           .eq("key", `${role}_password`)
           .single();
         
-        if (!error && data?.value) {
+        if (error) {
+          console.error(`[API][${requestId}] Supabase error fetching password for ${role}:`, error.message);
+        } else if (data?.value) {
           correctPassword = data.value;
         }
       } catch (supabaseErr: any) {
-        console.error(`[API][${requestId}] Supabase error:`, supabaseErr.message);
+        console.error(`[API][${requestId}] Supabase exception:`, supabaseErr.message);
       }
+    } else {
+      console.warn(`[API][${requestId}] globalSupabase is null. Using default password.`);
     }
 
-    if (String(password) === String(correctPassword)) {
+    if (String(password).trim() === String(correctPassword).trim()) {
       return res.status(200).json({ success: true, role, version: "1.0.6" });
     }
     
@@ -87,8 +91,9 @@ export default async function handler(req: any, res: any) {
       error: "Invalid password",
       diagnostics: {
         supabaseConfigured: !!supabaseUrl && !!supabaseServiceKey,
-        usingDefault: correctPassword === defaultPasswords[role],
-        role: role
+        usingDefault: String(correctPassword).trim() === String(defaultPasswords[role]).trim(),
+        role: role,
+        hasGlobalSupabase: !!globalSupabase
       }
     });
   } catch (error: any) {
