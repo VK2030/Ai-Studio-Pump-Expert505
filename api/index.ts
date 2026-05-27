@@ -1,15 +1,15 @@
 import express from "express";
 import cors from "cors";
-import loginHandler from "./login.js";
-import historyHandler from "./history.js";
-import configHandler from "./config.js";
-import questionsHandler from "./quiz/questions/[moduleId].js";
-import checkHandler from "./quiz/check.js";
-import viewsHandler from "./quiz/views/increment.js";
-import syncHandler from "./admin/sync.js";
-import telegramHandler from "./telegram/send-summary.js";
-import healthHandler from "./health.js";
-import testSupabaseHandler from "./test-supabase.js";
+import loginHandler from "./_handlers/login.js";
+import historyHandler from "./_handlers/history.js";
+import configHandler from "./_handlers/config.js";
+import questionsHandler from "./_handlers/quiz-questions.js";
+import checkHandler from "./_handlers/quiz-check.js";
+import viewsHandler from "./_handlers/quiz-views-increment.js";
+import syncHandler from "./_handlers/admin-sync.js";
+import telegramHandler from "./_handlers/telegram-send-summary.js";
+import healthHandler from "./_handlers/health.js";
+import testSupabaseHandler from "./_handlers/test-supabase.js";
 
 const app = express();
 app.use(cors());

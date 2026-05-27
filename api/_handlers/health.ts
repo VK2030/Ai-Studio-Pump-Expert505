@@ -1,7 +1,7 @@
-import { supabase, supabaseUrl, supabaseServiceKey } from "./_lib/supabase.js";
+import { supabase, supabaseUrl, supabaseServiceKey } from "../_lib/supabase.js";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-const questionsData = require("./_lib/questions.json");
+const questionsData = require("../_lib/questions.json");
 
 export default async function handler(req: any, res: any) {
   try {

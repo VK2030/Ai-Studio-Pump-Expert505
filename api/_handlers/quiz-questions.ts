@@ -1,4 +1,4 @@
-import { supabase } from "../../_lib/supabase.js";
+import { supabase } from "../_lib/supabase.js";
 import { createRequire } from "module";
 import dns from "node:dns";
 
@@ -7,7 +7,7 @@ if (typeof dns.setDefaultResultOrder === 'function') {
 }
 
 const require = createRequire(import.meta.url);
-const questionsData = require("../../_lib/questions.json");
+const questionsData = require("../_lib/questions.json");
 
 console.log("[API] questions handler starting");
 
