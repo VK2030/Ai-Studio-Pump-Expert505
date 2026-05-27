@@ -900,7 +900,14 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         </div>
         <div className={`absolute bottom-0 left-0 right-0 p-6 ${isDark ? 'bg-gradient-to-t from-[#081221] via-[#081221]/90 to-transparent' : 'bg-gradient-to-t from-white via-white/90 to-transparent'}`}>
           <AnimatedContent distance={20} delay={0.5} direction="vertical">
-            <button onClick={clearModuleHistory} className={`w-full py-3 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isDark ? 'bg-red-500/5 border-red-500/10 text-red-500/50 active:bg-red-500 active:text-white' : 'bg-red-50 border-red-100 text-red-500 active:bg-red-500 active:text-white'}`}>Удалить историю этого модуля</button>
+            {userRole !== 'contestant' && (
+              <button 
+                onClick={clearModuleHistory} 
+                className={`w-full py-3 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isDark ? 'bg-red-500/5 border-red-500/10 text-red-500/50 active:bg-red-500 active:text-white' : 'bg-red-50 border-red-100 text-red-500 active:bg-red-500 active:text-white'}`}
+              >
+                Удалить историю этого модуля
+              </button>
+            )}
           </AnimatedContent>
         </div>
       </div>
