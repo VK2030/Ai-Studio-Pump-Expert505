@@ -25,18 +25,13 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, iconType, progress = 0
         return (
           <div className={iconWrapperClass}>
              <div className={`absolute inset-0 ${glowColor} rounded-full blur-xl group-hover:opacity-100 transition-opacity`}></div>
-             <svg viewBox="0 0 24 24" className={`w-full h-full ${iconColor} drop-shadow-[0_0_8px_rgba(255,255,255,0.1)]`} fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="9" />
-                <circle cx="12" cy="12" r="3" />
-                <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-                <path d="M12 9 C 15 7.5, 14 5.5, 12 3" />
-                <path d="M12 9 C 15 7.5, 14 5.5, 12 3" transform="rotate(45 12 12)" />
-                <path d="M12 9 C 15 7.5, 14 5.5, 12 3" transform="rotate(90 12 12)" />
-                <path d="M12 9 C 15 7.5, 14 5.5, 12 3" transform="rotate(135 12 12)" />
-                <path d="M12 9 C 15 7.5, 14 5.5, 12 3" transform="rotate(180 12 12)" />
-                <path d="M12 9 C 15 7.5, 14 5.5, 12 3" transform="rotate(225 12 12)" />
-                <path d="M12 9 C 15 7.5, 14 5.5, 12 3" transform="rotate(270 12 12)" />
-                <path d="M12 9 C 15 7.5, 14 5.5, 12 3" transform="rotate(315 12 12)" />
+              <svg viewBox="0 0 24 24" className={`w-full h-full ${iconColor} drop-shadow-[0_0_8px_rgba(255,255,255,0.1)]`} fill="none" stroke="currentColor" strokeWidth="1.5">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="4.5" />
+                <path d="M11 9.17A3 3 0 1 0 13 9.17L13 8h-2z" />
+                {[0, 60, 120, 180, 240, 300].map(angle => (
+                  <path key={angle} d="M12 7.5 C16 7.5, 21.5 10, 20.66 17" transform={`rotate(${angle} 12 12)`} />
+                ))}
              </svg>
           </div>
         );
