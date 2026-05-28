@@ -65,21 +65,55 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
   const loadedImagesRef = useRef<HTMLImageElement[]>([]);
 
   useEffect(() => {
-    const images = IMAGE_URLS.map(src => {
-      const img = new Image();
-      img.src = src;
-      return img;
+    const fallbackUrls = [
+      '/stator.png',
+      '/wheel.png',
+      '/impeller.png'
+    ];
+
+    const loadPromises = IMAGE_URLS.map((src, index) => {
+      return new Promise<HTMLImageElement>((resolve) => {
+        const img = new Image();
+        img.src = src;
+        
+        const handleSuccess = () => {
+          if (img.naturalWidth > 0) {
+            resolve(img);
+          } else {
+            handleError();
+          }
+        };
+
+        const handleError = () => {
+          console.warn(`Failed to load main image ${src}, trying fallback to ${fallbackUrls[index]}...`);
+          const fallbackImg = new Image();
+          fallbackImg.src = fallbackUrls[index];
+          fallbackImg.onload = () => {
+            if (fallbackImg.naturalWidth > 0) {
+              resolve(fallbackImg);
+            } else {
+              resolve(img);
+            }
+          };
+          fallbackImg.onerror = () => {
+            console.error(`Failed to load fallback image as well: ${fallbackUrls[index]}`);
+            resolve(img);
+          };
+        };
+
+        if (img.complete) {
+          handleSuccess();
+        } else {
+          img.onload = handleSuccess;
+          img.onerror = handleError;
+        }
+      });
     });
-    Promise.all(images.map(img => new Promise(res => {
-      if (img.complete) res(img.naturalWidth > 0);
-      else { 
-        img.onload = () => res(true); 
-        img.onerror = () => { console.error('Failed to load image:', img.src); res(false); } 
-      }
-    }))).then((results) => {
-      console.log('Images loaded. Results:', results, 'Images array:', images);
+
+    Promise.all(loadPromises).then((images) => {
+      console.log('Images loading process finished. Loaded images:', images);
       loadedImagesRef.current = images;
-      setLoadedImages([...images]);
+      setLoadedImages(images);
     });
   }, []);
   const [circles, setCircles] = useState<Circle[]>([]);
