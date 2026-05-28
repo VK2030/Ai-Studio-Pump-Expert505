@@ -6,6 +6,18 @@ interface FruitNinjaGameProps {
   isDark: boolean;
 }
 
+
+const IMAGE_URLS = [
+  '/stator.png',
+  '/wheel.png',
+  '/impeller.png'
+];
+/*
+  '/c2e9b8f2-5bdc-4da6-b4ca-ca65ef31ec1b.png',
+  '/dc86bcf1-0e3b-4886-9ac7-90c00d46dd6c.png',
+  '/7bce29b1-ab9a-4cce-9ffc-a3c306d15b2e.png'
+];*/
+
 const QUESTIONS = [
   { text: "Сколько будет 5 + 7?", options: ["10", "11", "12", "13"], correct: "12" },
   { text: "Вычислите 15 - 8", options: ["6", "7", "8", "9"], correct: "7" },
@@ -21,6 +33,8 @@ interface Circle {
   radius: number;
   text: string;
   sliced: boolean;
+  imageIdx: number;
+  isCorrect: boolean;
   sliceAngle?: number;
   sliceProgress?: number;
 }
@@ -40,7 +54,28 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
-  const [correctCount, setCorrectCount] = useState(0);
+    const [correctCount, setCorrectCount] = useState(0);
+  const [loadedImages, setLoadedImages] = useState<HTMLImageElement[]>([]);
+  const loadedImagesRef = useRef<HTMLImageElement[]>([]);
+
+  useEffect(() => {
+    const images = IMAGE_URLS.map(src => {
+      const img = new Image();
+      img.src = src;
+      return img;
+    });
+    Promise.all(images.map(img => new Promise(res => {
+      if (img.complete) res(img.naturalWidth > 0);
+      else { 
+        img.onload = () => res(true); 
+        img.onerror = () => { console.error('Failed to load image:', img.src); res(false); } 
+      }
+    }))).then((results) => {
+      console.log('Images loaded. Results:', results, 'Images array:', images);
+      loadedImagesRef.current = images;
+      setLoadedImages([...images]);
+    });
+  }, []);
   const [circles, setCircles] = useState<Circle[]>([]);
   const circlesRef = useRef<Circle[]>([]);
   const [sparks, setSparks] = useState<Spark[]>([]);
@@ -96,7 +131,9 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           vy: -Math.sqrt(2 * gravity * distanceToPeak), // Calculate velocity to reach target peak
           radius: r,
           text: opt,
-          sliced: false
+          sliced: false,
+          imageIdx: i % IMAGE_URLS.length,
+          isCorrect: opt === currentQ.correct
         };
       });
       circlesRef.current = newCircles;
@@ -235,20 +272,59 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
       
       // Draw circles
       currentCircles.forEach(c => {
+        const img = loadedImagesRef.current[c.imageIdx];
         if (!c.sliced) {
-          ctx.beginPath();
-          ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
-          ctx.fillStyle = isDark ? '#1e293b' : '#ffffff';
-          ctx.fill();
-          ctx.lineWidth = 4;
-          ctx.strokeStyle = isDark ? '#334155' : '#e2e8f0';
-          ctx.stroke();
+          if (img && img.naturalWidth > 0) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+            ctx.clip();
+            // Draw image covering the circle
+            const aspect = img.width / img.height;
+            let drawW = c.radius * 2;
+            let drawH = c.radius * 2;
+            if (aspect > 1) {
+              drawW = drawH * aspect;
+            } else {
+              drawH = drawW / aspect;
+            }
+            ctx.drawImage(img, c.x - drawW/2, c.y - drawH/2, drawW, drawH);
+            ctx.restore();
+            
+            // outline
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = isDark ? '#334155' : '#e2e8f0';
+            ctx.stroke();
+          } else {
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+            ctx.fillStyle = isDark ? '#1e293b' : '#ffffff';
+            ctx.fill();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = isDark ? '#334155' : '#e2e8f0';
+            ctx.stroke();
+          }
           
-          ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
+          
+          // Text styling with shadow for readability
           ctx.font = `bold ${Math.floor(c.radius * 0.5)}px Inter, sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
+          
+          if (img && img.naturalWidth > 0) {
+            // Draw a subtle dark semi-transparent band behind the text so it's readable over images
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, c.radius * 0.45, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+          } else {
+            ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
+          }
           ctx.fillText(c.text, c.x, c.y);
+  
         } else {
           // Draw sliced
           const splitDist = (c.sliceProgress || 0) * 50;
@@ -261,10 +337,21 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           // Half 1
           ctx.beginPath();
           ctx.arc(c.x - dx, c.y - dy, c.radius, angle, angle + Math.PI);
-          ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
-          ctx.fill();
+          if (img && img.naturalWidth > 0) {
+            ctx.save();
+            ctx.clip();
+            const aspect = img.width / img.height;
+            let drawW = c.radius * 2;
+            let drawH = c.radius * 2;
+            if (aspect > 1) { drawW = drawH * aspect; } else { drawH = drawW / aspect; }
+            ctx.drawImage(img, c.x - dx - drawW/2, c.y - dy - drawH/2, drawW, drawH);
+            ctx.restore();
+          } else {
+            ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
+            ctx.fill();
+          }
           ctx.lineWidth = 4;
-          ctx.strokeStyle = '#ef4444'; // Red edge for cut
+          ctx.strokeStyle = c.isCorrect ? '#22c55e' : '#ef4444'; // Green if correct, red if incorrect
           ctx.stroke();
           
           // Text half 1
@@ -272,20 +359,44 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           ctx.rect(c.x - dx - c.radius, c.y - dy - c.radius, c.radius * 2, c.radius * 2);
           ctx.clip();
           ctx.translate(-dx, -dy);
-          ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
+          
+          // Text styling with shadow for readability
           ctx.font = `bold ${Math.floor(c.radius * 0.5)}px Inter, sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
+          
+          if (img && img.naturalWidth > 0) {
+            // Draw a subtle dark semi-transparent band behind the text so it's readable over images
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, c.radius * 0.45, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+          } else {
+            ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
+          }
           ctx.fillText(c.text, c.x, c.y);
+  
           ctx.restore();
           
           // Half 2
           ctx.beginPath();
           ctx.arc(c.x + dx, c.y + dy, c.radius, angle + Math.PI, angle + Math.PI * 2);
-          ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
-          ctx.fill();
+          if (img && img.naturalWidth > 0) {
+            ctx.save();
+            ctx.clip();
+            const aspect = img.width / img.height;
+            let drawW = c.radius * 2;
+            let drawH = c.radius * 2;
+            if (aspect > 1) { drawW = drawH * aspect; } else { drawH = drawW / aspect; }
+            ctx.drawImage(img, c.x + dx - drawW/2, c.y + dy - drawH/2, drawW, drawH);
+            ctx.restore();
+          } else {
+            ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
+            ctx.fill();
+          }
           ctx.lineWidth = 4;
-          ctx.strokeStyle = '#ef4444'; // Red edge for cut
+          ctx.strokeStyle = c.isCorrect ? '#22c55e' : '#ef4444'; // Green if correct, red if incorrect
           ctx.stroke();
           
           // Text half 2
@@ -293,11 +404,24 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           ctx.rect(c.x + dx - c.radius, c.y + dy - c.radius, c.radius * 2, c.radius * 2);
           ctx.clip();
           ctx.translate(dx, dy);
-          ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
+          
+          // Text styling with shadow for readability
           ctx.font = `bold ${Math.floor(c.radius * 0.5)}px Inter, sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
+          
+          if (img && img.naturalWidth > 0) {
+            // Draw a subtle dark semi-transparent band behind the text so it's readable over images
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, c.radius * 0.45, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+          } else {
+            ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
+          }
           ctx.fillText(c.text, c.x, c.y);
+  
           ctx.restore();
           
           ctx.restore();
