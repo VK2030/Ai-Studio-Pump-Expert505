@@ -504,7 +504,14 @@ const App: React.FC = () => {
                             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border transition-colors
                               ${isDark ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-500'}`}>
                               <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                                <rect x="3" y="5" width="18" height="11" rx="1" />
+                                <path d="M2 18h20" />
+                                <circle cx="8" cy="10.5" r="2.2" />
+                                <path d="M8 8.3v4.4M5.8 10.5h4.4" />
+                                <path d="M6.5 9l3 3M9.5 9l-3 3" />
+                                <path d="M13 14v-2M15.5 14v-4M18 14v-6" />
+                                <path d="M12.5 10l3.5-3.5 3 2" />
+                                <path d="M6 14h3" opacity="0.5" />
                               </svg>
                             </div>
                             <div className="flex flex-col items-start">
@@ -1007,7 +1014,14 @@ const App: React.FC = () => {
                         className={`w-12 h-12 rounded-2xl flex-shrink-0 flex items-center justify-center border transition-colors
                         ${isDark ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-500'}`}>
                         <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.5">
-                          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                          <rect x="3" y="5" width="18" height="11" rx="1" />
+                          <path d="M2 18h20" />
+                          <circle cx="8" cy="10.5" r="2.2" />
+                          <path d="M8 8.3v4.4M5.8 10.5h4.4" />
+                          <path d="M6.5 9l3 3M9.5 9l-3 3" />
+                          <path d="M13 14v-2M15.5 14v-4M18 14v-6" />
+                          <path d="M12.5 10l3.5-3.5 3 2" />
+                          <path d="M6 14h3" opacity="0.5" />
                         </svg>
                       </motion.div>
                     </div>
@@ -1044,8 +1058,15 @@ const App: React.FC = () => {
               />
               <NavButton isDark={isDark} active={activeTab === 'tasks'} onClick={() => setActiveTab('tasks')} label="Упражнения" 
                 icon={(active) => (
-                  <svg viewBox="0 0 24 24" className={`w-5 h-5 transition-all ${active ? (isDark ? 'text-white' : 'text-slate-800') : (isDark ? 'text-white/30' : 'text-slate-400')}`} fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
-                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  <svg viewBox="0 0 24 24" className={`w-5 h-5 transition-all ${active ? (isDark ? 'text-white' : 'text-slate-800') : (isDark ? 'text-white/30' : 'text-slate-400')}`} fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="3" y="5" width="18" height="11" rx="1" />
+                    <path d="M2 18h20" />
+                    <circle cx="8" cy="10.5" r="2.2" />
+                    <path d="M8 8.3v4.4M5.8 10.5h4.4" />
+                    <path d="M6.5 9l3 3M9.5 9l-3 3" />
+                    <path d="M13 14v-2M15.5 14v-4M18 14v-6" />
+                    <path d="M12.5 10l3.5-3.5 3 2" />
+                    <path d="M6 14h3" opacity="0.5" />
                   </svg>
                 )} 
               />

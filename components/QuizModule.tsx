@@ -425,13 +425,17 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         <div className={containerClass}> 
           <div className={`absolute inset-0 ${isDark ? 'bg-indigo-500/10' : 'bg-slate-400/5'} blur-xl`}></div> 
           <svg viewBox="0 0 24 24" className={iconClass} fill="none" stroke="currentColor" strokeWidth="1.5"> 
-            <rect x="3" y="5" width="18" height="11" rx="1" />
-            <path d="M2 18h20" />
-            <circle cx="8" cy="10.5" r="2.2" />
-            <path d="M8 8.3v4.4M5.8 10.5h4.4" />
-            <path d="M6.5 9l3 3M9.5 9l-3 3" />
-            <path d="M13 14v-2M15.5 14v-4M18 14v-6" />
-            <path d="M12.5 10l3.5-3.5 3 2" />
+            <circle cx="12" cy="12" r="9" />
+            <circle cx="12" cy="12" r="3" />
+            <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+            <path d="M12 9 C 15 7.5, 14 5.5, 12 3" />
+            <path d="M12 9 C 15 7.5, 14 5.5, 12 3" transform="rotate(45 12 12)" />
+            <path d="M12 9 C 15 7.5, 14 5.5, 12 3" transform="rotate(90 12 12)" />
+            <path d="M12 9 C 15 7.5, 14 5.5, 12 3" transform="rotate(135 12 12)" />
+            <path d="M12 9 C 15 7.5, 14 5.5, 12 3" transform="rotate(180 12 12)" />
+            <path d="M12 9 C 15 7.5, 14 5.5, 12 3" transform="rotate(225 12 12)" />
+            <path d="M12 9 C 15 7.5, 14 5.5, 12 3" transform="rotate(270 12 12)" />
+            <path d="M12 9 C 15 7.5, 14 5.5, 12 3" transform="rotate(315 12 12)" />
           </svg> 
         </div> 
       );
