@@ -245,7 +245,7 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
       const currentQ = QUESTIONS[currentQuestionIdx];
       if (!currentQ) return;
       
-      const gravity = Math.max(h * 1.5, 800);
+      const gravity = Math.max(h * 1.5, 800) * 0.64;
       
       const newCircles: Circle[] = currentQ.options.map((opt, i) => {
         // Base X to distribute somewhat across the screen, with slight random offset
@@ -299,7 +299,7 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
       
       const w = containerRef.current.clientWidth;
       const h = containerRef.current.clientHeight;
-      const gravity = Math.max(h * 1.5, 800); // Gravity in px/sec^2
+      const gravity = Math.max(h * 1.5, 800) * 0.64; // Gravity in px/sec^2
       
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
@@ -573,11 +573,11 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
         ctx.lineWidth = 6;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.strokeStyle = isDark ? "rgba(148, 163, 184, 0.5)" : "rgba(100, 116, 139, 0.3)";
         ctx.stroke();
         
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "rgba(0, 190, 255, 1)"; // cyan glow
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = isDark ? "rgba(226, 232, 240, 1)" : "rgba(30, 41, 59, 1)"; // graphite color (slate-800)
         ctx.stroke();
       }
       
@@ -682,24 +682,16 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           <div className={`p-8 rounded-[2.5rem] mt-8 mb-8 border backdrop-blur-md relative overflow-hidden group
             ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
             <p className={`text-sm uppercase tracking-widest font-bold mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Верных ответов</p>
-            <div className={`text-8xl font-black mb-4 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+            <div className={`text-8xl font-black mb-4 ${isDark ? 'text-slate-300' : 'text-slate-800'}`}>
               <span className="text-6xl">{correctCount}</span>
               <span className={`text-2xl text-slate-500 ml-1`}>/ {QUESTIONS.length}</span>
             </div>
-            
-            {correctCount === QUESTIONS.length ? (
-              <p className="text-green-500 font-bold">Отличный результат!</p>
-            ) : correctCount > 0 ? (
-              <p className="text-amber-500 font-bold">Хорошая попытка!</p>
-            ) : (
-              <p className="text-rose-500 font-bold">Нужно потренироваться!</p>
-            )}
           </div>
 
           <button 
             onClick={onClose}
             className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-[0.98] transition-all
-              ${isDark ? 'bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500/50 shadow-indigo-500/20' : 'bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-700 shadow-indigo-200'}`}
+              ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border border-slate-700 shadow-slate-200'}`}
           >
             Закрыть
           </button>
