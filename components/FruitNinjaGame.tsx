@@ -7,10 +7,14 @@ interface FruitNinjaGameProps {
 }
 
 
+import statorImg from '../assets/stator.png';
+import wheelImg from '../assets/wheel.png';
+import impellerImg from '../assets/impeller.png';
+
 const IMAGE_URLS = [
-  '/stator.png',
-  '/wheel.png',
-  '/impeller.png'
+  statorImg,
+  wheelImg,
+  impellerImg
 ];
 /*
   '/c2e9b8f2-5bdc-4da6-b4ca-ca65ef31ec1b.png',
