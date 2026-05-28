@@ -6,7 +6,7 @@
       "destination": "/api/index?_path=$1"
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/((?!api/|assets/|stator.png|wheel.png|impeller.png|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.svg|.*\\.js|.*\\.css|.*\\.ico).*)",
       "destination": "/index.html"
     }
   ]
