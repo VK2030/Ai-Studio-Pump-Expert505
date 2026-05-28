@@ -6,21 +6,164 @@ interface FruitNinjaGameProps {
   isDark: boolean;
 }
 
+function drawVectorShape(ctx: CanvasRenderingContext2D, typeIdx: number, cx: number, cy: number, radius: number, isDark: boolean) {
+  ctx.save();
+  ctx.translate(cx, cy);
 
-import statorImg from '../src/assets/stator.png';
-import wheelImg from '../src/assets/wheel.png';
-import impellerImg from '../src/assets/impeller.png';
+  if (typeIdx === 0) { // Stator
+    // Base ring
+    ctx.fillStyle = isDark ? '#475569' : '#64748b';
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fill();
 
-const IMAGE_URLS = [
-  statorImg,
-  wheelImg,
-  impellerImg
-];
-/*
-  '/c2e9b8f2-5bdc-4da6-b4ca-ca65ef31ec1b.png',
-  '/dc86bcf1-0e3b-4886-9ac7-90c00d46dd6c.png',
-  '/7bce29b1-ab9a-4cce-9ffc-a3c306d15b2e.png'
-];*/
+    // Inner cutout
+    ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Copper coils (highly detailed)
+    ctx.fillStyle = '#b45309'; // bronze/amber coils
+    const numCoils = 12;
+    for (let i = 0; i < numCoils; i++) {
+        const angle = (i / numCoils) * Math.PI * 2;
+        ctx.save();
+        ctx.rotate(angle);
+        ctx.beginPath();
+        // Shape of coil segment
+        ctx.moveTo(radius * 0.65, radius * 0.12);
+        ctx.lineTo(radius * 0.95, radius * 0.16);
+        ctx.lineTo(radius * 0.95, -radius * 0.16);
+        ctx.lineTo(radius * 0.65, -radius * 0.12);
+        ctx.fill();
+        
+        ctx.strokeStyle = '#d97706'; // copper highlight
+        ctx.lineWidth = radius * 0.02;
+        
+        // Wrap lines
+        for(let j=1; j<=4; j++){
+           let xPos = radius * 0.65 + (radius * 0.3 * j / 5);
+           ctx.beginPath();
+           ctx.moveTo(xPos, radius * 0.13);
+           ctx.lineTo(xPos, -radius * 0.13);
+           ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+    
+    // Outer casing rim
+    ctx.lineWidth = radius * 0.05;
+    ctx.strokeStyle = '#94a3b8';
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.7, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Bolt holes
+    ctx.fillStyle = '#334155';
+    for (let i = 0; i < 4; i++) {
+       const angle = (i / 4) * Math.PI * 2 + Math.PI/4;
+       ctx.beginPath();
+       ctx.arc(Math.cos(angle)*radius*0.85, Math.sin(angle)*radius*0.85, radius*0.06, 0, Math.PI*2);
+       ctx.fill();
+    }
+  } else if (typeIdx === 1) { // Wheel
+    // Outer tire casing
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Inner rim
+    ctx.fillStyle = isDark ? '#334155' : '#cbd5e1';
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.75, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.lineWidth = radius * 0.05;
+    ctx.strokeStyle = '#94a3b8'; // Rim edge
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.75, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Spokes
+    ctx.fillStyle = '#94a3b8'; 
+    for (let i = 0; i < 6; i++) {
+        ctx.save();
+        ctx.rotate((i * Math.PI) / 3);
+        ctx.beginPath();
+        ctx.rect(-radius*0.08, -radius*0.75, radius*0.16, radius*1.5);
+        ctx.fill();
+        
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(-radius*0.02, -radius*0.75, radius*0.04, radius*1.5); // highlight/indent
+        ctx.restore();
+    }
+    
+    // Center hub
+    ctx.fillStyle = '#475569';
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.fillStyle = '#1e293b'; // axle hole
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (typeIdx === 2) { // Impeller
+    ctx.fillStyle = '#94a3b8'; // Back plate
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Outer ring edge
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = radius * 0.04;
+    ctx.beginPath();
+    ctx.arc(0, 0, radius*0.98, 0, Math.PI*2);
+    ctx.stroke();
+    
+    // Blades
+    ctx.fillStyle = '#e2e8f0'; 
+    for (let i = 0; i < 8; i++) {
+        ctx.save();
+        ctx.rotate((i * Math.PI) / 4);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(radius * 0.4, radius * 0.6, radius * 0.95, radius * 0.1);
+        ctx.quadraticCurveTo(radius * 0.5, radius * 0.2, 0, 0);
+        ctx.fill();
+        
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = radius * 0.02;
+        ctx.stroke();
+        ctx.restore();
+    }
+    
+    // Center hub cone
+    ctx.fillStyle = '#64748b';
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Bolt in center
+    ctx.fillStyle = '#cbd5e1';
+    ctx.beginPath();
+    // hex shape
+    for(let i=0; i<6; i++) {
+        const a = i * Math.PI / 3;
+        const x = Math.cos(a) * radius * 0.12;
+        const y = Math.sin(a) * radius * 0.12;
+        if(i===0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
 
 const QUESTIONS = [
   { text: "Сколько будет 5 + 7?", options: ["10", "11", "12", "13"], correct: "12" },
@@ -55,67 +198,14 @@ interface Spark {
   color: string;
 }
 
+
 export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
-    const [correctCount, setCorrectCount] = useState(0);
-  const [loadedImages, setLoadedImages] = useState<HTMLImageElement[]>([]);
-  const loadedImagesRef = useRef<HTMLImageElement[]>([]);
+  const [correctCount, setCorrectCount] = useState(0);
 
-  useEffect(() => {
-    const fallbackUrls = [
-      '/stator.png',
-      '/wheel.png',
-      '/impeller.png'
-    ];
-
-    const loadPromises = IMAGE_URLS.map((src, index) => {
-      return new Promise<HTMLImageElement>((resolve) => {
-        const img = new Image();
-        img.src = src;
-        
-        const handleSuccess = () => {
-          if (img.naturalWidth > 0) {
-            resolve(img);
-          } else {
-            handleError();
-          }
-        };
-
-        const handleError = () => {
-          console.warn(`Failed to load main image ${src}, trying fallback to ${fallbackUrls[index]}...`);
-          const fallbackImg = new Image();
-          fallbackImg.src = fallbackUrls[index];
-          fallbackImg.onload = () => {
-            if (fallbackImg.naturalWidth > 0) {
-              resolve(fallbackImg);
-            } else {
-              resolve(img);
-            }
-          };
-          fallbackImg.onerror = () => {
-            console.error(`Failed to load fallback image as well: ${fallbackUrls[index]}`);
-            resolve(img);
-          };
-        };
-
-        if (img.complete) {
-          handleSuccess();
-        } else {
-          img.onload = handleSuccess;
-          img.onerror = handleError;
-        }
-      });
-    });
-
-    Promise.all(loadPromises).then((images) => {
-      console.log('Images loading process finished. Loaded images:', images);
-      loadedImagesRef.current = images;
-      setLoadedImages(images);
-    });
-  }, []);
   const [circles, setCircles] = useState<Circle[]>([]);
   const circlesRef = useRef<Circle[]>([]);
   const [sparks, setSparks] = useState<Spark[]>([]);
@@ -172,7 +262,7 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           radius: r,
           text: opt,
           sliced: false,
-          imageIdx: i % IMAGE_URLS.length,
+          imageIdx: i % 3,
           isCorrect: opt === currentQ.correct,
           rotation: Math.random() * Math.PI * 2,
           vRot: 2 + Math.random() * 3, // initial speed 2-5 radians per second
@@ -322,40 +412,22 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
         ctx.rotate(c.rotation);
         ctx.translate(-c.x, -c.y);
         
-        const img = loadedImagesRef.current[c.imageIdx];
         if (!c.sliced) {
-          if (img && img.naturalWidth > 0) {
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
-            ctx.clip();
-            // Draw image covering the circle
-            const aspect = img.width / img.height;
-            let drawW = c.radius * 2;
-            let drawH = c.radius * 2;
-            if (aspect > 1) {
-              drawW = drawH * aspect;
-            } else {
-              drawH = drawW / aspect;
-            }
-            ctx.drawImage(img, c.x - drawW/2, c.y - drawH/2, drawW, drawH);
-            ctx.restore();
-            
-            // outline
-            ctx.beginPath();
-            ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = isDark ? '#334155' : '#e2e8f0';
-            ctx.stroke();
-          } else {
-            ctx.beginPath();
-            ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
-            ctx.fillStyle = isDark ? '#1e293b' : '#ffffff';
-            ctx.fill();
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = isDark ? '#334155' : '#e2e8f0';
-            ctx.stroke();
-          }
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+          ctx.clip();
+          
+          drawVectorShape(ctx, c.imageIdx, c.x, c.y, c.radius, isDark);
+          
+          ctx.restore();
+          
+          // outline
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = isDark ? '#334155' : '#e2e8f0';
+          ctx.stroke();
           
           ctx.save();
           ctx.translate(c.x, c.y);
@@ -367,16 +439,13 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           
-          if (img && img.naturalWidth > 0) {
-            // Draw a subtle dark semi-transparent band behind the text so it's readable over images
-            ctx.fillStyle = 'rgba(0,0,0,0.6)';
-            ctx.beginPath();
-            ctx.arc(c.x, c.y, c.radius * 0.45, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#ffffff';
-          } else {
-            ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
-          }
+          // Draw a subtle dark semi-transparent band behind the text so it's readable over images
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, c.radius * 0.45, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#ffffff';
+
           ctx.fillText(c.text, c.x, c.y);
           
           ctx.restore();
@@ -393,19 +462,11 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           // Half 1
           ctx.beginPath();
           ctx.arc(c.x - dx, c.y - dy, c.radius, angle, angle + Math.PI);
-          if (img && img.naturalWidth > 0) {
-            ctx.save();
-            ctx.clip();
-            const aspect = img.width / img.height;
-            let drawW = c.radius * 2;
-            let drawH = c.radius * 2;
-            if (aspect > 1) { drawW = drawH * aspect; } else { drawH = drawW / aspect; }
-            ctx.drawImage(img, c.x - dx - drawW/2, c.y - dy - drawH/2, drawW, drawH);
-            ctx.restore();
-          } else {
-            ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
-            ctx.fill();
-          }
+          ctx.save();
+          ctx.clip();
+          drawVectorShape(ctx, c.imageIdx, c.x - dx, c.y - dy, c.radius, isDark);
+          ctx.restore();
+
           ctx.lineWidth = 4;
           ctx.strokeStyle = c.isCorrect ? '#22c55e' : '#ef4444'; // Green if correct, red if incorrect
           ctx.stroke();
@@ -426,16 +487,13 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           
-          if (img && img.naturalWidth > 0) {
-            // Draw a subtle dark semi-transparent band behind the text so it's readable over images
-            ctx.fillStyle = 'rgba(0,0,0,0.6)';
-            ctx.beginPath();
-            ctx.arc(c.x, c.y, c.radius * 0.45, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#ffffff';
-          } else {
-            ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
-          }
+          // Draw a subtle dark semi-transparent band behind the text so it's readable over images
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, c.radius * 0.45, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#ffffff';
+
           ctx.fillText(c.text, c.x, c.y);
   
           ctx.restore();
@@ -444,19 +502,11 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           // Half 2
           ctx.beginPath();
           ctx.arc(c.x + dx, c.y + dy, c.radius, angle + Math.PI, angle + Math.PI * 2);
-          if (img && img.naturalWidth > 0) {
-            ctx.save();
-            ctx.clip();
-            const aspect = img.width / img.height;
-            let drawW = c.radius * 2;
-            let drawH = c.radius * 2;
-            if (aspect > 1) { drawW = drawH * aspect; } else { drawH = drawW / aspect; }
-            ctx.drawImage(img, c.x + dx - drawW/2, c.y + dy - drawH/2, drawW, drawH);
-            ctx.restore();
-          } else {
-            ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
-            ctx.fill();
-          }
+          ctx.save();
+          ctx.clip();
+          drawVectorShape(ctx, c.imageIdx, c.x + dx, c.y + dy, c.radius, isDark);
+          ctx.restore();
+
           ctx.lineWidth = 4;
           ctx.strokeStyle = c.isCorrect ? '#22c55e' : '#ef4444'; // Green if correct, red if incorrect
           ctx.stroke();
@@ -477,16 +527,13 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           
-          if (img && img.naturalWidth > 0) {
-            // Draw a subtle dark semi-transparent band behind the text so it's readable over images
-            ctx.fillStyle = 'rgba(0,0,0,0.6)';
-            ctx.beginPath();
-            ctx.arc(c.x, c.y, c.radius * 0.45, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#ffffff';
-          } else {
-            ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
-          }
+          // Draw a subtle dark semi-transparent band behind the text so it's readable over images
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, c.radius * 0.45, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#ffffff';
+
           ctx.fillText(c.text, c.x, c.y);
   
           ctx.restore();
