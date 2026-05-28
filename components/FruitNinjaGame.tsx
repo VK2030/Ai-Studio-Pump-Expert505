@@ -68,48 +68,56 @@ function drawVectorShape(ctx: CanvasRenderingContext2D, typeIdx: number, cx: num
        ctx.arc(Math.cos(angle)*radius*0.85, Math.sin(angle)*radius*0.85, radius*0.06, 0, Math.PI*2);
        ctx.fill();
     }
-  } else if (typeIdx === 1) { // Wheel
-    // Outer tire casing
-    ctx.fillStyle = '#1e293b';
+  } else if (typeIdx === 1) { // Wheel (Straight blades)
+    ctx.fillStyle = '#94a3b8'; // Back plate
     ctx.beginPath();
     ctx.arc(0, 0, radius, 0, Math.PI * 2);
     ctx.fill();
-    
-    // Inner rim
-    ctx.fillStyle = isDark ? '#334155' : '#cbd5e1';
+
+    // Outer ring edge
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = radius * 0.04;
     ctx.beginPath();
-    ctx.arc(0, 0, radius * 0.75, 0, Math.PI * 2);
-    ctx.fill();
-    
-    ctx.lineWidth = radius * 0.05;
-    ctx.strokeStyle = '#94a3b8'; // Rim edge
-    ctx.beginPath();
-    ctx.arc(0, 0, radius * 0.75, 0, Math.PI * 2);
+    ctx.arc(0, 0, radius*0.98, 0, Math.PI*2);
     ctx.stroke();
     
-    // Spokes
-    ctx.fillStyle = '#94a3b8'; 
-    for (let i = 0; i < 6; i++) {
+    // Straight Blades
+    ctx.fillStyle = '#e2e8f0'; 
+    for (let i = 0; i < 8; i++) {
         ctx.save();
-        ctx.rotate((i * Math.PI) / 3);
+        ctx.rotate((i * Math.PI) / 4);
         ctx.beginPath();
-        ctx.rect(-radius*0.08, -radius*0.75, radius*0.16, radius*1.5);
+        ctx.moveTo(radius * 0.1, -radius * 0.08);
+        ctx.lineTo(radius * 0.95, -radius * 0.08);
+        ctx.lineTo(radius * 0.95, radius * 0.08);
+        ctx.lineTo(radius * 0.1, radius * 0.08);
+        ctx.closePath();
         ctx.fill();
         
-        ctx.fillStyle = '#64748b';
-        ctx.fillRect(-radius*0.02, -radius*0.75, radius*0.04, radius*1.5); // highlight/indent
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = radius * 0.02;
+        ctx.stroke();
         ctx.restore();
     }
     
-    // Center hub
-    ctx.fillStyle = '#475569';
+    // Center hub cone
+    ctx.fillStyle = '#64748b';
     ctx.beginPath();
-    ctx.arc(0, 0, radius * 0.25, 0, Math.PI * 2);
+    ctx.arc(0, 0, radius * 0.3, 0, Math.PI * 2);
     ctx.fill();
     
-    ctx.fillStyle = '#1e293b'; // axle hole
+    // Bolt in center
+    ctx.fillStyle = '#cbd5e1';
     ctx.beginPath();
-    ctx.arc(0, 0, radius * 0.08, 0, Math.PI * 2);
+    // hex shape
+    for(let i=0; i<6; i++) {
+        const a = i * Math.PI / 3;
+        const x = Math.cos(a) * radius * 0.12;
+        const y = Math.sin(a) * radius * 0.12;
+        if(i===0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
+    }
+    ctx.closePath();
     ctx.fill();
   } else if (typeIdx === 2) { // Impeller
     ctx.fillStyle = '#94a3b8'; // Back plate
