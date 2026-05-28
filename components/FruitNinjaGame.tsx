@@ -35,6 +35,8 @@ interface Circle {
   sliced: boolean;
   imageIdx: number;
   isCorrect: boolean;
+  rotation: number;
+  vRot: number;
   sliceAngle?: number;
   sliceProgress?: number;
 }
@@ -133,7 +135,9 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           text: opt,
           sliced: false,
           imageIdx: i % IMAGE_URLS.length,
-          isCorrect: opt === currentQ.correct
+          isCorrect: opt === currentQ.correct,
+          rotation: Math.random() * Math.PI * 2,
+          vRot: 2 + Math.random() * 3, // initial speed 2-5 radians per second
         };
       });
       circlesRef.current = newCircles;
@@ -181,6 +185,8 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
         c.vy += gravity * dt;
         c.x += c.vx * dt;
         c.y += c.vy * dt;
+        c.rotation += c.vRot * dt;
+        c.vRot *= Math.max(0.1, 1 - 0.4 * dt); // damp angular velocity
         
         if (!c.sliced) {
           anyNotSliced = true;
@@ -210,6 +216,7 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
             const distanceToPeak = (h + c.radius) - peakHeightTop;
             c.vy = -Math.sqrt(2 * gravity * distanceToPeak);
             c.vx = (Math.random() - 0.5) * (w * 0.1);
+            c.vRot = 2 + Math.random() * 3;
           }
         });
       }
@@ -272,6 +279,11 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
       
       // Draw circles
       currentCircles.forEach(c => {
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate(c.rotation);
+        ctx.translate(-c.x, -c.y);
+        
         const img = loadedImagesRef.current[c.imageIdx];
         if (!c.sliced) {
           if (img && img.naturalWidth > 0) {
@@ -307,6 +319,10 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
             ctx.stroke();
           }
           
+          ctx.save();
+          ctx.translate(c.x, c.y);
+          ctx.rotate(-c.rotation);
+          ctx.translate(-c.x, -c.y);
           
           // Text styling with shadow for readability
           ctx.font = `bold ${Math.floor(c.radius * 0.5)}px Inter, sans-serif`;
@@ -324,6 +340,8 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
             ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
           }
           ctx.fillText(c.text, c.x, c.y);
+          
+          ctx.restore();
   
         } else {
           // Draw sliced
@@ -360,6 +378,11 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           ctx.clip();
           ctx.translate(-dx, -dy);
           
+          ctx.save();
+          ctx.translate(c.x, c.y);
+          ctx.rotate(-c.rotation);
+          ctx.translate(-c.x, -c.y);
+          
           // Text styling with shadow for readability
           ctx.font = `bold ${Math.floor(c.radius * 0.5)}px Inter, sans-serif`;
           ctx.textAlign = 'center';
@@ -377,6 +400,7 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           }
           ctx.fillText(c.text, c.x, c.y);
   
+          ctx.restore();
           ctx.restore();
           
           // Half 2
@@ -405,6 +429,11 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           ctx.clip();
           ctx.translate(dx, dy);
           
+          ctx.save();
+          ctx.translate(c.x, c.y);
+          ctx.rotate(-c.rotation);
+          ctx.translate(-c.x, -c.y);
+          
           // Text styling with shadow for readability
           ctx.font = `bold ${Math.floor(c.radius * 0.5)}px Inter, sans-serif`;
           ctx.textAlign = 'center';
@@ -423,9 +452,12 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           ctx.fillText(c.text, c.x, c.y);
   
           ctx.restore();
+          ctx.restore();
           
           ctx.restore();
         }
+        
+        ctx.restore(); // Restore rotation transform
       });
       
       // Draw sparks
