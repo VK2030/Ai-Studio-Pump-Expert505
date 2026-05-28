@@ -7,9 +7,9 @@ interface FruitNinjaGameProps {
 }
 
 
-import statorImg from '../assets/stator.png';
-import wheelImg from '../assets/wheel.png';
-import impellerImg from '../assets/impeller.png';
+import statorImg from '../src/assets/stator.png';
+import wheelImg from '../src/assets/wheel.png';
+import impellerImg from '../src/assets/impeller.png';
 
 const IMAGE_URLS = [
   statorImg,
