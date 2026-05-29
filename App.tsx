@@ -147,6 +147,34 @@ const App: React.FC = () => {
       const summaries: string[] = [];
       let currentSummary = `<b>📊 Сводный отчет о результатах тестирования на ${today}</b>\n\n`;
 
+      const getRecentScoresWithDates = (modId: string, isPbotosAggregated = false) => {
+        let entries: QuizHistoryEntry[] = [];
+        if (isPbotosAggregated) {
+          const pbotosSubIds = Object.keys(PBOTOS_SUBMODULES);
+          entries = fullHistory.filter(h => h.moduleId === 'pbotos' || (h.moduleId && pbotosSubIds.includes(h.moduleId)));
+        } else {
+          entries = fullHistory.filter(h => h.moduleId === modId);
+        }
+        
+        if (entries.length === 0) return '';
+        // fullHistory is sorted desc (newest first). last 3 entries = top 3.
+        // We want to display oldest of the 3 first, so we reverse it.
+        const last3 = entries.slice(0, 3).reverse();
+        const scores = last3.map(h => {
+          const [correct, total] = h.score.split('/').map(Number);
+          if (isNaN(correct) || isNaN(total) || total === 0) return '0%';
+          return Math.round((correct / total) * 100) + '%';
+        });
+        const dates = last3.map(h => {
+          const d = new Date(h.date);
+          const day = String(d.getDate()).padStart(2, '0');
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const year = String(d.getFullYear()).slice(-2);
+          return `${day}.${month}.${year}г.`;
+        });
+        return `${scores.join(', ')} (${dates.join(', ')})`;
+      };
+
       // Проходим по модулям в заданном порядке (из constants.tsx)
       for (const module of MODULES) {
         const modId = module.id;
@@ -156,10 +184,10 @@ const App: React.FC = () => {
           // Сначала выводим основной ПБОТОС если есть
           if (statsByModule['pbotos']) {
             const stats = statsByModule['pbotos'];
-            const recentScores = moduleRecentScores['pbotos'] || [];
+            const recentScoresStr = getRecentScoresWithDates('pbotos', true);
             section += `🔹 <b>ПБОТОС</b>\n`;
-            if (recentScores.length > 0) {
-              section += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
+            if (recentScoresStr) {
+              section += `   Последние результаты: ${recentScoresStr}\n`;
             }
             section += `\n`;
           }
@@ -168,10 +196,10 @@ const App: React.FC = () => {
           for (const [subId, subTitle] of Object.entries(PBOTOS_SUBMODULES)) {
             if (statsByModule[subId]) {
               const stats = statsByModule[subId];
-              const recentScores = moduleRecentScores[subId] || [];
+              const recentScoresStr = getRecentScoresWithDates(subId);
               section += `🔹 <b>ПБОТОС/${subTitle}</b>\n`;
-              if (recentScores.length > 0) {
-                section += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
+              if (recentScoresStr) {
+                section += `   Последние результаты: ${recentScoresStr}\n`;
               }
               
               // Получаем количество вопросов из последнего теста
@@ -189,11 +217,11 @@ const App: React.FC = () => {
           // Обычные модули
           if (statsByModule[modId]) {
             const stats = statsByModule[modId];
-            const recentScores = moduleRecentScores[modId] || [];
+            const recentScoresStr = getRecentScoresWithDates(modId);
             
             section += `🔹 <b>${module.title}</b>\n`;
-            if (recentScores.length > 0) {
-              section += `   Последние результаты: ${recentScores.map(s => `${s}%`).join(', ')}\n`;
+            if (recentScoresStr) {
+              section += `   Последние результаты: ${recentScoresStr}\n`;
             }
 
             // Добавляем информацию о количестве вопросов
