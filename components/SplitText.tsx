@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -39,32 +39,46 @@ const SplitText: React.FC<SplitTextProps> = ({
   onLetterAnimationComplete
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [elements, setElements] = useState<string[]>([]);
+  const chars = text.split('');
+
+  const onLetterAnimationCompleteRef = useRef(onLetterAnimationComplete);
+  useEffect(() => {
+    onLetterAnimationCompleteRef.current = onLetterAnimationComplete;
+  }, [onLetterAnimationComplete]);
+
+  const fromOpacity = from.opacity;
+  const fromY = from.y;
+  const toOpacity = to.opacity;
+  const toY = to.y;
 
   useEffect(() => {
-    // Manually split text to avoid dependency on GSAP SplitText (Premium)
-    setElements(text.split(''));
-  }, [text]);
+    if (!containerRef.current) return;
 
-  useEffect(() => {
-    if (!containerRef.current || elements.length === 0) return;
+    const charElements = containerRef.current.querySelectorAll('.split-char');
+    if (charElements.length === 0) return;
 
-    const chars = containerRef.current.querySelectorAll('.split-char');
-    
+    // Set initial frame state immediately to prevent visual flash before timeline boots
+    gsap.set(charElements, { opacity: fromOpacity, y: fromY });
+
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: containerRef.current,
         start: `top bottom-=${threshold * 100}%`,
         once: true,
       },
-      onComplete: onLetterAnimationComplete
+      onComplete: () => {
+        if (onLetterAnimationCompleteRef.current) {
+          onLetterAnimationCompleteRef.current();
+        }
+      }
     });
 
     tl.fromTo(
-      chars,
-      { ...from },
+      charElements,
+      { opacity: fromOpacity, y: fromY },
       {
-        ...to,
+        opacity: toOpacity,
+        y: toY,
         duration,
         ease,
         stagger: delay / 1000,
@@ -73,11 +87,12 @@ const SplitText: React.FC<SplitTextProps> = ({
 
     return () => {
       tl.kill();
+      gsap.killTweensOf(charElements);
       ScrollTrigger.getAll().forEach(t => {
         if (t.trigger === containerRef.current) t.kill();
       });
     };
-  }, [elements, delay, duration, ease, from, to, threshold, onLetterAnimationComplete]);
+  }, [text, delay, duration, ease, fromOpacity, fromY, toOpacity, toY, threshold]);
 
   return (
     <Tag
@@ -89,7 +104,7 @@ const SplitText: React.FC<SplitTextProps> = ({
         display
       }}
     >
-      {elements.map((char, i) => (
+      {chars.map((char, i) => (
         <span
           key={i}
           className="split-char"

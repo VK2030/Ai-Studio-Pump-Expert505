@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import CloudStatus from './CloudStatus';
+import SplitText from './SplitText';
 
 // --- Константы данных ---
 const TOPICS = {
@@ -487,9 +488,21 @@ const SulfateGame: React.FC<SulfateGameProps> = ({ onClose, isDark = true, syncS
           )}
           <div className="max-w-xs w-full flex flex-col items-center">
             <div className="text-center mb-4">
-              <span className={`text-2xl font-black uppercase tracking-tight leading-none ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
-                {sessions[currentSessionIndex] ? TOPICS[sessions[currentSessionIndex]].title : ''}
-              </span>
+              {sessions[currentSessionIndex] && (
+                <SplitText
+                  key={`topic-${currentSessionIndex}`}
+                  text={TOPICS[sessions[currentSessionIndex]].title}
+                  className={`text-2xl font-black uppercase tracking-tight leading-none ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}
+                  delay={50}
+                  duration={1.25}
+                  ease="power3.out"
+                  from={{ opacity: 0, y: 40 }}
+                  to={{ opacity: 1, y: 0 }}
+                  textAlign="center"
+                  display="inline-block"
+                  tag="span"
+                />
+              )}
             </div>
             
             {(() => {
@@ -500,12 +513,32 @@ const SulfateGame: React.FC<SulfateGameProps> = ({ onClose, isDark = true, syncS
                 const restOfText = parts.slice(1).join(' ');
                 return (
                   <div className="flex flex-col items-center text-center">
-                    <span className={`text-2xl font-black uppercase tracking-tight leading-none mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      {firstWord}
-                    </span>
-                    <h2 className={`text-2xl font-black leading-tight uppercase tracking-tight mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      {restOfText}
-                    </h2>
+                    <SplitText
+                      key={`task-first-${currentSessionIndex}-${currentTaskIndex}`}
+                      text={firstWord}
+                      className={`text-2xl font-black uppercase tracking-tight leading-none mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}
+                      delay={100}
+                      duration={1.25}
+                      ease="power3.out"
+                      from={{ opacity: 0, y: 40 }}
+                      to={{ opacity: 1, y: 0 }}
+                      textAlign="center"
+                      display="inline-block"
+                      tag="span"
+                    />
+                    <SplitText
+                      key={`task-rest-${currentSessionIndex}-${currentTaskIndex}`}
+                      text={restOfText}
+                      className={`text-2xl font-black leading-tight uppercase tracking-tight mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}
+                      delay={150}
+                      duration={1.25}
+                      ease="power3.out"
+                      from={{ opacity: 0, y: 40 }}
+                      to={{ opacity: 1, y: 0 }}
+                      textAlign="center"
+                      display="inline-block"
+                      tag="h2"
+                    />
                   </div>
                 );
             })()}
