@@ -208,7 +208,7 @@ const App: React.FC = () => {
                 const scoreParts = lastEntry.score.split('/');
                 const questionsInTest = parseInt(scoreParts[1]) || 0;
                 const totalInDb = GLOBAL_QUESTION_COUNTS[subId] || 0;
-                section += `   Пройдено вопросов: ${questionsInTest} из ${totalInDb}\n`;
+                section += `   Пройдено вопросов с начала подготовки: ${questionsInTest} из ${totalInDb}\n`;
               }
               section += `\n`;
             }
@@ -231,7 +231,7 @@ const App: React.FC = () => {
               const questionsInTest = parseInt(scoreParts[1]) || 0;
               const totalInDb = GLOBAL_QUESTION_COUNTS[modId] || 0;
               if (totalInDb > 0) {
-                section += `   Пройдено вопросов: ${questionsInTest} из ${totalInDb}\n`;
+                section += `   Пройдено вопросов с начала подготовки: ${questionsInTest} из ${totalInDb}\n`;
               }
             }
 
