@@ -288,7 +288,7 @@ const App: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error("Error loading data from cloud:", error);
+      console.warn("Error loading data from cloud:", error);
       setSyncStatus('error');
       const savedHistory = localStorage.getItem('quizHistory');
       if (savedHistory) history = JSON.parse(savedHistory);

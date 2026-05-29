@@ -45,6 +45,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   const isDark = theme === 'dark';
   const [screen, setScreen] = useState<'menu' | 'quiz' | 'results' | 'history'>('menu');
   const [activeSubModuleId, setActiveSubModuleId] = useState<string | null>(null);
+  const [pressedSubId, setPressedSubId] = useState<string | null>(null);
   const [sessionQuestions, setSessionQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
@@ -114,7 +115,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
           setCurrentSession(1);
         }
       } catch (error) {
-        console.error("Error fetching history:", error);
+        console.warn("Error fetching history:", error);
         const savedHistory = localStorage.getItem('quizHistory');
         if (savedHistory) {
           const data = JSON.parse(savedHistory);
@@ -388,7 +389,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
           setSaveStatus('error');
         }
       } catch (error: any) {
-        console.error("Failed to save history to cloud:", error);
+        console.warn("Failed to save history to cloud:", error);
         // Removing alert to prevent annoyance, gracefully degrading
         setSaveStatus('error');
       }
@@ -514,11 +515,25 @@ const QuizModule: React.FC<QuizModuleProps> = ({
                 return Math.round((correct / total) * 100);
               });
 
+              const handleSubClick = (e: React.MouseEvent) => {
+                e.preventDefault();
+                if (pressedSubId) return;
+                setPressedSubId(sub.id);
+                setTimeout(() => {
+                  setPressedSubId(null);
+                  setActiveSubModuleId(sub.id);
+                }, 180);
+              };
+
+              const isPressed = pressedSubId === sub.id;
+
               return (
                 <AnimatedContent key={sub.id} distance={30} delay={idx * 0.05} direction="vertical">
-                  <button 
-                    onClick={() => setActiveSubModuleId(sub.id)}
-                    className={`w-full p-5 rounded-2xl border text-left transition-all active:scale-[0.98] group relative overflow-hidden
+                  <motion.button 
+                    onClick={handleSubClick}
+                    animate={{ scale: isPressed ? 0.92 : 1 }}
+                    transition={{ duration: 0.15, ease: "easeInOut" }}
+                    className={`w-full p-5 rounded-2xl border text-left transition-all group relative overflow-hidden
                       ${isDark ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-slate-200 hover:border-indigo-200 shadow-sm'}`}
                   >
                     <div className={`absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-3xl -mr-8 -mt-8 transition-opacity group-hover:opacity-100 opacity-0`}></div>
@@ -548,7 +563,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
                         </svg>
                       </div>
                     </div>
-                  </button>
+                  </motion.button>
                 </AnimatedContent>
               );
             })}
