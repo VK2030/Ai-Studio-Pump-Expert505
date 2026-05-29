@@ -59,6 +59,12 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [correctIndicesForCurrentQuestion, setCorrectIndicesForCurrentQuestion] = useState<number[] | null>(null);
+
+  const [isBack1Pressed, setIsBack1Pressed] = useState(false);
+  const [isBack2Pressed, setIsBack2Pressed] = useState(false);
+  const [isHistory1Pressed, setIsHistory1Pressed] = useState(false);
+  const [isHistory2Pressed, setIsHistory2Pressed] = useState(false);
+  const [isHistoryBackPressed, setIsHistoryBackPressed] = useState(false);
   
   const [timeLeft, setTimeLeft] = useState(30);
   const timerRef = useRef<any | null>(null);
@@ -570,13 +576,23 @@ const QuizModule: React.FC<QuizModuleProps> = ({
 
             <AnimatedContent distance={30} delay={PBOTOS_SUBMODULES.length * 0.05} direction="vertical">
               <div className="pt-2">
-                <button 
-                  onClick={onClose} 
-                  className={`w-full py-4 flex items-center justify-center gap-2 rounded-2xl font-bold text-xs uppercase tracking-[0.15em] transition-all active:scale-[0.98] border
+                <motion.button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (isBack1Pressed) return;
+                    setIsBack1Pressed(true);
+                    setTimeout(() => {
+                      setIsBack1Pressed(false);
+                      onClose();
+                    }, 180);
+                  }}
+                  animate={{ scale: isBack1Pressed ? 0.92 : 1 }}
+                  transition={{ duration: 0.15, ease: "easeInOut" }}
+                  className={`w-full py-4 flex items-center justify-center gap-2 rounded-2xl font-bold text-xs uppercase tracking-[0.15em] transition-all border
                   ${isDark ? 'bg-white/5 border-white/10 text-white/40 active:text-white' : 'bg-white border-slate-200 text-slate-400 active:text-slate-900'}`}>
                   <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   Вернуться назад
-                </button>
+                </motion.button>
               </div>
             </AnimatedContent>
           </div>
@@ -612,18 +628,46 @@ const QuizModule: React.FC<QuizModuleProps> = ({
             </button>
           </AnimatedContent>
           <AnimatedContent distance={30} delay={0.6} direction="vertical">
-            <button onClick={() => setScreen('history')} className={`w-full py-4 rounded-2xl font-bold active:scale-[0.98] transition-all border
-              ${isDark ? 'bg-white/5 border-white/10 text-indigo-100' : 'bg-white border-slate-200 text-slate-700'}`}>История тестирования</button>
+            <motion.button 
+              onClick={(e) => {
+                e.preventDefault();
+                if (isHistory1Pressed) return;
+                setIsHistory1Pressed(true);
+                setTimeout(() => {
+                  setIsHistory1Pressed(false);
+                  setScreen('history');
+                }, 180);
+              }}
+              animate={{ scale: isHistory1Pressed ? 0.92 : 1 }}
+              transition={{ duration: 0.15, ease: "easeInOut" }}
+              className={`w-full py-4 rounded-2xl font-bold transition-all border
+              ${isDark ? 'bg-white/5 border-white/10 text-indigo-100' : 'bg-white border-slate-200 text-slate-700'}`}>
+              История тестирования
+            </motion.button>
           </AnimatedContent>
           <AnimatedContent distance={30} delay={0.7} direction="vertical">
             <div className="pt-4">
-              <button 
-                onClick={activeSubModuleId ? () => setActiveSubModuleId(null) : onClose} 
-                className={`w-full py-4 flex items-center justify-center gap-2 rounded-2xl font-bold text-xs uppercase tracking-[0.15em] transition-all active:scale-[0.98] border
+              <motion.button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (isBack2Pressed) return;
+                  setIsBack2Pressed(true);
+                  setTimeout(() => {
+                    setIsBack2Pressed(false);
+                    if (activeSubModuleId) {
+                      setActiveSubModuleId(null);
+                    } else {
+                      onClose();
+                    }
+                  }, 180);
+                }}
+                animate={{ scale: isBack2Pressed ? 0.92 : 1 }}
+                transition={{ duration: 0.15, ease: "easeInOut" }}
+                className={`w-full py-4 flex items-center justify-center gap-2 rounded-2xl font-bold text-xs uppercase tracking-[0.15em] transition-all border
                 ${isDark ? 'bg-white/5 border-white/10 text-white/40 active:text-white' : 'bg-white border-slate-200 text-slate-400 active:text-slate-900'}`}>
                 <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 {activeSubModuleId ? 'К подразделам' : 'Вернуться назад'}
-              </button>
+              </motion.button>
             </div>
           </AnimatedContent>
         </div>
@@ -863,7 +907,21 @@ const QuizModule: React.FC<QuizModuleProps> = ({
             <button onClick={startQuiz} className={`w-full py-4 rounded-2xl text-white font-bold active:scale-[0.98] transition-all border ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200'}`}>Повторить тест</button>
           </AnimatedContent>
           <AnimatedContent distance={30} delay={0.5} direction="vertical">
-            <button onClick={() => setScreen('history')} className={`w-full py-4 rounded-2xl font-bold active:scale-[0.98] transition-all border ${isDark ? 'bg-white/5 border-white/10 text-indigo-100' : 'bg-white border-slate-200 text-slate-700'}`}>История тестирования</button>
+            <motion.button 
+              onClick={(e) => {
+                e.preventDefault();
+                if (isHistory2Pressed) return;
+                setIsHistory2Pressed(true);
+                setTimeout(() => {
+                  setIsHistory2Pressed(false);
+                  setScreen('history');
+                }, 180);
+              }}
+              animate={{ scale: isHistory2Pressed ? 0.92 : 1 }}
+              transition={{ duration: 0.15, ease: "easeInOut" }}
+              className={`w-full py-4 rounded-2xl font-bold transition-all border ${isDark ? 'bg-white/5 border-white/10 text-indigo-100' : 'bg-white border-slate-200 text-slate-700'}`}>
+              История тестирования
+            </motion.button>
           </AnimatedContent>
           <AnimatedContent distance={30} delay={0.6} direction="vertical">
             <button onClick={() => onExitToApp ? onExitToApp() : onClose()} className={`w-full py-4 rounded-2xl font-bold active:scale-[0.98] transition-all opacity-60 border ${isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-white border-slate-200 text-slate-400'}`}>В главное меню</button>
@@ -885,7 +943,21 @@ const QuizModule: React.FC<QuizModuleProps> = ({
               <span className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>История тестирования</span>
               <h3 className={`font-bold text-sm truncate max-w-[200px] ${isDark ? 'text-white' : 'text-slate-900'}`}>{moduleTitle}</h3>
             </div>
-            <button onClick={() => setScreen('menu')} className={`px-4 py-2 rounded-xl border font-bold text-xs uppercase ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>Назад</button>
+            <motion.button 
+              onClick={(e) => {
+                e.preventDefault();
+                if (isHistoryBackPressed) return;
+                setIsHistoryBackPressed(true);
+                setTimeout(() => {
+                  setIsHistoryBackPressed(false);
+                  setScreen('menu');
+                }, 180);
+              }}
+              animate={{ scale: isHistoryBackPressed ? 0.92 : 1 }}
+              transition={{ duration: 0.15, ease: "easeInOut" }}
+              className={`px-4 py-2 rounded-xl border font-bold text-xs uppercase ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
+              Назад
+            </motion.button>
           </header>
         </AnimatedContent>
         <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-24">
