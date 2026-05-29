@@ -875,7 +875,7 @@ const App: React.FC = () => {
                           className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-[0.98] transition-all
                             ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border border-slate-700 shadow-slate-200'}`}
                         >
-                          Запустить упражнение
+                          Запустить
                         </button>
                       </div>
                     </AnimatedContent>
@@ -894,7 +894,7 @@ const App: React.FC = () => {
                           className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-[0.98] transition-all
                             ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border border-slate-700 shadow-slate-200'}`}
                         >
-                          Запустить упражнение
+                          Запустить
                         </button>
                       </div>
                     </AnimatedContent>
