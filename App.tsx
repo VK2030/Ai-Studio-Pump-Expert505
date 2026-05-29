@@ -56,6 +56,18 @@ const App: React.FC = () => {
   const [userRole, setUserRole] = useState<'contestant' | 'admin' | null>(null);
 
   const [activeTab, setActiveTab] = useState<AppSection>('home');
+  const [isTasksPressed, setIsTasksPressed] = useState<boolean>(false);
+
+  const handleTasksClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isTasksPressed) return;
+    setIsTasksPressed(true);
+    setTimeout(() => {
+      setIsTasksPressed(false);
+      setActiveTab('tasks');
+    }, 180);
+  };
+
   const [selectedModule, setSelectedModule] = useState<ModuleData | null>(null);
   const [moduleProgress, setModuleProgress] = useState<Record<string, number>>({});
   const [moduleRecentScores, setModuleRecentScores] = useState<Record<string, number[]>>({});
@@ -505,9 +517,11 @@ const App: React.FC = () => {
 
                     <div className="flex flex-col gap-2 flex-shrink-0 mt-2">
                       <AnimatedContent distance={30} delay={0.8} direction="vertical">
-                        <button 
-                          onClick={() => setActiveTab('tasks')}
-                          className={`w-full p-4 rounded-3xl border backdrop-blur-md relative overflow-hidden group flex items-center justify-between active:scale-[0.98] transition-all
+                        <motion.button 
+                          onClick={handleTasksClick}
+                          animate={{ scale: isTasksPressed ? 0.95 : 1 }}
+                          transition={{ duration: 0.15, ease: "easeInOut" }}
+                          className={`w-full p-4 rounded-3xl border backdrop-blur-md relative overflow-hidden group flex items-center justify-between transition-all
                             ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-slate-200 shadow-sm text-slate-900'}`}
                         >
                           <div className="flex items-center gap-4">
@@ -532,7 +546,7 @@ const App: React.FC = () => {
                           <svg viewBox="0 0 24 24" className={`w-5 h-5 opacity-30 group-hover:opacity-100 transition-opacity ${isDark ? 'text-white' : 'text-slate-900'}`} fill="none" stroke="currentColor" strokeWidth="3">
                             <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
-                        </button>
+                        </motion.button>
                       </AnimatedContent>
                     </div>
                   </div>

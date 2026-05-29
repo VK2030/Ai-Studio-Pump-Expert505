@@ -111,10 +111,33 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, iconType, progress = 0
     }
   };
 
+  const [isPressed, setIsPressed] = React.useState(false);
+  const isMounted = React.useRef(true);
+
+  React.useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isPressed) return;
+    setIsPressed(true);
+    setTimeout(() => {
+      if (isMounted.current) {
+        setIsPressed(false);
+      }
+      onClick();
+    }, 180);
+  };
+
   return (
-    <button 
-      onClick={onClick}
-      className={`flex flex-col items-start p-3 pb-8 rounded-2xl border backdrop-blur-md relative overflow-hidden group w-full h-full transition-all duration-300 active:scale-95
+    <motion.button 
+      onClick={handleClick}
+      animate={{ scale: isPressed ? 0.92 : 1 }}
+      transition={{ duration: 0.15, ease: "easeInOut" }}
+      className={`flex flex-col items-start p-3 pb-8 rounded-2xl border backdrop-blur-md relative overflow-hidden group w-full h-full transition-all duration-300
         ${isDark 
           ? 'bg-white/5 border-white/10 hover:bg-white/[0.08]' 
           : 'bg-white border-slate-200 shadow-sm hover:bg-slate-50'}`}
@@ -149,7 +172,7 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, iconType, progress = 0
           </div>
         )}
       </div>
-    </button>
+    </motion.button>
   );
 };
 
