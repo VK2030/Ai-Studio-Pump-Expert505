@@ -132,8 +132,9 @@ const App: React.FC = () => {
       });
 
       const today = new Date().toLocaleDateString('ru-RU');
-      let summary = `<b>📊 Сводный отчет о результатах тестирования на ${today}</b>\n\n`;
-      
+      const summaries: string[] = [];
+      let currentSummary = `<b>📊 Сводный отчет о результатах тестирования на ${today}</b>\n\n`;
+
       // Проходим по модулям в заданном порядке (из constants.tsx)
       for (const module of MODULES) {
         const modId = module.id;
@@ -209,24 +210,33 @@ const App: React.FC = () => {
         }
 
         // Проверяем лимит перед добавлением секции
-        if (summary.length + section.length > 3800) {
-          summary += `\n⚠️ <i>Часть данных не вошла в отчет из-за ограничений Telegram</i>\n`;
-          break;
+        if (currentSummary.length + section.length > 3900) {
+          summaries.push(currentSummary);
+          currentSummary = section;
+        } else {
+          currentSummary += section;
         }
-        summary += section;
       }
 
-      summary += `🕒 <i>Последнее обновление: ${new Date().toLocaleString()}</i>`;
+      currentSummary += `🕒 <i>Последнее обновление: ${new Date().toLocaleString()}</i>`;
+      summaries.push(currentSummary);
 
-      const response = await fetch('/api/telegram/send-summary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ summary }),
-      });
+      for (const summaryPart of summaries) {
+        if (!summaryPart.trim()) continue;
+        
+        const response = await fetch('/api/telegram/send-summary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ summary: summaryPart }),
+        });
 
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Failed to send');
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to send');
+        }
+        
+        // Небольшая пауза между отправкой сообщений
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
       
       setTelegramStatus('success');
