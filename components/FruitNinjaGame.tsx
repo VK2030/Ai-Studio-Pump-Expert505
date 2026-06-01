@@ -329,6 +329,15 @@ interface Spark {
   color: string;
 }
 
+interface Shockwave {
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  alpha: number;
+  color: string;
+}
+
 
 export default function FruitNinjaGame({ onClose, isDark, userRole }: FruitNinjaGameProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -402,6 +411,8 @@ export default function FruitNinjaGame({ onClose, isDark, userRole }: FruitNinja
   const sparksRef = useRef<Spark[]>([]);
   const [pointerTrail, setPointerTrail] = useState<{x: number, y: number}[]>([]);
   const pointerTrailRef = useRef<{x: number, y: number}[]>([]);
+  const shockwavesRef = useRef<Shockwave[]>([]);
+  const shakeRef = useRef({ time: 0, intensity: 0, x: 0, y: 0 });
   const isSlicing = useRef(false);
   const pointerDown = useRef(false);
   const [isDone, setIsDone] = useState(false);
@@ -636,6 +647,33 @@ export default function FruitNinjaGame({ onClose, isDark, userRole }: FruitNinja
         }
       }
       
+      // Update Shake
+      const shake = shakeRef.current;
+      if (shake.time > 0) {
+        shake.time -= dt;
+        const currentIntensity = shake.intensity * (shake.time / 0.4); // fade out over 0.4s
+        shake.x = (Math.random() - 0.5) * currentIntensity * 2;
+        shake.y = (Math.random() - 0.5) * currentIntensity * 2;
+        if (shake.time <= 0) {
+          shake.x = 0;
+          shake.y = 0;
+        }
+      } else {
+        shake.x = 0;
+        shake.y = 0;
+      }
+
+      // Update Shockwaves
+      const currentShockwaves = shockwavesRef.current;
+      for (let i = currentShockwaves.length - 1; i >= 0; i--) {
+        const sw = currentShockwaves[i];
+        sw.radius += dt * 500; // expand rapidly
+        sw.alpha = Math.max(0, 1 - (sw.radius / sw.maxRadius));
+        if (sw.radius >= sw.maxRadius || sw.alpha <= 0) {
+          currentShockwaves.splice(i, 1);
+        }
+      }
+
       // Update trail
       const trail = pointerTrailRef.current;
       if (!pointerDown.current && trail.length > 0) {
@@ -645,6 +683,10 @@ export default function FruitNinjaGame({ onClose, isDark, userRole }: FruitNinja
       
       // Draw everything
       ctx.clearRect(0, 0, w, h);
+      
+      // Start Shake
+      ctx.save();
+      ctx.translate(shake.x, shake.y);
       
       // Draw circles
       currentCircles.forEach(c => {
@@ -858,6 +900,28 @@ export default function FruitNinjaGame({ onClose, isDark, userRole }: FruitNinja
         ctx.fill();
       });
       
+      // Draw shockwaves
+      currentShockwaves.forEach(sw => {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+        ctx.lineWidth = 14 * sw.alpha; // thicker and more beautiful, tapering down
+        ctx.strokeStyle = `rgba(${sw.color}, ${sw.alpha})`;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = `rgba(${sw.color}, ${sw.alpha * 0.7})`;
+        ctx.stroke();
+        
+        // Dynamic radial inner glow
+        ctx.beginPath();
+        ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+        const grad = ctx.createRadialGradient(sw.x, sw.y, sw.radius * 0.4, sw.x, sw.y, sw.radius);
+        grad.addColorStop(0, `rgba(${sw.color}, 0)`);
+        grad.addColorStop(1, `rgba(${sw.color}, ${sw.alpha * 0.25})`);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.restore();
+      });
+
       // Draw trail
       if (trail.length > 1) {
         ctx.beginPath();
@@ -876,6 +940,9 @@ export default function FruitNinjaGame({ onClose, isDark, userRole }: FruitNinja
         ctx.strokeStyle = isDark ? "rgba(226, 232, 240, 1)" : "rgba(30, 41, 59, 1)"; // graphite color (slate-800)
         ctx.stroke();
       }
+      
+      // Restore Shake
+      ctx.restore();
       
       // Check for slicing
       if (canSlice && trail.length >= 2) {
@@ -909,6 +976,34 @@ export default function FruitNinjaGame({ onClose, isDark, userRole }: FruitNinja
             c.vy = -10; // pop up slightly when sliced
             c.sliceAngle = Math.atan2(last.y - prev.y, last.x - prev.x);
             c.sliceProgress = 0;
+
+            // Trigger screen shake
+            shakeRef.current = {
+              time: 0.4,
+              intensity: 18,
+              x: 0,
+              y: 0
+            };
+
+            // Spawn shockwaves
+            const swColor = c.isCorrect ? '34, 197, 94' : '239, 68, 68';
+            shockwavesRef.current.push({
+              x: c.x,
+              y: c.y,
+              radius: c.radius * 0.4,
+              maxRadius: c.radius * 3.5,
+              alpha: 1.0,
+              color: swColor
+            });
+            // A second slightly delayed / outer shockwave ring for richer impact
+            shockwavesRef.current.push({
+              x: c.x,
+              y: c.y,
+              radius: c.radius * 0.1,
+              maxRadius: c.radius * 2.5,
+              alpha: 0.8,
+              color: swColor
+            });
             
             // Generate sparks
             for(let i=0; i<30; i++) {
