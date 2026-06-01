@@ -107,6 +107,7 @@ const App: React.FC = () => {
   });
 
   const [historyFilter, setHistoryFilter] = useState<string | 'all'>('all');
+  const [isHistoryFilterOpen, setIsHistoryFilterOpen] = useState(false);
 
   // Гарантируем чистоту сессии и сброс сохраненной авторизации при каждой загрузке страницы
   useEffect(() => {
@@ -580,9 +581,24 @@ const App: React.FC = () => {
                   </div>
                 );
               case 'history':
+                const getFilterLabel = (filterVal: string) => {
+                  if (filterVal === 'all') return 'Все разделы';
+                  if (filterVal === 'matrix-tz') return 'Матрица ТЗ';
+                  if (filterVal === 'pbotos-all' || filterVal === 'pbotos') return 'ПБОТОС';
+                  const matchedModule = MODULES.find(m => m.id === filterVal);
+                  if (matchedModule) {
+                    return matchedModule.id === 'failure-investigation' ? 'Расследование отказов' : (matchedModule.id === 'esp-selection-startup' ? 'Подбор УЭЦН и ВНР' : matchedModule.title);
+                  }
+                  const pbotosTitle = PBOTOS_SUBMODULES[filterVal];
+                  if (pbotosTitle) {
+                    return `ПБОТОС / ${filterVal === 'pbotos-b21' ? 'Б.2.1' : pbotosTitle}`;
+                  }
+                  return filterVal;
+                };
+
                 const filteredHistory = (() => {
                   if (historyFilter === 'all') return fullHistory;
-                  if (historyFilter === 'pbotos-all') {
+                  if (historyFilter === 'pbotos-all' || historyFilter === 'pbotos') {
                     const pbotosSubIds = Object.keys(PBOTOS_SUBMODULES);
                     return fullHistory.filter(h => h.moduleId === 'pbotos' || (h.moduleId && pbotosSubIds.includes(h.moduleId)));
                   }
@@ -591,55 +607,177 @@ const App: React.FC = () => {
 
                 return (
                   <div className="flex-1 flex flex-col overflow-hidden px-4">
-                    {/* Filter Bar */}
-                    <div className="flex-shrink-0 mb-4 overflow-x-auto no-scrollbar flex gap-2 pb-2">
-                      <button 
-                        onClick={() => setHistoryFilter('all')}
-                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap
-                          ${historyFilter === 'all' 
-                            ? (isDark ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-white') 
-                            : (isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-white border-slate-200 text-slate-400')}`}
+                    {/* Vertical Filter Dropdown */}
+                    <div className="flex-shrink-0 mb-4 relative z-40">
+                      <button
+                        onClick={() => setIsHistoryFilterOpen(!isHistoryFilterOpen)}
+                        className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border shadow-sm active:scale-[0.99]
+                          ${isDark 
+                            ? 'bg-slate-800 hover:bg-slate-700 border-white/10 text-white' 
+                            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'}`}
                       >
-                        Все разделы
+                        <span className="flex items-center gap-3">
+                          <svg className="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                          </svg>
+                          <span className="text-[11px]">Фильтр: {getFilterLabel(historyFilter)}</span>
+                        </span>
+                        <motion.svg
+                          animate={{ rotate: isHistoryFilterOpen ? 180 : 0 }}
+                          transition={{ duration: 0.2, ease: "easeInOut" }}
+                          className="w-4 h-4 opacity-60"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          strokeWidth="2.5"
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </motion.svg>
                       </button>
 
-                      <button 
-                        onClick={() => setHistoryFilter('matrix-tz')}
-                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap
-                          ${historyFilter === 'matrix-tz' 
-                            ? (isDark ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-white') 
-                            : (isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-white border-slate-200 text-slate-400')}`}
-                      >
-                        Матрица ТЗ
-                      </button>
+                      <AnimatePresence>
+                        {isHistoryFilterOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                            animate={{ opacity: 1, height: "auto", marginTop: 8 }}
+                            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                            transition={{ duration: 0.25, ease: "easeInOut" }}
+                            className={`overflow-hidden rounded-2xl border absolute left-0 right-0 shadow-2xl max-h-80 overflow-y-auto no-scrollbar
+                              ${isDark ? 'bg-slate-900 border-white/10 backdrop-blur-md' : 'bg-white border-slate-200 backdrop-blur-md'}`}
+                          >
+                            <div className="p-2 flex flex-col gap-1">
+                              {/* Option All */}
+                              <button
+                                onClick={() => {
+                                  setHistoryFilter('all');
+                                  setIsHistoryFilterOpen(false);
+                                }}
+                                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between
+                                  ${historyFilter === 'all'
+                                    ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white')
+                                    : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
+                              >
+                                <span>Все разделы</span>
+                                {historyFilter === 'all' && (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                )}
+                              </button>
 
-                      {MODULES.map(m => m.id !== 'pbotos' && (
-                        <button 
-                          key={m.id}
-                          onClick={() => setHistoryFilter(m.id)}
-                          className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap
-                            ${historyFilter === m.id 
-                              ? (isDark ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-white') 
-                              : (isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-white border-slate-200 text-slate-400')}`}
-                        >
-                          {m.id === 'failure-investigation' ? 'Расследование отказов' : m.title}
-                        </button>
-                      ))}
-                      {Object.entries(PBOTOS_SUBMODULES).map(([subId, subTitle]) => (
-                        <button 
-                          key={subId}
-                          onClick={() => setHistoryFilter(subId)}
-                          className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap
-                            ${historyFilter === subId 
-                              ? (isDark ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-white') 
-                              : (isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-white border-slate-200 text-slate-400')}`}
-                        >
-                          ПБОТОС / {subId === 'pbotos-b21' ? 'Б.2.1' : subTitle}
-                        </button>
-                      ))}
+                              {/* Header: Раздел "Тестирование" (underlined, informative, not clickable) */}
+                              <div className={`px-4 pt-3 pb-1 text-[11px] font-black uppercase tracking-wider underline
+                                ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                                Раздел &ldquo;Тестирование&rdquo;
+                              </div>
+
+                              {/* Option: Подбор УЭЦН и ВНР */}
+                              <button
+                                onClick={() => {
+                                  setHistoryFilter('esp-selection-startup');
+                                  setIsHistoryFilterOpen(false);
+                                }}
+                                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between pl-6
+                                  ${historyFilter === 'esp-selection-startup'
+                                    ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white')
+                                    : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
+                              >
+                                <span>Подбор УЭЦН и ВНР</span>
+                                {historyFilter === 'esp-selection-startup' && (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                )}
+                              </button>
+
+                              {/* Option: Расследование отказов */}
+                              <button
+                                onClick={() => {
+                                  setHistoryFilter('failure-investigation');
+                                  setIsHistoryFilterOpen(false);
+                                }}
+                                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between pl-6
+                                  ${historyFilter === 'failure-investigation'
+                                    ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white')
+                                    : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
+                              >
+                                <span>Расследование отказов</span>
+                                {historyFilter === 'failure-investigation' && (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                )}
+                              </button>
+
+                              {/* Option: Осложняющие факторы */}
+                              <button
+                                onClick={() => {
+                                  setHistoryFilter('operating-factors');
+                                  setIsHistoryFilterOpen(false);
+                                }}
+                                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between pl-6
+                                  ${historyFilter === 'operating-factors'
+                                    ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white')
+                                    : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
+                              >
+                                <span>Осложняющие факторы</span>
+                                {historyFilter === 'operating-factors' && (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                )}
+                              </button>
+
+                              {/* Option: ПБОТОС */}
+                              <button
+                                onClick={() => {
+                                  setHistoryFilter('pbotos-all');
+                                  setIsHistoryFilterOpen(false);
+                                }}
+                                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between pl-6
+                                  ${historyFilter === 'pbotos-all' || historyFilter === 'pbotos'
+                                    ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white')
+                                    : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
+                              >
+                                <span>ПБОТОС</span>
+                                {(historyFilter === 'pbotos-all' || historyFilter === 'pbotos') && (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                )}
+                              </button>
+
+                              {/* Header: Раздел "Упражнения" (underlined, informative, not clickable) */}
+                              <div className={`px-4 pt-3 pb-1 text-[11px] font-black uppercase tracking-wider underline
+                                ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                                Раздел &ldquo;Упражнения&rdquo;
+                              </div>
+
+                              {/* Option: Матрица ТЗ */}
+                              <button
+                                onClick={() => {
+                                  setHistoryFilter('matrix-tz');
+                                  setIsHistoryFilterOpen(false);
+                                }}
+                                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between pl-6
+                                  ${historyFilter === 'matrix-tz'
+                                    ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white')
+                                    : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
+                              >
+                                <span>Матрица ТЗ</span>
+                                {historyFilter === 'matrix-tz' && (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                )}
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto space-y-3 pb-24 pr-1">
+                    <div key={historyFilter} className="flex-1 overflow-y-auto space-y-3 pb-24 pr-1">
                       {filteredHistory.length === 0 ? (
                         <AnimatedContent distance={20} delay={0.2}>
                           <div className={`flex flex-col items-center justify-center py-24 italic text-sm text-center
