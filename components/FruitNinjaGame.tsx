@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface FruitNinjaGameProps {
   onClose: () => void;
   isDark: boolean;
+  userRole?: 'contestant' | 'admin' | null;
 }
 
 function drawVectorShape(ctx: CanvasRenderingContext2D, typeIdx: number, cx: number, cy: number, radius: number, isDark: boolean) {
@@ -329,7 +330,7 @@ interface Spark {
 }
 
 
-export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps) {
+export default function FruitNinjaGame({ onClose, isDark, userRole }: FruitNinjaGameProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
@@ -405,6 +406,57 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
   const pointerDown = useRef(false);
   const [isDone, setIsDone] = useState(false);
   const [canSlice, setCanSlice] = useState(true);
+
+  const [incorrectAnswersList, setIncorrectAnswersList] = useState<{question: string, userAnswer: string, correctAnswer: string}[]>([]);
+
+  // Auto-save history once isDone becomes true
+  useEffect(() => {
+    if (isDone) {
+      const saveGameHistory = async () => {
+        let history: any[] = [];
+        const savedHistory = localStorage.getItem('quizHistory');
+        if (savedHistory) {
+          try {
+            history = JSON.parse(savedHistory);
+          } catch (e) {}
+        }
+        
+        // Calculate session number for 'matrix-tz'
+        const sessionNum = history.filter(h => h.moduleId === 'matrix-tz').length + 1;
+        
+        const newEntry = {
+          date: new Date().toISOString(),
+          session: sessionNum,
+          score: `${correctCount}/${sessionQuestions.length}`,
+          moduleId: 'matrix-tz',
+          incorrectAnswers: incorrectAnswersList
+        };
+        
+        const updatedHistory = [newEntry, ...history];
+        localStorage.setItem('quizHistory', JSON.stringify(updatedHistory));
+        window.dispatchEvent(new Event('storage'));
+        
+        // Post to cloud if they are logged in as contestant
+        if (userRole === 'contestant') {
+          try {
+            await fetch('/api/history', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                ...newEntry,
+                user: localStorage.getItem('app_user_name') || 'Contestant',
+                correct_answers: correctCount
+              })
+            });
+          } catch (error) {
+            console.warn("Failed to save fruit ninja history to cloud:", error);
+          }
+        }
+      };
+
+      saveGameHistory();
+    }
+  }, [isDone, correctCount, sessionQuestions, incorrectAnswersList, userRole]);
 
   // Initialize circles for a question
   useEffect(() => {
@@ -842,6 +894,15 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
             const currentQ = sessionQuestions[currentQuestionIdx];
             if (c.text === currentQ.correct) {
               setCorrectCount(prev => prev + 1);
+            } else {
+              setIncorrectAnswersList(prevList => [
+                ...prevList,
+                {
+                  question: currentQ.text,
+                  userAnswer: c.text,
+                  correctAnswer: currentQ.correct
+                }
+              ]);
             }
 
             c.sliced = true;
@@ -958,7 +1019,7 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
             <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-indigo-400' : 'text-indigo-600'} block mb-2`}>
               Вопрос {currentQuestionIdx + 1} из {sessionQuestions.length}
             </span>
-            <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            <h2 className={`text-[17px] font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
               {sessionQuestions[currentQuestionIdx]?.text}
             </h2>
          </div>

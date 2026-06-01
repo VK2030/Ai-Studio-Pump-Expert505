@@ -603,6 +603,16 @@ const App: React.FC = () => {
                         Все разделы
                       </button>
 
+                      <button 
+                        onClick={() => setHistoryFilter('matrix-tz')}
+                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap
+                          ${historyFilter === 'matrix-tz' 
+                            ? (isDark ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-white') 
+                            : (isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-white border-slate-200 text-slate-400')}`}
+                      >
+                        Матрица ТЗ
+                      </button>
+
                       {MODULES.map(m => m.id !== 'pbotos' && (
                         <button 
                           key={m.id}
@@ -653,6 +663,9 @@ const App: React.FC = () => {
                           const module = MODULES.find(m => m.id === entry.moduleId);
                           
                           let displayTitle = module?.title?.replace('\n', ' ') || entry.moduleId || 'Общий тест';
+                          if (entry.moduleId === 'matrix-tz') {
+                            displayTitle = 'Матрица ТЗ';
+                          }
                           
                           if (entry.moduleId && PBOTOS_SUBMODULES[entry.moduleId]) {
                             displayTitle = `ПБОТОС / ${PBOTOS_SUBMODULES[entry.moduleId]}`;
@@ -1189,7 +1202,7 @@ const App: React.FC = () => {
             transition={{ duration: 0.3 }}
             className="fixed inset-0 z-[70]"
           >
-            <FruitNinjaGame isDark={isDark} onClose={() => setActiveGame(null)} />
+            <FruitNinjaGame isDark={isDark} onClose={() => setActiveGame(null)} userRole={userRole} />
           </motion.div>
         )}
       </AnimatePresence>
