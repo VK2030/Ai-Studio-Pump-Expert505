@@ -300,6 +300,31 @@ const QUESTIONS = [
     text: "Ограничение по максимальной Т пласта при применении НКТ с внутренним покрытием Тип 3? (градусов Цельсия)",
     options: ["60", "80", "110", "130"],
     correct: "110"
+  },
+  {
+    text: "Минимальный ЗУМПФ для применения капсулированного ингибитора (ИС, ИК), размещаемого в ЗУМПФ скважины? (метр)",
+    options: ["10", "15", "20", "25"],
+    correct: "15"
+  },
+  {
+    text: "Максимальная Т пласта для применения греющего кабеля? (градусов Цельсия)",
+    options: ["110", "120", "130", "140"],
+    correct: "140"
+  },
+  {
+    text: "Максимальная Т пласта для применения НКТ из стеклопластика? (градусов Цельсия)",
+    options: ["60", "70", "80", "90"],
+    correct: "90"
+  },
+  {
+    text: "Максимальное содержание свободного газа (%) в насосе для применения Конического УЭЦН?",
+    options: ["25", "30", "35", "40"],
+    correct: "35"
+  },
+  {
+    text: "Максимальное содержание свободного газа (%) в насосе для применения Мультифазного УЭЦН?",
+    options: ["75", "80", "85", "90"],
+    correct: "80"
   }
 ];
 
@@ -526,7 +551,7 @@ export default function FruitNinjaGame({ onClose, isDark, userRole, onShowHistor
           radius: r,
           text: opt,
           sliced: false,
-          imageIdx: i % 3,
+          imageIdx: [2, 0, 1, 0][i % 4], // order: impeller - stator - wheel - stator
           isCorrect: opt === currentQ.correct,
           rotation: Math.random() * Math.PI * 2,
           vRot: 2 + Math.random() * 3, // initial speed 2-5 radians per second
