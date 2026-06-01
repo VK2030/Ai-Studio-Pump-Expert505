@@ -174,9 +174,131 @@ function drawVectorShape(ctx: CanvasRenderingContext2D, typeIdx: number, cx: num
 }
 
 const QUESTIONS = [
-  { text: "Сколько будет 5 + 7?", options: ["10", "11", "12", "13"], correct: "12" },
-  { text: "Вычислите 15 - 8", options: ["6", "7", "8", "9"], correct: "7" },
-  { text: "Чему равно 6 * 4?", options: ["20", "22", "24", "26"], correct: "24" }
+  {
+    text: "Минимальное допустимое погружение насоса (ЭЦН) под Ндин при постоянном дозировании химических реагентов (ингибиторов солеотложений, ингибиторов коррозии, бактерицидов, ингибиторов АСПО, деэмульгаторов) в затруб скважины через СУДР? (метров)",
+    options: ["30", "50", "100", "150"],
+    correct: "50"
+  },
+  {
+    text: "Минимальное допустимое погружение насоса (ЭЦН) под Ндин (метров) при постоянном дозировании химических реагентов (ингибиторов солеотложений, ингибиторов коррозии, бактерицидов, ингибиторов АСПО, деэмульгаторов) в затруб скважины через СУДР по импульсной трубке? (метров)",
+    options: ["нет", "50", "100", "150"],
+    correct: "нет"
+  },
+  {
+    text: "Максимально допустимый перепад давления (Рзат-Рлин) при открытой затрубной задвижке при постоянном дозировании химических реагентов (ингибиторов солеотложений, ингибиторов коррозии, бактерицида, ингибитора АСПО) в затруб скважины через СУДР (при ЭЦН)? (атм)",
+    options: ["3", "5", "10", "50"],
+    correct: "3"
+  },
+  {
+    text: "Максимально допустимый перепад давления (Рзат-Рлин) при открытой затрубной задвижке при постоянном дозировании химических реагентов (ингибиторов солеотложений, ингибиторов коррозии, бактерицида, ингибитора АСПО) в затруб скважины через СУДР по импульсной трубке (при ЭЦН)? (атм)",
+    options: ["нет", "3", "5", "10"],
+    correct: "нет"
+  },
+  {
+    text: "Ограничение по минимальному Qжидкости ЭЦН при постоянном дозировании химических реагентов в товарной форме (ингибиторов солеотложений, ингибиторов коррозии, бактерицида) в затруб скважины через СУДР? (м3/сут)",
+    options: ["5", "10", "50", "100"],
+    correct: "50"
+  },
+  {
+    text: "Ограничение по максимальному Qжидкости ЭЦН при постоянном дозировании ингибиторов коррозии в затруб скважины через СУДР? (м3/сут)",
+    options: ["100", "300", "500", "800"],
+    correct: "500"
+  },
+  {
+    text: "Ограничение по максимальному КВЧ при постоянном дозировании ингибиторов коррозии в затруб скважины через СУДР (при ЭЦН)? (мг/л)",
+    options: ["100", "300", "500", "1000"],
+    correct: "1000"
+  },
+  {
+    text: "Максимальная Т пласта при постоянном дозировании ингибиторов коррозии в затруб скважины через СУДР (для ЭЦН)? (градусов Цельсия)",
+    options: ["60", "70", "80", "90"],
+    correct: "90"
+  },
+  {
+    text: "Минимальное допустимое погружение насоса (ЭЦН) под Ндин при периодическом дозировании химических реагентов (ингибиторов солеотложений, ингибиторов коррозии, бактерицидов, ингибиторов АСПО, деэмульгаторов) в затруб скважины через СУДР? (метров)",
+    options: ["30", "50", "100", "150"],
+    correct: "100"
+  },
+  {
+    text: "Максимально допустимый перепад давления (Рзат-Рлин) при открытой затрубной задвижке при периодическом дозировании химических реагентов (ингибиторов солеотложений, ингибиторов коррозии, бактерицида, ингибитора АСПО, деэмульгаторов) в затруб скважины (при ЭЦН)? (атм)",
+    options: ["3", "5", "8", "10"],
+    correct: "3"
+  },
+  {
+    text: "Ограничение по максимальному Qжидкости ЭЦН при периодическом дозировании ингибиторов коррозии в затруб скважины? (м3/сут)",
+    options: ["100", "300", "500", "800"],
+    correct: "500"
+  },
+  {
+    text: "Ограничение по максимальному КВЧ при периодическом дозировании ингибиторов коррозии в затруб скважины (при ЭЦН)? (мг/л)",
+    options: ["100", "300", "500", "1000"],
+    correct: "1000"
+  },
+  {
+    text: "Максимальная Т пласта при периодическом дозировании ингибиторов коррозии в затруб скважины (для ЭЦН)? (градусов Цельсия)",
+    options: ["60", "70", "80", "90"],
+    correct: "90"
+  },
+  {
+    text: "Ограничение по максимальному Qжидкости ЭЦН при применении неуправляемого внутрискважинного контейнера с ингибитором (ИС, ИК, АСПО)? (м3/сут)",
+    options: ["50", "75", "100", "125"],
+    correct: "125"
+  },
+  {
+    text: "Максимальный период защиты при применении неуправляемого внутрискважинного контейнера с ингибитором (ИС, ИК, АСПО) (при ЭЦН)? (суток)",
+    options: ["60", "90", "180", "365"],
+    correct: "365"
+  },
+  {
+    text: "Максимальная Т пласта при применении управляемого внутрискважинного контейнера с ингибитором (ИС, ИК, АСПО) (при ЭЦН)?",
+    options: ["60", "75", "80", "90"],
+    correct: "75"
+  },
+  {
+    text: "Максимальный период защиты при применении управляемого внутрискважинного контейнера с ингибитором (ИС, ИК, АСПО) (при ЭЦН)? (суток)",
+    options: ["60", "90", "180", "365"],
+    correct: "365"
+  },
+  {
+    text: "Ограничение по максимальному Qжидкости ЭЦН при применении управляемого внутрискважинного контейнера с ингибитором (ИС, ИК, АСПО)? (м3/сут)",
+    options: ["50", "75", "100", "125"],
+    correct: "125"
+  },
+  {
+    text: "Ограничение по максимальному Qжидкости ЭЦН при применении фильтра модульного для ЭЦН гр. Ф-2, Ф-3, Ф-4? (м3/сут)",
+    options: ["200", "300", "400", "500"],
+    correct: "500"
+  },
+  {
+    text: "Ограничение по максимальному Qжидкости ЭЦН при применении сепаратора мех.примесей для ГНО гр.Ф-5? (м3/сут)",
+    options: ["500", "700", "900", "950"],
+    correct: "950"
+  },
+  {
+    text: "Ограничение по минимальному Qжидкости ЭЦН при применении сепаратора мех.примесей для ГНО гр.Ф-5? (м3/сут)",
+    options: ["5", "10", "25", "35"],
+    correct: "5"
+  },
+  {
+    text: "Ограничение по максимальному уголу наклона в месте размещения ГНО (ЭЦН) при применении сепаратора мех.примесей для ГНО гр.Ф-5? (градусов)",
+    options: ["40", "60", "70", "90"],
+    correct: "70"
+  },
+  {
+    text: "Ограничение по максимальной Т пласта при применении НКТ с внутренним покрытием Тип 1? (градусов Цельсия)",
+    options: ["60", "80", "110", "130"],
+    correct: "60"
+  },
+  {
+    text: "Ограничение по максимальной Т пласта при применении НКТ с внутренним покрытием Тип 2? (градусов Цельсия)",
+    options: ["60", "80", "110", "130"],
+    correct: "80"
+  },
+  {
+    text: "Ограничение по максимальной Т пласта при применении НКТ с внутренним покрытием Тип 3? (градусов Цельсия)",
+    options: ["60", "80", "110", "130"],
+    correct: "110"
+  }
 ];
 
 interface Circle {
@@ -211,6 +333,65 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
+  const [sessionQuestions, setSessionQuestions] = useState<any[]>(() => {
+    let lastSessionIndices: number[] = [];
+    try {
+      const saved = localStorage.getItem('fn_last_session_indices');
+      if (saved) {
+        lastSessionIndices = JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    if (!Array.isArray(lastSessionIndices)) {
+      lastSessionIndices = [];
+    }
+
+    let lifetimeCounts: number[] = [];
+    try {
+      const saved = localStorage.getItem('fn_lifetime_counts');
+      if (saved) {
+        lifetimeCounts = JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    if (!Array.isArray(lifetimeCounts) || lifetimeCounts.length !== QUESTIONS.length) {
+      lifetimeCounts = new Array(QUESTIONS.length).fill(0);
+    }
+
+    const allIndices = QUESTIONS.map((_, i) => i);
+    let availableIndices = allIndices.filter(idx => !lastSessionIndices.includes(idx));
+
+    if (availableIndices.length < 10) {
+      availableIndices = allIndices;
+    }
+
+    const shuffledAvailable = availableIndices.slice().sort(() => Math.random() - 0.5);
+    shuffledAvailable.sort((a, b) => (lifetimeCounts[a] || 0) - (lifetimeCounts[b] || 0));
+
+    const selectedIndices = shuffledAvailable.slice(0, 10);
+    const sessionIndices = selectedIndices.sort(() => Math.random() - 0.5);
+
+    sessionIndices.forEach(idx => {
+      lifetimeCounts[idx] = (lifetimeCounts[idx] || 0) + 1;
+    });
+
+    try {
+      localStorage.setItem('fn_lifetime_counts', JSON.stringify(lifetimeCounts));
+      localStorage.setItem('fn_last_session_indices', JSON.stringify(sessionIndices));
+    } catch (e) {
+      console.error(e);
+    }
+
+    return sessionIndices.map(idx => ({
+      ...QUESTIONS[idx],
+      originalIdx: idx
+    }));
+  });
+
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
 
@@ -242,7 +423,7 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
       
       const r = Math.min(w, h) * 0.12 * 0.8; // Circle radius decreased by 20%
       
-      const currentQ = QUESTIONS[currentQuestionIdx];
+      const currentQ = sessionQuestions[currentQuestionIdx];
       if (!currentQ) return;
       
       const gravity = Math.max(h * 1.5, 800) * 0.64;
@@ -280,7 +461,7 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
       setCanSlice(true);
     };
     init();
-  }, [currentQuestionIdx, isDone]);
+  }, [currentQuestionIdx, isDone, sessionQuestions]);
 
   // Main game loop
   useEffect(() => {
@@ -443,9 +624,17 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           ctx.translate(-c.x, -c.y);
           
           // Text styling with shadow for readability
-          ctx.font = `bold ${Math.floor(c.radius * 0.5)}px Inter, sans-serif`;
+          let fontSize = Math.floor(c.radius * 0.5);
+          ctx.font = `bold ${fontSize}px Inter, sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
+          
+          let textWidth = ctx.measureText(c.text).width;
+          const maxAllowedWidth = c.radius * 0.75;
+          if (textWidth > maxAllowedWidth) {
+            fontSize = Math.floor(fontSize * (maxAllowedWidth / textWidth));
+            ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+          }
           
           // Draw a subtle dark semi-transparent band behind the text so it's readable over images
           ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -470,13 +659,33 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           // Half 1
           ctx.beginPath();
           ctx.arc(c.x - dx, c.y - dy, c.radius, angle, angle + Math.PI);
+          ctx.closePath();
           ctx.save();
           ctx.clip();
           drawVectorShape(ctx, c.imageIdx, c.x - dx, c.y - dy, c.radius, isDark);
           ctx.restore();
 
+          // Sliced fading boundary glow
+          const glowOpacity = Math.max(0, 1 - (c.sliceProgress || 0) * 0.8);
+          if (glowOpacity > 0) {
+            ctx.save();
+            const rgb = c.isCorrect ? '34, 197, 94' : '239, 68, 68';
+            for (let j = 8; j >= 1; j--) {
+              ctx.beginPath();
+              ctx.arc(c.x - dx, c.y - dy, c.radius, angle, angle + Math.PI);
+              ctx.closePath();
+              ctx.lineWidth = 4 + j * 18;
+              ctx.strokeStyle = `rgba(${rgb}, ${glowOpacity * 0.22 * (1 - j / 9)})`;
+              ctx.stroke();
+            }
+            ctx.restore();
+          }
+
           ctx.lineWidth = 4;
           ctx.strokeStyle = c.isCorrect ? '#22c55e' : '#ef4444'; // Green if correct, red if incorrect
+          ctx.beginPath();
+          ctx.arc(c.x - dx, c.y - dy, c.radius, angle, angle + Math.PI);
+          ctx.closePath();
           ctx.stroke();
           
           // Text half 1
@@ -491,9 +700,17 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           ctx.translate(-c.x, -c.y);
           
           // Text styling with shadow for readability
-          ctx.font = `bold ${Math.floor(c.radius * 0.5)}px Inter, sans-serif`;
+          let fontSize1 = Math.floor(c.radius * 0.5);
+          ctx.font = `bold ${fontSize1}px Inter, sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
+          
+          let textWidth1 = ctx.measureText(c.text).width;
+          const maxAllowedWidth1 = c.radius * 0.75;
+          if (textWidth1 > maxAllowedWidth1) {
+            fontSize1 = Math.floor(fontSize1 * (maxAllowedWidth1 / textWidth1));
+            ctx.font = `bold ${fontSize1}px Inter, sans-serif`;
+          }
           
           // Draw a subtle dark semi-transparent band behind the text so it's readable over images
           ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -510,13 +727,32 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           // Half 2
           ctx.beginPath();
           ctx.arc(c.x + dx, c.y + dy, c.radius, angle + Math.PI, angle + Math.PI * 2);
+          ctx.closePath();
           ctx.save();
           ctx.clip();
           drawVectorShape(ctx, c.imageIdx, c.x + dx, c.y + dy, c.radius, isDark);
           ctx.restore();
 
+          // Sliced fading boundary glow
+          if (glowOpacity > 0) {
+            ctx.save();
+            const rgb = c.isCorrect ? '34, 197, 94' : '239, 68, 68';
+            for (let j = 8; j >= 1; j--) {
+              ctx.beginPath();
+              ctx.arc(c.x + dx, c.y + dy, c.radius, angle + Math.PI, angle + Math.PI * 2);
+              ctx.closePath();
+              ctx.lineWidth = 4 + j * 18;
+              ctx.strokeStyle = `rgba(${rgb}, ${glowOpacity * 0.22 * (1 - j / 9)})`;
+              ctx.stroke();
+            }
+            ctx.restore();
+          }
+
           ctx.lineWidth = 4;
           ctx.strokeStyle = c.isCorrect ? '#22c55e' : '#ef4444'; // Green if correct, red if incorrect
+          ctx.beginPath();
+          ctx.arc(c.x + dx, c.y + dy, c.radius, angle + Math.PI, angle + Math.PI * 2);
+          ctx.closePath();
           ctx.stroke();
           
           // Text half 2
@@ -531,9 +767,17 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
           ctx.translate(-c.x, -c.y);
           
           // Text styling with shadow for readability
-          ctx.font = `bold ${Math.floor(c.radius * 0.5)}px Inter, sans-serif`;
+          let fontSize2 = Math.floor(c.radius * 0.5);
+          ctx.font = `bold ${fontSize2}px Inter, sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
+          
+          let textWidth2 = ctx.measureText(c.text).width;
+          const maxAllowedWidth2 = c.radius * 0.75;
+          if (textWidth2 > maxAllowedWidth2) {
+            fontSize2 = Math.floor(fontSize2 * (maxAllowedWidth2 / textWidth2));
+            ctx.font = `bold ${fontSize2}px Inter, sans-serif`;
+          }
           
           // Draw a subtle dark semi-transparent band behind the text so it's readable over images
           ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -595,7 +839,7 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
             // Slice it!
             setCanSlice(false);
             
-            const currentQ = QUESTIONS[currentQuestionIdx];
+            const currentQ = sessionQuestions[currentQuestionIdx];
             if (c.text === currentQ.correct) {
               setCorrectCount(prev => prev + 1);
             }
@@ -620,7 +864,7 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
             
             // Advance to next question after delay
             setTimeout(() => {
-              if (currentQuestionIdx < QUESTIONS.length - 1) {
+              if (currentQuestionIdx < sessionQuestions.length - 1) {
                 setCurrentQuestionIdx(idx => idx + 1);
               } else {
                 setIsDone(true);
@@ -636,7 +880,7 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
     animationFrameId = requestAnimationFrame(loop);
     
     return () => cancelAnimationFrame(animationFrameId);
-  }, [currentQuestionIdx, isDone, canSlice, isDark]);
+  }, [currentQuestionIdx, isDone, canSlice, isDark, sessionQuestions]);
   
   // Helpers for line segment distance
   const distToSegmentSquared = (p: {x: number, y: number}, v: {x: number, y: number}, w: {x: number, y: number}) => {
@@ -684,7 +928,7 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
             <p className={`text-sm uppercase tracking-widest font-bold mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Верных ответов</p>
             <div className={`text-8xl font-black mb-4 ${isDark ? 'text-slate-300' : 'text-slate-800'}`}>
               <span className="text-6xl">{correctCount}</span>
-              <span className={`text-2xl text-slate-500 ml-1`}>/ {QUESTIONS.length}</span>
+              <span className={`text-2xl text-slate-500 ml-1`}>/ {sessionQuestions.length}</span>
             </div>
           </div>
 
@@ -712,10 +956,10 @@ export default function FruitNinjaGame({ onClose, isDark }: FruitNinjaGameProps)
          <div className={`p-4 rounded-xl max-w-lg w-full text-center shadow-lg border backdrop-blur-sm
            ${isDark ? 'bg-slate-800/80 border-slate-700/50' : 'bg-white/80 border-slate-200/50'}`}>
             <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-indigo-400' : 'text-indigo-600'} block mb-2`}>
-              Вопрос {currentQuestionIdx + 1} из {QUESTIONS.length}
+              Вопрос {currentQuestionIdx + 1} из {sessionQuestions.length}
             </span>
             <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {QUESTIONS[currentQuestionIdx]?.text}
+              {sessionQuestions[currentQuestionIdx]?.text}
             </h2>
          </div>
       </div>
