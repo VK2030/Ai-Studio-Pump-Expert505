@@ -214,6 +214,27 @@ const App: React.FC = () => {
               section += `\n`;
             }
           }
+
+          // Добавляем раздел "Критерии матрицы ТЗ" после ПБОТОС
+          if (statsByModule['matrix-tz']) {
+            const stats = statsByModule['matrix-tz'];
+            const recentScoresStr = getRecentScoresWithDates('matrix-tz');
+            section += `🔹 <b>Упражнение "Критерии матрицы ТЗ"</b>\n`;
+            if (recentScoresStr) {
+              section += `   Последние результаты: ${recentScoresStr}\n`;
+            }
+            if (stats.latestEntry?.incorrectAnswers && stats.latestEntry.incorrectAnswers.length > 0) {
+              section += `<blockquote expandable>`;
+              section += `<b>Ошибки в последней сессии:</b>\n\n`;
+              stats.latestEntry.incorrectAnswers.forEach((ans, idx) => {
+                section += `<b>${idx + 1}. ${escapeHTML(ans.question)}</b>\n`;
+                section += `❌ Ваш ответ: ${escapeHTML(ans.userAnswer || '(нет ответа)')}\n`;
+                section += `✅ Правильный: ${escapeHTML(ans.correctAnswer)}\n\n`;
+              });
+              section += `</blockquote>`;
+            }
+            section += `\n`;
+          }
         } else {
           // Обычные модули
           if (statsByModule[modId]) {
