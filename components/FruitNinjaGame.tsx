@@ -5,6 +5,7 @@ interface FruitNinjaGameProps {
   onClose: () => void;
   isDark: boolean;
   userRole?: 'contestant' | 'admin' | null;
+  onShowHistory?: () => void;
 }
 
 function drawVectorShape(ctx: CanvasRenderingContext2D, typeIdx: number, cx: number, cy: number, radius: number, isDark: boolean) {
@@ -339,11 +340,11 @@ interface Shockwave {
 }
 
 
-export default function FruitNinjaGame({ onClose, isDark, userRole }: FruitNinjaGameProps) {
+export default function FruitNinjaGame({ onClose, isDark, userRole, onShowHistory }: FruitNinjaGameProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
-  const [sessionQuestions, setSessionQuestions] = useState<any[]>(() => {
+  const generateNewSessionQuestions = () => {
     let lastSessionIndices: number[] = [];
     try {
       const saved = localStorage.getItem('fn_last_session_indices');
@@ -400,7 +401,9 @@ export default function FruitNinjaGame({ onClose, isDark, userRole }: FruitNinja
       ...QUESTIONS[idx],
       originalIdx: idx
     }));
-  });
+  };
+
+  const [sessionQuestions, setSessionQuestions] = useState<any[]>(() => generateNewSessionQuestions());
 
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -419,6 +422,15 @@ export default function FruitNinjaGame({ onClose, isDark, userRole }: FruitNinja
   const [canSlice, setCanSlice] = useState(true);
 
   const [incorrectAnswersList, setIncorrectAnswersList] = useState<{question: string, userAnswer: string, correctAnswer: string}[]>([]);
+
+  const handleRestart = () => {
+    const newQs = generateNewSessionQuestions();
+    setSessionQuestions(newQs);
+    setCurrentQuestionIdx(0);
+    setCorrectCount(0);
+    setIncorrectAnswersList([]);
+    setIsDone(false);
+  };
 
   // Auto-save history once isDone becomes true
   useEffect(() => {
@@ -1075,7 +1087,7 @@ export default function FruitNinjaGame({ onClose, isDark, userRole }: FruitNinja
 
   if (isDone) {
     return (
-      <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: isDark ? 'rgba(15,23,42,0.95)' : 'rgba(248,250,252,0.95)' }}>
+      <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
         <div className="text-center w-full max-w-sm">
           <h2 className={`text-4xl font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Итоги игры</h2>
           
@@ -1088,13 +1100,35 @@ export default function FruitNinjaGame({ onClose, isDark, userRole }: FruitNinja
             </div>
           </div>
 
-          <button 
-            onClick={onClose}
-            className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-[0.98] transition-all
-              ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border border-slate-700 shadow-slate-200'}`}
-          >
-            Закрыть
-          </button>
+          <div className="flex flex-col gap-3 w-full">
+            <button 
+              onClick={handleRestart}
+              className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg active:scale-[0.98] transition-all
+                ${isDark ? 'bg-slate-700 hover:bg-slate-600 text-white border border-white/10' : 'bg-slate-700 hover:bg-slate-800 text-white'}`}
+            >
+              Продолжить
+            </button>
+
+            <button 
+              onClick={onShowHistory ? onShowHistory : onClose}
+              className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-[0.98] transition-all border shadow-sm
+                ${isDark 
+                  ? 'bg-white text-slate-800 border-white/10 hover:bg-slate-100' 
+                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-800'}`}
+            >
+              История
+            </button>
+
+            <button 
+              onClick={onClose}
+              className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-[0.98] transition-all border shadow-sm
+                ${isDark 
+                  ? 'bg-white text-slate-800 border-white/10 hover:bg-slate-100' 
+                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-800'}`}
+            >
+              В главное меню
+            </button>
+          </div>
         </div>
       </div>
     );

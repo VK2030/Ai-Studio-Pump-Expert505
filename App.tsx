@@ -1202,7 +1202,16 @@ const App: React.FC = () => {
             transition={{ duration: 0.3 }}
             className="fixed inset-0 z-[70]"
           >
-            <FruitNinjaGame isDark={isDark} onClose={() => setActiveGame(null)} userRole={userRole} />
+            <FruitNinjaGame 
+              isDark={isDark} 
+              onClose={() => setActiveGame(null)} 
+              userRole={userRole} 
+              onShowHistory={() => {
+                setActiveTab('history');
+                setHistoryFilter('matrix-tz');
+                setActiveGame(null);
+              }}
+            />
           </motion.div>
         )}
       </AnimatePresence>
