@@ -445,6 +445,7 @@ export default function FruitNinjaGame({ onClose, isDark, userRole, onShowHistor
   const pointerDown = useRef(false);
   const [isDone, setIsDone] = useState(false);
   const [canSlice, setCanSlice] = useState(true);
+  const [showLocalHistory, setShowLocalHistory] = useState(false);
 
   const [incorrectAnswersList, setIncorrectAnswersList] = useState<{question: string, userAnswer: string, correctAnswer: string}[]>([]);
 
@@ -455,6 +456,7 @@ export default function FruitNinjaGame({ onClose, isDark, userRole, onShowHistor
     setCorrectCount(0);
     setIncorrectAnswersList([]);
     setIsDone(false);
+    setShowLocalHistory(false);
   };
 
   // Auto-save history once isDone becomes true
@@ -1111,6 +1113,139 @@ export default function FruitNinjaGame({ onClose, isDark, userRole, onShowHistor
   };
 
   if (isDone) {
+    if (showLocalHistory) {
+      const historyList = (() => {
+        let history: any[] = [];
+        const savedHistory = localStorage.getItem('quizHistory');
+        if (savedHistory) {
+          try {
+            history = JSON.parse(savedHistory);
+          } catch (e) {}
+        }
+        return history.filter(h => h.moduleId === 'matrix-tz');
+      })();
+
+      const clearGameHistory = () => {
+        let history: any[] = [];
+        const savedHistory = localStorage.getItem('quizHistory');
+        if (savedHistory) {
+          try {
+            history = JSON.parse(savedHistory);
+          } catch (e) {}
+        }
+        const filtered = history.filter(h => h.moduleId !== 'matrix-tz');
+        localStorage.setItem('quizHistory', JSON.stringify(filtered));
+        window.dispatchEvent(new Event('storage'));
+        setShowLocalHistory(false);
+      };
+
+      return (
+        <div className="absolute inset-0 z-50 flex flex-col p-4 overflow-hidden" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
+          <div className="w-full max-w-sm mx-auto h-full flex flex-col">
+            {/* Header */}
+            <div className={`p-4 border-b flex justify-between items-center ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
+              <div className="flex flex-col text-left">
+                <span className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>История сессий</span>
+                <h3 className={`font-bold text-sm truncate max-w-[200px] ${isDark ? 'text-white' : 'text-slate-900'}`}>Матрица ТЗ</h3>
+              </div>
+              <button 
+                onClick={() => setShowLocalHistory(false)}
+                className={`px-4 py-2 rounded-xl border font-bold text-xs uppercase transition-all active:scale-[0.98]
+                  ${isDark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-900 hover:bg-slate-50'}`}
+              >
+                Назад
+              </button>
+            </div>
+
+            {/* Scrollable List */}
+            <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1 no-scrollbar">
+              {historyList.length === 0 ? (
+                <div className={`flex flex-col items-center justify-center py-24 italic text-sm text-center ${isDark ? 'text-white/20' : 'text-slate-300'}`}>
+                  <svg viewBox="0 0 24 24" className="w-12 h-12 mb-4 opacity-10 mx-auto" fill="none" stroke="currentColor" strokeWidth="1">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Попыток еще не было
+                </div>
+              ) : (
+                historyList.map((entry, idx) => {
+                  const [correct, totalVal] = entry.score.split('/').map(Number);
+                  const isSuccess = correct >= Math.ceil(totalVal * 0.8);
+                  const formattedDate = (() => {
+                    try {
+                      return new Date(entry.date).toLocaleString('ru-RU', { 
+                        day: '2-digit', month: '2-digit', year: 'numeric', 
+                        hour: '2-digit', minute: '2-digit' 
+                      });
+                    } catch (e) {
+                      return entry.date;
+                    }
+                  })();
+
+                  return (
+                    <motion.div 
+                      key={idx}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25, delay: idx * 0.05 }}
+                      className={`p-5 rounded-2xl border relative overflow-hidden text-left ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}
+                    >
+                      {isSuccess && <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/10 rounded-full blur-2xl"></div>}
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">Сессия {entry.session}</span>
+                          <span className={`text-[10px] font-bold ${isDark ? 'text-white/50' : 'text-slate-400'}`}>{formattedDate}</span>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <span className={`text-xl font-black ${isSuccess ? 'text-green-500' : 'text-indigo-500'}`}>{entry.score}</span>
+                          <span className={`text-[8px] font-black uppercase tracking-tighter ${isSuccess ? 'text-green-600/50' : 'text-indigo-500/50'}`}>
+                            {isSuccess ? 'Успешно' : 'Нужна практика'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {entry.incorrectAnswers && entry.incorrectAnswers.length > 0 && (
+                        <div className={`mt-4 pt-4 border-t space-y-4 ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
+                          <span className="text-[9px] uppercase font-black text-red-500/60 tracking-widest">Разбор ошибок ({entry.incorrectAnswers.length}):</span>
+                          {entry.incorrectAnswers.map((err: any, i: number) => (
+                            <div key={i} className={`text-[11px] space-y-1 p-3 rounded-xl border text-left ${isDark ? 'bg-black/20 border-white/5' : 'bg-slate-50 border-slate-100'}`}>
+                              <p className={`font-bold leading-tight ${isDark ? 'text-white/80' : 'text-slate-800'}`}>«{err.question}»</p>
+                              <div className="flex flex-col gap-1 mt-2">
+                                <div className="flex gap-2">
+                                  <span className="text-red-500/80 font-bold uppercase text-[7px] px-1 py-0.5 bg-red-500/10 rounded self-start">Ваш выбор</span>
+                                  <span className={isDark ? 'text-white/40' : 'text-slate-500'}>{err.userAnswer || '(пусто)'}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                  <span className="text-green-500 font-bold uppercase text-[7px] px-1 py-0.5 bg-green-500/10 rounded self-start">Верно</span>
+                                  <span className={isDark ? 'text-green-300/80' : 'text-green-600'}>{err.correctAnswer}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Clear History Button */}
+            {userRole !== 'contestant' && historyList.length > 0 && (
+              <div className="pt-2 pb-4 mt-auto">
+                <button 
+                  onClick={clearGameHistory}
+                  className={`w-full py-3 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
+                    ${isDark ? 'bg-red-500/5 border-red-500/10 text-red-500/50 hover:bg-red-500 hover:text-white' : 'bg-red-50 border-red-100 text-red-500 hover:bg-red-500 hover:text-white'}`}
+                >
+                  Удалить историю этого упражнения
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
         <div className="text-center w-full max-w-sm">
@@ -1135,7 +1270,7 @@ export default function FruitNinjaGame({ onClose, isDark, userRole, onShowHistor
             </button>
 
             <button 
-              onClick={onShowHistory ? onShowHistory : onClose}
+              onClick={() => setShowLocalHistory(true)}
               className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-[0.98] transition-all border shadow-sm
                 ${isDark 
                   ? 'bg-white text-slate-800 border-white/10 hover:bg-slate-100' 
