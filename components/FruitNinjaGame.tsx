@@ -537,8 +537,8 @@ export default function FruitNinjaGame({ onClose, isDark, userRole }: FruitNinja
         return;
       }
       
-      // limit max dt to avoid jumps if tab was inactive, reduce speed by 15%
-      const dt = Math.min((time - lastTime) / 1000, 0.1) * 0.85;
+      // limit max dt to avoid jumps if tab was inactive, reduce speed by 20% further (from 0.85 to 0.68) at user request
+      const dt = Math.min((time - lastTime) / 1000, 0.1) * 0.68;
       lastTime = time;
       
       const w = containerRef.current.clientWidth;
