@@ -361,7 +361,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     window.dispatchEvent(new Event('storage'));
     setScreen('results');
 
-    if (userRole === 'contestant') {
+    if (userRole === 'contestant' || userRole === 'admin') {
       setSaveStatus('saving');
       try {
         const response = await fetch('/api/history', {
@@ -369,7 +369,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...newEntry,
-            user: localStorage.getItem('app_user_name') || 'Contestant',
+            user: userRole === 'admin' ? 'Администратор' : (localStorage.getItem('app_user_name') || 'Contestant'),
             correct_answers: finalCount
           })
         });

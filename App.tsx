@@ -108,6 +108,12 @@ const App: React.FC = () => {
 
   const [historyFilter, setHistoryFilter] = useState<string | 'all'>('all');
   const [isHistoryFilterOpen, setIsHistoryFilterOpen] = useState(false);
+  const [accountFilter, setAccountFilter] = useState<'all' | 'contestant' | 'admin'>('contestant');
+  const [isAccountFilterOpen, setIsAccountFilterOpen] = useState(false);
+
+  const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
+  const [clearHistoryPasswordInput, setClearHistoryPasswordInput] = useState('');
+  const [clearHistoryError, setClearHistoryError] = useState('');
 
   // Гарантируем чистоту сессии и сброс сохраненной авторизации при каждой загрузке страницы
   useEffect(() => {
@@ -115,8 +121,24 @@ const App: React.FC = () => {
     localStorage.removeItem('app_remember_me');
   }, []);
 
+  const baseHistory = useMemo(() => {
+    return fullHistory.filter((h) => {
+      if (userRole === 'admin') {
+        if (accountFilter === 'all') return true;
+        if (accountFilter === 'admin') return h.user === 'admin' || h.user === 'Администратор';
+        if (accountFilter === 'contestant') return h.user !== 'admin' && h.user !== 'Администратор';
+        return true;
+      } else {
+        // Contestant cannot see admin history.
+        return h.user !== 'admin' && h.user !== 'Администратор';
+      }
+    });
+  }, [fullHistory, userRole, accountFilter]);
+
   const sendHistoryToTelegram = async () => {
-    if (fullHistory.length === 0) {
+    const contestantHistory = fullHistory.filter(h => h.user !== 'admin' && h.user !== 'Администратор');
+
+    if (contestantHistory.length === 0) {
       alert("История пуста. Нечего отправлять.");
       return;
     }
@@ -132,7 +154,7 @@ const App: React.FC = () => {
     try {
       // Группируем результаты по модулям
       const statsByModule: Record<string, { count: number, totalScore: number, latestEntry?: QuizHistoryEntry }> = {};
-      fullHistory.forEach(entry => {
+      contestantHistory.forEach(entry => {
         const modId = entry.moduleId || 'unknown';
         if (!statsByModule[modId]) {
           statsByModule[modId] = { count: 0, totalScore: 0, latestEntry: entry };
@@ -152,9 +174,9 @@ const App: React.FC = () => {
         let entries: QuizHistoryEntry[] = [];
         if (isPbotosAggregated) {
           const pbotosSubIds = Object.keys(PBOTOS_SUBMODULES);
-          entries = fullHistory.filter(h => h.moduleId === 'pbotos' || (h.moduleId && pbotosSubIds.includes(h.moduleId)));
+          entries = contestantHistory.filter(h => h.moduleId === 'pbotos' || (h.moduleId && pbotosSubIds.includes(h.moduleId)));
         } else {
-          entries = fullHistory.filter(h => h.moduleId === modId);
+          entries = contestantHistory.filter(h => h.moduleId === modId);
         }
         
         if (entries.length === 0) return '';
@@ -460,40 +482,49 @@ const App: React.FC = () => {
   };
 
 
-  const clearGlobalHistory = async () => {
+  const handleClearGlobalHistoryClick = () => {
     if (userRole !== 'admin') {
       alert('У вас нет прав для очистки глобальной истории.');
       return;
     }
+    setClearHistoryPasswordInput('');
+    setClearHistoryError('');
+    setShowClearHistoryModal(true);
+  };
 
-    if (window.confirm('Вы уверены, что хотите полностью очистить ВСЮ историю тестирования во всех аккаунтах и в облаке?')) {
-      console.log("Attempting to clear global history...");
-      setSyncStatus('syncing');
-      try {
-        const response = await fetch('/api/history', { 
-          method: 'DELETE',
-          headers: { 'x-admin-password': adminPassword }
+  const executeClearGlobalHistory = async () => {
+    if (clearHistoryPasswordInput !== '----') {
+      setClearHistoryError('Неверный пароль!');
+      return;
+    }
+
+    console.log("Attempting to clear global history after correct password verification...");
+    setShowClearHistoryModal(false);
+    setSyncStatus('syncing');
+    try {
+      const response = await fetch('/api/history', { 
+        method: 'DELETE',
+        headers: { 'x-admin-password': adminPassword }
+      });
+      const result = await response.json();
+      
+      if (response.ok) {
+        localStorage.removeItem('quizHistory');
+        MODULES.forEach(m => {
+          localStorage.removeItem(`quizSessionNum_${m.id}`);
         });
-        const result = await response.json();
         
-        if (response.ok) {
-          localStorage.removeItem('quizHistory');
-          MODULES.forEach(m => {
-            localStorage.removeItem(`quizSessionNum_${m.id}`);
-          });
-          
-          await loadData();
-          window.dispatchEvent(new Event('storage'));
-          alert(`✅ База очищена. Удалено записей: ${result.deletedCount || 0}`);
-        } else {
-          alert('❌ Ошибка при удалении из облака: ' + (result.error || 'Неизвестная ошибка'));
-          setSyncStatus('error');
-        }
-      } catch (error: any) {
-        console.error("Clear history error:", error);
-        alert('❌ Ошибка сети: ' + error.message);
+        await loadData();
+        window.dispatchEvent(new Event('storage'));
+        alert(`✅  База очищена. Удалено записей: ${result.deletedCount || 0}`);
+      } else {
+        alert('❌ Ошибка при удалении из облака: ' + (result.error || 'Неизвестная ошибка'));
         setSyncStatus('error');
       }
+    } catch (error: any) {
+      console.error("Clear history error:", error);
+      alert('❌ Ошибка сети: ' + error.message);
+      setSyncStatus('error');
     }
   };
 
@@ -618,16 +649,102 @@ const App: React.FC = () => {
                 };
 
                 const filteredHistory = (() => {
-                  if (historyFilter === 'all') return fullHistory;
+                  if (historyFilter === 'all') return baseHistory;
                   if (historyFilter === 'pbotos-all' || historyFilter === 'pbotos') {
                     const pbotosSubIds = Object.keys(PBOTOS_SUBMODULES);
-                    return fullHistory.filter(h => h.moduleId === 'pbotos' || (h.moduleId && pbotosSubIds.includes(h.moduleId)));
+                    return baseHistory.filter(h => h.moduleId === 'pbotos' || (h.moduleId && pbotosSubIds.includes(h.moduleId)));
                   }
-                  return fullHistory.filter(h => h.moduleId === historyFilter);
+                  return baseHistory.filter(h => h.moduleId === historyFilter);
                 })();
+
+                const getAccountFilterLabel = () => {
+                  if (accountFilter === 'all') return 'Все аккаунты';
+                  if (accountFilter === 'contestant') return 'Конкурсанты';
+                  if (accountFilter === 'admin') return 'Администраторы';
+                  return 'Аккаунт';
+                };
 
                 return (
                   <div className="flex-1 flex flex-col overflow-hidden px-4">
+                    {/* Account Filter Dropdown (Admin only) */}
+                    {userRole === 'admin' && (
+                      <div className="flex-shrink-0 mb-3 relative z-50">
+                        <button 
+                          onClick={() => setIsAccountFilterOpen(!isAccountFilterOpen)}
+                          className={`w-full py-3 px-4 rounded-xl flex items-center justify-between shadow-sm border transition-all active:scale-[0.98]
+                            ${isDark 
+                              ? 'bg-[#182133] border-white/5 text-white' 
+                              : 'bg-white border-slate-200 text-slate-800'}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className={`p-1.5 rounded-lg ${isDark ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-50 text-indigo-600'}`}>
+                              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                              </svg>
+                            </span>
+                            <div className="flex flex-col items-start gap-1">
+                              <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-indigo-400' : 'text-indigo-600'} leading-none`}>
+                                Фильтр по аккаунту
+                              </span>
+                              <span className="text-xs font-bold leading-none">{getAccountFilterLabel()}</span>
+                            </div>
+                          </div>
+                          <svg viewBox="0 0 24 24" className={`w-4 h-4 transition-transform ${isAccountFilterOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="3">
+                            <polyline points="6 9 12 15 18 9" />
+                          </svg>
+                        </button>
+                        
+                        <AnimatePresence>
+                          {isAccountFilterOpen && (
+                            <motion.div 
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -10 }}
+                              className={`absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-xl overflow-hidden border
+                                ${isDark ? 'bg-[#1e293b] border-white/10' : 'bg-white border-slate-200'}`}
+                            >
+                              <button 
+                                onClick={() => { setAccountFilter('all'); setIsAccountFilterOpen(false); }}
+                                className={`w-full text-left px-4 py-3 text-xs font-bold transition-all flex items-center justify-between
+                                  ${accountFilter === 'all' 
+                                    ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white') 
+                                    : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
+                              >
+                                Все аккаунты
+                                {accountFilter === 'all' && (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                                )}
+                              </button>
+                              <button 
+                                onClick={() => { setAccountFilter('contestant'); setIsAccountFilterOpen(false); }}
+                                className={`w-full text-left px-4 py-3 text-xs font-bold transition-all flex items-center justify-between
+                                  ${accountFilter === 'contestant' 
+                                    ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white') 
+                                    : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
+                              >
+                                Конкурсанты
+                                {accountFilter === 'contestant' && (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                                )}
+                              </button>
+                              <button 
+                                onClick={() => { setAccountFilter('admin'); setIsAccountFilterOpen(false); }}
+                                className={`w-full text-left px-4 py-3 text-xs font-bold transition-all flex items-center justify-between
+                                  ${accountFilter === 'admin' 
+                                    ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white') 
+                                    : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
+                              >
+                                Администраторы
+                                {accountFilter === 'admin' && (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                                )}
+                              </button>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
+
                     {/* Vertical Filter Dropdown */}
                     <div className="flex-shrink-0 mb-4 relative z-40">
                       <button
@@ -907,7 +1024,7 @@ const App: React.FC = () => {
                     {fullHistory.length > 0 && userRole === 'admin' && (
                       <AnimatedContent distance={20} delay={0.5} direction="vertical" className="p-4 pt-0">
                         <button 
-                          onClick={clearGlobalHistory}
+                          onClick={handleClearGlobalHistoryClick}
                           className={`w-full py-3 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
                             ${isDark ? 'bg-red-500/5 border-red-500/10 text-red-500/50 active:bg-red-500 active:text-white' : 'bg-red-50 border-red-100 text-red-600 active:bg-red-600 active:text-white'}`}
                         >
@@ -1149,6 +1266,75 @@ const App: React.FC = () => {
               >
                 ОК
               </button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showClearHistoryModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center px-6 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className={`w-full max-w-xs p-6 rounded-[2.5rem] border text-center shadow-2xl
+                ${isDark ? 'bg-[#0f172a] border-white/10' : 'bg-white border-slate-200'}`}
+            >
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4
+                ${isDark ? 'bg-red-500/10 text-red-500' : 'bg-red-50 text-red-500'}`}>
+                <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+
+              <h3 className={`text-base font-black uppercase tracking-tight mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                Очистить всю историю?
+              </h3>
+              <p className={`text-[11px] font-medium leading-relaxed mb-4 ${isDark ? 'text-white/40' : 'text-slate-500'}`}>
+                Это действие безвозвратно удалит все результаты сессий из базы данных.
+              </p>
+
+              <div className="mb-4">
+                <input 
+                  type="text"
+                  maxLength={4}
+                  autoFocus
+                  placeholder="Пароль подтверждения"
+                  value={clearHistoryPasswordInput}
+                  onChange={(e) => {
+                    setClearHistoryPasswordInput(e.target.value);
+                    if (clearHistoryError) setClearHistoryError('');
+                  }}
+                  className={`w-full py-3 px-4 rounded-xl text-center font-mono font-bold text-sm tracking-widest outline-none border transition-all
+                    ${isDark 
+                      ? 'bg-black/20 border-white/10 text-white focus:border-indigo-500 focus:bg-black/40' 
+                      : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-indigo-500 focus:bg-white'}`}
+                />
+                {clearHistoryError && (
+                  <p className="text-red-500 text-[10px] font-bold mt-1.5">{clearHistoryError}</p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <button 
+                  onClick={executeClearGlobalHistory}
+                  className={`w-full py-3.5 rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-lg active:scale-[0.98] transition-all
+                    ${isDark ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'}`}
+                >
+                  Очистить базу данных
+                </button>
+                <button 
+                  onClick={() => setShowClearHistoryModal(false)}
+                  className={`w-full py-3.5 rounded-2xl font-black uppercase text-[11px] tracking-widest active:scale-[0.98] transition-all
+                    ${isDark ? 'bg-white/5 border border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+                >
+                  Отмена
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

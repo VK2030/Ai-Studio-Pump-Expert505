@@ -486,15 +486,15 @@ export default function FruitNinjaGame({ onClose, isDark, userRole, onShowHistor
         localStorage.setItem('quizHistory', JSON.stringify(updatedHistory));
         window.dispatchEvent(new Event('storage'));
         
-        // Post to cloud if they are logged in as contestant
-        if (userRole === 'contestant') {
+        // Post to cloud if they are logged in as contestant or admin
+        if (userRole === 'contestant' || userRole === 'admin') {
           try {
             await fetch('/api/history', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 ...newEntry,
-                user: localStorage.getItem('app_user_name') || 'Contestant',
+                user: userRole === 'admin' ? 'Администратор' : (localStorage.getItem('app_user_name') || 'Contestant'),
                 correct_answers: correctCount
               })
             });
