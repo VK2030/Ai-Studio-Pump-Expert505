@@ -659,8 +659,8 @@ const App: React.FC = () => {
 
                 const getAccountFilterLabel = () => {
                   if (accountFilter === 'all') return 'Все аккаунты';
-                  if (accountFilter === 'contestant') return 'Конкурсанты';
-                  if (accountFilter === 'admin') return 'Администраторы';
+                  if (accountFilter === 'contestant') return 'Конкурсант';
+                  if (accountFilter === 'admin') return 'Администратор';
                   return 'Аккаунт';
                 };
 
@@ -722,7 +722,7 @@ const App: React.FC = () => {
                                     ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white') 
                                     : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
                               >
-                                Конкурсанты
+                                Конкурсант
                                 {accountFilter === 'contestant' && (
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
                                 )}
@@ -734,7 +734,7 @@ const App: React.FC = () => {
                                     ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white') 
                                     : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
                               >
-                                Администраторы
+                                Администратор
                                 {accountFilter === 'admin' && (
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
                                 )}
