@@ -677,11 +677,9 @@ const App: React.FC = () => {
                               : 'bg-white border-slate-200 text-slate-800'}`}
                         >
                           <div className="flex items-center gap-3">
-                            <span className={`p-1.5 rounded-lg ${isDark ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-50 text-indigo-600'}`}>
-                              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                              </svg>
-                            </span>
+                            <svg className={`w-4 h-4 opacity-70 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                            </svg>
                             <div className="flex flex-col items-start gap-1">
                               <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-indigo-400' : 'text-indigo-600'} leading-none`}>
                                 Фильтр по аккаунту
@@ -705,7 +703,7 @@ const App: React.FC = () => {
                             >
                               <button 
                                 onClick={() => { setAccountFilter('all'); setIsAccountFilterOpen(false); }}
-                                className={`w-full text-left px-4 py-3 text-xs font-bold transition-all flex items-center justify-between
+                                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between pl-6
                                   ${accountFilter === 'all' 
                                     ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white') 
                                     : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
@@ -717,7 +715,7 @@ const App: React.FC = () => {
                               </button>
                               <button 
                                 onClick={() => { setAccountFilter('contestant'); setIsAccountFilterOpen(false); }}
-                                className={`w-full text-left px-4 py-3 text-xs font-bold transition-all flex items-center justify-between
+                                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between pl-6
                                   ${accountFilter === 'contestant' 
                                     ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white') 
                                     : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
@@ -729,7 +727,7 @@ const App: React.FC = () => {
                               </button>
                               <button 
                                 onClick={() => { setAccountFilter('admin'); setIsAccountFilterOpen(false); }}
-                                className={`w-full text-left px-4 py-3 text-xs font-bold transition-all flex items-center justify-between
+                                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between pl-6
                                   ${accountFilter === 'admin' 
                                     ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white') 
                                     : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
@@ -749,28 +747,25 @@ const App: React.FC = () => {
                     <div className="flex-shrink-0 mb-4 relative z-40">
                       <button
                         onClick={() => setIsHistoryFilterOpen(!isHistoryFilterOpen)}
-                        className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border shadow-sm active:scale-[0.99]
+                        className={`w-full py-3 px-4 rounded-xl flex items-center justify-between shadow-sm border transition-all active:scale-[0.98]
                           ${isDark 
-                            ? 'bg-slate-800 hover:bg-slate-700 border-white/10 text-white' 
-                            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'}`}
+                            ? 'bg-[#182133] border-white/5 text-white' 
+                            : 'bg-white border-slate-200 text-slate-800'}`}
                       >
-                        <span className="flex items-center gap-3">
-                          <svg className="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                        <div className="flex items-center gap-3">
+                          <svg className={`w-4 h-4 opacity-70 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
                           </svg>
-                          <span className="text-[11px]">Фильтр: {getFilterLabel(historyFilter)}</span>
-                        </span>
-                        <motion.svg
-                          animate={{ rotate: isHistoryFilterOpen ? 180 : 0 }}
-                          transition={{ duration: 0.2, ease: "easeInOut" }}
-                          className="w-4 h-4 opacity-60"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          strokeWidth="2.5"
-                        >
+                          <div className="flex flex-col items-start gap-1">
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-indigo-400' : 'text-indigo-600'} leading-none`}>
+                              Фильтр по разделу
+                            </span>
+                            <span className="text-xs font-bold leading-none">{getFilterLabel(historyFilter)}</span>
+                          </div>
+                        </div>
+                        <svg viewBox="0 0 24 24" className={`w-4 h-4 transition-transform ${isHistoryFilterOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="3">
                           <polyline points="6 9 12 15 18 9" />
-                        </motion.svg>
+                        </svg>
                       </button>
 
                       <AnimatePresence>
@@ -790,7 +785,7 @@ const App: React.FC = () => {
                                   setHistoryFilter('all');
                                   setIsHistoryFilterOpen(false);
                                 }}
-                                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between
+                                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between pl-6
                                   ${historyFilter === 'all'
                                     ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white')
                                     : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
