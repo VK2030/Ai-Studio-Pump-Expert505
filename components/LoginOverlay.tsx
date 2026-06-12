@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import AnimatedContent from './AnimatedContent';
 import SplitText from './SplitText';
 import CloudStatus from './CloudStatus';
@@ -20,6 +21,9 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const isDark = theme === 'dark';
+
+  const [isContestantPressed, setIsContestantPressed] = useState(false);
+  const [isAdminPressed, setIsAdminPressed] = useState(false);
 
   useEffect(() => {
     if (stage === 'pin') {
@@ -112,21 +116,41 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
             />
 
             <div className="w-full space-y-4">
-              <button 
-                onClick={() => handleAccountSelect('contestant')}
-                className={`w-full h-16 rounded-[2rem] border backdrop-blur-md flex items-center justify-center transition-all active:scale-[0.97] shadow-lg hover:shadow-xl hover:-translate-y-0.5
+              <motion.button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (isContestantPressed) return;
+                  setIsContestantPressed(true);
+                  setTimeout(() => {
+                    setIsContestantPressed(false);
+                    handleAccountSelect('contestant');
+                  }, 180);
+                }}
+                animate={{ scale: isContestantPressed ? 0.92 : 1 }}
+                transition={{ duration: 0.15, ease: "easeInOut" }}
+                className={`w-full h-16 rounded-[2rem] border backdrop-blur-md flex items-center justify-center transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5
                   ${isDark ? 'bg-slate-800/80 border-slate-700 shadow-black/40 text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-900 shadow-slate-300 hover:bg-slate-50'}`}
               >
                 <span className="text-[13px] font-black uppercase tracking-widest">Конкурсант</span>
-              </button>
+              </motion.button>
 
-              <button 
-                onClick={() => handleAccountSelect('admin')}
-                className={`w-full h-16 rounded-[2rem] border backdrop-blur-md flex items-center justify-center transition-all active:scale-[0.97] shadow-lg hover:shadow-xl hover:-translate-y-0.5
+              <motion.button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (isAdminPressed) return;
+                  setIsAdminPressed(true);
+                  setTimeout(() => {
+                    setIsAdminPressed(false);
+                    handleAccountSelect('admin');
+                  }, 180);
+                }}
+                animate={{ scale: isAdminPressed ? 0.92 : 1 }}
+                transition={{ duration: 0.15, ease: "easeInOut" }}
+                className={`w-full h-16 rounded-[2rem] border backdrop-blur-md flex items-center justify-center transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5
                   ${isDark ? 'bg-slate-800/80 border-slate-700 shadow-black/40 text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-900 shadow-slate-300 hover:bg-slate-50'}`}
               >
                 <span className="text-[13px] font-black uppercase tracking-widest">Администратор</span>
-              </button>
+              </motion.button>
             </div>
           </div>
         </AnimatedContent>
