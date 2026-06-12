@@ -1571,15 +1571,6 @@ const NavButton: React.FC<{ isDark: boolean; active: boolean; onClick: () => voi
     >
       <div className="relative">
         {icon(active)}
-        {active && (
-          <motion.div 
-            layoutId="nav-glow"
-            className="absolute inset-0 bg-indigo-500/20 blur-md rounded-full -z-10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          />
-        )}
       </div>
       <span className={`text-[9px] font-bold tracking-wide uppercase transition-colors duration-300
         ${active ? (isDark ? 'text-white' : 'text-slate-800') : (isDark ? 'text-white/30' : 'text-slate-400')}`}>
