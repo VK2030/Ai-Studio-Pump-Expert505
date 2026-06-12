@@ -198,6 +198,22 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         const mistakesStr = localStorage.getItem(mistakesKey);
         const mistakes: Record<string, number> = mistakesStr ? JSON.parse(mistakesStr) : {};
         
+        // --- Sync historical mistakes ---
+        const syncKey = `${mistakesKey}_synced`;
+        if (!localStorage.getItem(syncKey)) {
+          history.filter(h => h.moduleId === targetId && (h.user === userName || h.user === 'Contestant')).forEach(session => {
+            session.incorrectAnswers?.forEach(inc => {
+              const qObj = questionsForModule.find((q: any) => q.text === inc.question);
+              if (qObj && mistakes[qObj.id] === undefined) {
+                mistakes[qObj.id] = 0;
+              }
+            });
+          });
+          localStorage.setItem(mistakesKey, JSON.stringify(mistakes));
+          localStorage.setItem(syncKey, 'true');
+        }
+        // --------------------------------
+        
         const mistakesQuestions = questionsForModule.filter((q: any) => mistakes[q.id] !== undefined);
         if (mistakesQuestions.length === 0) {
           alert('У вас нет нерешенных ошибок в этом разделе!');
@@ -335,7 +351,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         finalCorrectCount += 1;
         setCorrectAnswersCount(finalCorrectCount);
         
-        if (isMistakesMode && mistakes[q.id!] !== undefined) {
+        if (mistakes[q.id!] !== undefined) {
           mistakes[q.id!] += 1;
           if (mistakes[q.id!] >= 2) {
             delete mistakes[q.id!];
