@@ -194,21 +194,24 @@ const QuizModule: React.FC<QuizModuleProps> = ({
       let finalSelected: any[] = [];
 
       if (mistakesOnly) {
-        const mistakesKey = `app_mistakes_${userName}_${targetId}`;
+        const mistakesKey = `app_mistakes_v2_${userName}_${targetId}`;
         const mistakesStr = localStorage.getItem(mistakesKey);
         const mistakes: Record<string, number> = mistakesStr ? JSON.parse(mistakesStr) : {};
         
         // --- Sync historical mistakes ---
-        const syncKey = `${mistakesKey}_synced`;
+        const syncKey = `${mistakesKey}_synced_v2`;
         if (!localStorage.getItem(syncKey)) {
-          history.filter(h => h.moduleId === targetId && (h.user === userName || h.user === 'Contestant')).forEach(session => {
-            session.incorrectAnswers?.forEach(inc => {
+          // Only sync the very last session to avoid overwhelming the user with old mistakes or merged contestant mistakes
+          const userHistory = history.filter(h => h.moduleId === targetId && h.user === userName);
+          if (userHistory.length > 0) {
+            const lastSession = userHistory[0]; // history is sorted by date descending
+            lastSession.incorrectAnswers?.forEach(inc => {
               const qObj = questionsForModule.find((q: any) => q.text === inc.question);
               if (qObj && mistakes[qObj.id] === undefined) {
                 mistakes[qObj.id] = 0;
               }
             });
-          });
+          }
           localStorage.setItem(mistakesKey, JSON.stringify(mistakes));
           localStorage.setItem(syncKey, 'true');
         }
@@ -221,7 +224,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
           return;
         }
         
-        finalSelected = shuffleArray(mistakesQuestions).slice(0, Math.min(10, mistakesQuestions.length));
+        finalSelected = shuffleArray(mistakesQuestions);
       } else {
         // Умная выборка: группируем по количеству просмотров
         const groupedByViews: Record<number, any[]> = {};
@@ -343,7 +346,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
       // Track mistakes
       const userName = localStorage.getItem('app_user_name') || 'Contestant';
       const targetId = activeSubModuleId || moduleId;
-      const mistakesKey = `app_mistakes_${userName}_${targetId}`;
+      const mistakesKey = `app_mistakes_v2_${userName}_${targetId}`;
       const mistakesStr = localStorage.getItem(mistakesKey);
       const mistakes: Record<string, number> = mistakesStr ? JSON.parse(mistakesStr) : {};
 
