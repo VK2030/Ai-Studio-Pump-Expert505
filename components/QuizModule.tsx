@@ -47,6 +47,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   const [activeSubModuleId, setActiveSubModuleId] = useState<string | null>(null);
   const [pressedSubId, setPressedSubId] = useState<string | null>(null);
   const [sessionQuestions, setSessionQuestions] = useState<QuizQuestion[]>([]);
+  const [isMistakesMode, setIsMistakesMode] = useState(false);
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
   const [currentSession, setCurrentSession] = useState(1);
@@ -152,12 +153,13 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     return arr;
   };
 
-  const startQuiz = async () => {
+  const startQuiz = async (mistakesOnly = false) => {
     const targetId = activeSubModuleId || moduleId;
-    console.log("Starting quiz for module:", targetId);
+    console.log("Starting quiz for module:", targetId, "mistakesOnly:", mistakesOnly);
     if (!targetId) return;
     finishQuizRef.current = false;
     setIsLoadingQuestions(true);
+    setIsMistakesMode(mistakesOnly);
     
     const userName = localStorage.getItem('app_user_name') || 'Contestant';
 
@@ -189,26 +191,43 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         return;
       }
 
-      // Умная выборка: группируем по количеству просмотров
-      const groupedByViews: Record<number, any[]> = {};
-      questionsForModule.forEach((q: any) => {
-        const views = q.viewCount || 0;
-        if (!groupedByViews[views]) groupedByViews[views] = [];
-        groupedByViews[views].push(q);
-      });
+      let finalSelected: any[] = [];
 
-      // Сортируем ключи (количества просмотров) по возрастанию
-      const sortedViewCounts = Object.keys(groupedByViews).map(Number).sort((a, b) => a - b);
-      
-      let selected: any[] = [];
-      for (const count of sortedViewCounts) {
-        const group = shuffleArray(groupedByViews[count]);
-        selected = [...selected, ...group];
-        if (selected.length >= 10) break;
+      if (mistakesOnly) {
+        const mistakesKey = `app_mistakes_${userName}_${targetId}`;
+        const mistakesStr = localStorage.getItem(mistakesKey);
+        const mistakes: Record<string, number> = mistakesStr ? JSON.parse(mistakesStr) : {};
+        
+        const mistakesQuestions = questionsForModule.filter((q: any) => mistakes[q.id] !== undefined);
+        if (mistakesQuestions.length === 0) {
+          alert('У вас нет нерешенных ошибок в этом разделе!');
+          setIsLoadingQuestions(false);
+          return;
+        }
+        
+        finalSelected = shuffleArray(mistakesQuestions).slice(0, Math.min(10, mistakesQuestions.length));
+      } else {
+        // Умная выборка: группируем по количеству просмотров
+        const groupedByViews: Record<number, any[]> = {};
+        questionsForModule.forEach((q: any) => {
+          const views = q.viewCount || 0;
+          if (!groupedByViews[views]) groupedByViews[views] = [];
+          groupedByViews[views].push(q);
+        });
+
+        // Сортируем ключи (количества просмотров) по возрастанию
+        const sortedViewCounts = Object.keys(groupedByViews).map(Number).sort((a, b) => a - b);
+        
+        let selected: any[] = [];
+        for (const count of sortedViewCounts) {
+          const group = shuffleArray(groupedByViews[count]);
+          selected = [...selected, ...group];
+          if (selected.length >= 10) break;
+        }
+
+        // Берем первые 10 (или сколько есть)
+        finalSelected = selected.slice(0, Math.min(10, questionsForModule.length));
       }
-
-      // Берем первые 10 (или сколько есть)
-      const finalSelected = selected.slice(0, Math.min(10, questionsForModule.length));
       
       // Инкрементируем просмотры для выбранных вопросов
       fetch('/api/quiz/views/increment', {
@@ -305,10 +324,25 @@ const QuizModule: React.FC<QuizModuleProps> = ({
       let finalCorrectCount = correctAnswersCount;
       let finalIncorrectAnswers = [...incorrectAnswers];
 
+      // Track mistakes
+      const userName = localStorage.getItem('app_user_name') || 'Contestant';
+      const targetId = activeSubModuleId || moduleId;
+      const mistakesKey = `app_mistakes_${userName}_${targetId}`;
+      const mistakesStr = localStorage.getItem(mistakesKey);
+      const mistakes: Record<string, number> = mistakesStr ? JSON.parse(mistakesStr) : {};
+
       if (isCorrect) {
         finalCorrectCount += 1;
         setCorrectAnswersCount(finalCorrectCount);
+        
+        if (isMistakesMode && mistakes[q.id!] !== undefined) {
+          mistakes[q.id!] += 1;
+          if (mistakes[q.id!] >= 2) {
+            delete mistakes[q.id!];
+          }
+        }
       } else {
+        mistakes[q.id!] = 0; // Reset / add to mistakes if answered incorrectly
         const correctOptionTexts = correctIndices ? correctIndices.map((idx: number) => q.options[idx]) : ["(Скрыто)"];
         const selectedOptionTexts = selectedOptions.map(idx => shuffledOptions[idx]);
         
@@ -320,6 +354,8 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         finalIncorrectAnswers.push(newIncorrect);
         setIncorrectAnswers(finalIncorrectAnswers);
       }
+      
+      localStorage.setItem(mistakesKey, JSON.stringify(mistakes));
 
       setTimeout(() => {
         if (currentQuestionIdx < sessionQuestions.length - 1) {
@@ -344,6 +380,12 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     
     const finalCount = countOverride !== undefined ? countOverride : correctAnswersCount;
     const finalIncorrect = incorrectOverride !== undefined ? incorrectOverride : incorrectAnswers;
+
+    if (isMistakesMode) {
+      setScreen('results');
+      setSaveStatus('success');
+      return;
+    }
 
     const targetId = activeSubModuleId || moduleId;
     const newEntry: QuizHistoryEntry = {
@@ -614,17 +656,32 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         <div className="w-full space-y-3">
           <AnimatedContent distance={30} delay={0.5} direction="vertical">
             <button 
-              onClick={startQuiz} 
+              onClick={() => startQuiz(false)} 
               disabled={isLoadingQuestions}
               className={`w-full py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-all shadow-xl border flex items-center justify-center gap-2
               ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200'}`}
             >
-              {isLoadingQuestions ? (
+              {isLoadingQuestions && !isMistakesMode ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   Загрузка...
                 </>
               ) : 'Начать тест'}
+            </button>
+          </AnimatedContent>
+          <AnimatedContent distance={30} delay={0.55} direction="vertical">
+            <button 
+              onClick={() => startQuiz(true)} 
+              disabled={isLoadingQuestions}
+              className={`w-full py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-all shadow-xl border flex items-center justify-center gap-2
+              ${isDark ? 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border-orange-500/20' : 'bg-orange-50 hover:bg-orange-100 text-orange-600 border-orange-200'}`}
+            >
+              {isLoadingQuestions && isMistakesMode ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  Загрузка...
+                </>
+              ) : 'Работа над ошибками'}
             </button>
           </AnimatedContent>
           <AnimatedContent distance={30} delay={0.6} direction="vertical">
@@ -904,7 +961,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         </AnimatedContent>
         <div className="w-full space-y-3">
           <AnimatedContent distance={30} delay={0.4} direction="vertical">
-            <button onClick={startQuiz} className={`w-full py-4 rounded-2xl text-white font-bold active:scale-[0.98] transition-all border ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200'}`}>Повторить тест</button>
+            <button onClick={() => startQuiz(isMistakesMode)} className={`w-full py-4 rounded-2xl text-white font-bold active:scale-[0.98] transition-all border ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200'}`}>Повторить тест</button>
           </AnimatedContent>
           <AnimatedContent distance={30} delay={0.5} direction="vertical">
             <motion.button 
