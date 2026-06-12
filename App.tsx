@@ -1184,8 +1184,8 @@ const App: React.FC = () => {
                         
                         <button 
                           onClick={() => setActiveGame('sulfate')}
-                          className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-[0.98] transition-all
-                            ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border border-slate-700 shadow-slate-200'}`}
+                          className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all
+                            ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 shadow-black/40' : 'bg-slate-800 hover:bg-slate-900 text-white border border-slate-700 shadow-slate-300'}`}
                         >
                           Запустить
                         </button>
@@ -1203,8 +1203,8 @@ const App: React.FC = () => {
                         
                         <button 
                           onClick={() => setActiveGame('ninja')}
-                          className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-[0.98] transition-all
-                            ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border border-slate-700 shadow-slate-200'}`}
+                          className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all
+                            ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 shadow-black/40' : 'bg-slate-800 hover:bg-slate-900 text-white border border-slate-700 shadow-slate-300'}`}
                         >
                           Запустить
                         </button>

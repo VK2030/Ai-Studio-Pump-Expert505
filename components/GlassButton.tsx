@@ -137,10 +137,10 @@ const GlassButton: React.FC<GlassButtonProps> = ({ title, iconType, progress = 0
       onClick={handleClick}
       animate={{ scale: isPressed ? 0.92 : 1 }}
       transition={{ duration: 0.15, ease: "easeInOut" }}
-      className={`flex flex-col items-start p-3 pb-8 rounded-2xl border backdrop-blur-md relative overflow-hidden group w-full h-full transition-all duration-300
+      className={`flex flex-col items-start p-3 pb-8 rounded-2xl border backdrop-blur-md relative overflow-hidden group w-full h-full transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-0.5
         ${isDark 
-          ? 'bg-white/5 border-white/10 hover:bg-white/[0.08]' 
-          : 'bg-white border-slate-200 shadow-sm hover:bg-slate-50'}`}
+          ? 'bg-slate-800 border-slate-700 shadow-black/40 hover:bg-slate-700' 
+          : 'bg-white border-slate-200 shadow-slate-300 hover:bg-slate-50'}`}
     >
       <div className={`absolute top-0 left-0 w-full h-full pointer-events-none
         ${isDark ? 'bg-gradient-to-br from-white/5 to-transparent' : 'bg-gradient-to-br from-slate-50/10 to-transparent'}`}></div>

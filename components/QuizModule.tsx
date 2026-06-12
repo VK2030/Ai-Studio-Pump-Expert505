@@ -677,8 +677,8 @@ const QuizModule: React.FC<QuizModuleProps> = ({
             <button 
               onClick={() => startQuiz(false)} 
               disabled={isLoadingQuestions}
-              className={`w-full py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-all shadow-xl border flex items-center justify-center gap-2
-              ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200'}`}
+              className={`w-full py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5 border flex items-center justify-center gap-2
+              ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-slate-600 shadow-black/40' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-300'}`}
             >
               {isLoadingQuestions && !isMistakesMode ? (
                 <>
@@ -692,8 +692,8 @@ const QuizModule: React.FC<QuizModuleProps> = ({
             <button 
               onClick={() => startQuiz(true)} 
               disabled={isLoadingQuestions}
-              className={`w-full py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-all shadow-xl border flex items-center justify-center gap-2
-              ${isDark ? 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border-orange-500/20' : 'bg-orange-50 hover:bg-orange-100 text-orange-600 border-orange-200'}`}
+              className={`w-full py-4 rounded-2xl font-bold active:scale-[0.98] transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 border flex items-center justify-center gap-2
+              ${isDark ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600 shadow-black/30 text-indigo-100' : 'bg-white hover:bg-slate-50 border-slate-200 shadow-slate-200/50 text-slate-700'}`}
             >
               {isLoadingQuestions && isMistakesMode ? (
                 <>
@@ -716,8 +716,8 @@ const QuizModule: React.FC<QuizModuleProps> = ({
               }}
               animate={{ scale: isHistory1Pressed ? 0.92 : 1 }}
               transition={{ duration: 0.15, ease: "easeInOut" }}
-              className={`w-full py-4 rounded-2xl font-bold transition-all border
-              ${isDark ? 'bg-white/5 border-white/10 text-indigo-100' : 'bg-white border-slate-200 text-slate-700'}`}>
+              className={`w-full py-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 border
+              ${isDark ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600 shadow-black/30 text-indigo-100' : 'bg-white hover:bg-slate-50 border-slate-200 shadow-slate-200/50 text-slate-700'}`}>
               История тестирования
             </motion.button>
           </AnimatedContent>
@@ -980,7 +980,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         </AnimatedContent>
         <div className="w-full space-y-3">
           <AnimatedContent distance={30} delay={0.4} direction="vertical">
-            <button onClick={() => startQuiz(isMistakesMode)} className={`w-full py-4 rounded-2xl text-white font-bold active:scale-[0.98] transition-all border ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-white/10 shadow-black/20' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-200'}`}>Повторить тест</button>
+            <button onClick={() => startQuiz(isMistakesMode)} className={`w-full py-4 rounded-2xl text-white font-bold active:scale-[0.98] transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5 border ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-slate-600 shadow-black/40' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-300'}`}>Повторить тест</button>
           </AnimatedContent>
           <AnimatedContent distance={30} delay={0.5} direction="vertical">
             <motion.button 
@@ -995,7 +995,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
               }}
               animate={{ scale: isHistory2Pressed ? 0.92 : 1 }}
               transition={{ duration: 0.15, ease: "easeInOut" }}
-              className={`w-full py-4 rounded-2xl font-bold transition-all border ${isDark ? 'bg-white/5 border-white/10 text-indigo-100' : 'bg-white border-slate-200 text-slate-700'}`}>
+              className={`w-full py-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 border ${isDark ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600 shadow-black/30 text-indigo-100' : 'bg-white hover:bg-slate-50 border-slate-200 shadow-slate-200/50 text-slate-700'}`}>
               История тестирования
             </motion.button>
           </AnimatedContent>
