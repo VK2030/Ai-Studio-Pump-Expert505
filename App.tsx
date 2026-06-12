@@ -556,8 +556,8 @@ const App: React.FC = () => {
                   <div className="flex-1 flex flex-col px-4 pb-2 gap-3 overflow-hidden">
                     <div className="flex flex-col gap-2 flex-shrink-0">
                       <AnimatedContent distance={30} delay={0.1} direction="vertical">
-                        <div className={`w-full p-4 rounded-3xl border backdrop-blur-md relative overflow-hidden group flex items-center justify-between transition-all
-                          ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-slate-200 shadow-sm text-slate-900'}`}>
+                        <div className={`w-full p-4 rounded-3xl border backdrop-blur-md relative overflow-hidden group flex items-center justify-between transition-all shadow-md
+                          ${isDark ? 'bg-slate-800 border-slate-700 shadow-black/40 text-white' : 'bg-white border-slate-200 shadow-slate-300 text-slate-900'}`}>
                           <div className="flex items-center gap-4">
                             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border transition-colors
                               ${isDark ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-500'}`}>
@@ -575,7 +575,7 @@ const App: React.FC = () => {
                       </AnimatedContent>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 flex-1 min-h-0 overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-3 flex-1 min-h-0 overflow-y-auto px-1 -mx-1 pt-1 -mt-1 pb-8 relative z-10">
                       {MODULES.map((m, index) => (
                         <AnimatedContent
                           key={m.id}
@@ -602,8 +602,8 @@ const App: React.FC = () => {
                           onClick={handleTasksClick}
                           animate={{ scale: isTasksPressed ? 0.95 : 1 }}
                           transition={{ duration: 0.15, ease: "easeInOut" }}
-                          className={`w-full p-4 rounded-3xl border backdrop-blur-md relative overflow-hidden group flex items-center justify-between transition-all
-                            ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-slate-200 shadow-sm text-slate-900'}`}
+                          className={`w-full p-4 rounded-3xl border backdrop-blur-md relative overflow-hidden group flex items-center justify-between transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5
+                            ${isDark ? 'bg-slate-800 border-slate-700 shadow-black/40 hover:bg-slate-700 text-white' : 'bg-white border-slate-200 shadow-slate-300 hover:bg-slate-50 text-slate-900'}`}
                         >
                           <div className="flex items-center gap-4">
                             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border transition-colors
