@@ -114,16 +114,16 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
             <div className="w-full space-y-4">
               <button 
                 onClick={() => handleAccountSelect('contestant')}
-                className={`w-full h-16 rounded-[2rem] border backdrop-blur-md flex items-center justify-center transition-all active:scale-[0.97]
-                  ${isDark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-900 shadow-sm hover:bg-slate-50'}`}
+                className={`w-full h-16 rounded-[2rem] border backdrop-blur-md flex items-center justify-center transition-all active:scale-[0.97] shadow-lg hover:shadow-xl hover:-translate-y-0.5
+                  ${isDark ? 'bg-slate-800/80 border-slate-700 shadow-black/40 text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-900 shadow-slate-300 hover:bg-slate-50'}`}
               >
                 <span className="text-[13px] font-black uppercase tracking-widest">Конкурсант</span>
               </button>
 
               <button 
                 onClick={() => handleAccountSelect('admin')}
-                className={`w-full h-16 rounded-[2rem] border backdrop-blur-md flex items-center justify-center transition-all active:scale-[0.97]
-                  ${isDark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-900 shadow-sm hover:bg-slate-50'}`}
+                className={`w-full h-16 rounded-[2rem] border backdrop-blur-md flex items-center justify-center transition-all active:scale-[0.97] shadow-lg hover:shadow-xl hover:-translate-y-0.5
+                  ${isDark ? 'bg-slate-800/80 border-slate-700 shadow-black/40 text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-900 shadow-slate-300 hover:bg-slate-50'}`}
               >
                 <span className="text-[13px] font-black uppercase tracking-widest">Администратор</span>
               </button>
