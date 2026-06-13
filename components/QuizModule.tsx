@@ -58,6 +58,8 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   const [history, setHistory] = useState<QuizHistoryEntry[]>([]);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [showMistakesIntro, setShowMistakesIntro] = useState(false);
+  const [isMistakesOkPressed, setIsMistakesOkPressed] = useState(false);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [correctIndicesForCurrentQuestion, setCorrectIndicesForCurrentQuestion] = useState<number[] | null>(null);
 
@@ -690,7 +692,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
           </AnimatedContent>
           <AnimatedContent distance={30} delay={0.55} direction="vertical">
             <button 
-              onClick={() => startQuiz(true)} 
+              onClick={() => setShowMistakesIntro(true)} 
               disabled={isLoadingQuestions}
               className={`w-full py-4 rounded-2xl font-bold active:scale-[0.98] transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 border flex items-center justify-center gap-2
               ${isDark ? 'bg-slate-800/50 hover:bg-slate-700/50 border-slate-600 shadow-black/30 text-indigo-100' : 'bg-white hover:bg-slate-50 border-slate-200 shadow-slate-200/50 text-slate-700'}`}
@@ -1089,10 +1091,69 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     );
   };
 
+  const renderMistakesIntro = () => {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center overflow-hidden">
+        <AnimatedContent distance={30} delay={0.1} direction="vertical">
+          <div className={`w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-3xl border shadow-2xl ${isDark ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400 shadow-indigo-500/10' : 'bg-indigo-50 border-indigo-100 text-indigo-500 shadow-indigo-200/50'}`}>
+            <svg viewBox="0 0 24 24" className="w-10 h-10" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+        </AnimatedContent>
+        <AnimatedContent distance={30} delay={0.2} direction="vertical">
+          <h2 className={`text-2xl font-black uppercase tracking-tight mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            Работа над ошибками
+          </h2>
+        </AnimatedContent>
+        <AnimatedContent distance={30} delay={0.3} direction="vertical">
+          <p className={`text-[15px] mb-12 max-w-[280px] mx-auto leading-relaxed font-medium ${isDark ? 'text-white/60' : 'text-slate-500'}`}>
+            Здесь собраны только вопросы с ошибками. Чтобы вопрос был исключен из тестирования, ответьте на него верно дважды.
+          </p>
+        </AnimatedContent>
+        <AnimatedContent distance={30} delay={0.4} direction="vertical" className="w-full">
+          <motion.button 
+            onClick={(e) => {
+              e.preventDefault();
+              if (isMistakesOkPressed) return;
+              setIsMistakesOkPressed(true);
+              setTimeout(() => {
+                setIsMistakesOkPressed(false);
+                setShowMistakesIntro(false);
+                startQuiz(true);
+              }, 180);
+            }}
+            animate={{ scale: isMistakesOkPressed ? 0.92 : 1 }}
+            transition={{ duration: 0.15, ease: "easeInOut" }}
+            disabled={isLoadingQuestions}
+            className={`w-full py-4 flex items-center justify-center gap-2 rounded-2xl font-black uppercase text-[13px] tracking-widest transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5 border
+            ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border-slate-600 shadow-black/40' : 'bg-slate-800 hover:bg-slate-900 text-white border-slate-700 shadow-slate-300'}`}
+          >
+            {isLoadingQuestions ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Загрузка...
+              </>
+            ) : 'ОК'}
+          </motion.button>
+        </AnimatedContent>
+        <AnimatedContent distance={30} delay={0.5} direction="vertical" className="w-full mt-4">
+          <button 
+            onClick={() => setShowMistakesIntro(false)}
+            className={`w-full py-4 rounded-2xl font-black uppercase text-[12px] tracking-widest active:scale-[0.98] transition-all opacity-80 border ${isDark ? 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 shadow-sm'}`}
+          >
+            Отмена
+          </button>
+        </AnimatedContent>
+      </div>
+    );
+  };
+
   const mainBg = isDark ? 'bg-[#081221]' : 'bg-slate-50';
   return ( 
     <div className={`fixed inset-0 z-[60] flex flex-col ${mainBg}`}> 
-      {screen === 'menu' && renderMenu()} 
+      {screen === 'menu' && !showMistakesIntro && renderMenu()} 
+      {screen === 'menu' && showMistakesIntro && renderMistakesIntro()} 
       {screen === 'quiz' && renderQuiz()} 
       {screen === 'results' && renderResults()} 
       {screen === 'history' && renderHistory()} 
