@@ -204,15 +204,23 @@ const App: React.FC = () => {
         let section = '';
         
         if (modId === 'pbotos') {
+          let pbotosSection = '';
+          const hasPbotosData = statsByModule['pbotos'] || Object.keys(PBOTOS_SUBMODULES).some(subId => statsByModule[subId]);
+          
+          // Добавляем заголовок ПБОТОС, если есть хоть какие-то данные по нему
+          if (hasPbotosData) {
+            pbotosSection += `4️⃣ <b>ПБОТОС</b>\n\n`;
+          }
+
           // Сначала выводим основной ПБОТОС если есть
           if (statsByModule['pbotos']) {
             const stats = statsByModule['pbotos'];
             const recentScoresStr = getRecentScoresWithDates('pbotos', true);
-            section += `🔹 <b>ПБОТОС</b>\n`;
+            pbotosSection += `🔹 <b>ПБОТОС</b>\n`;
             if (recentScoresStr) {
-              section += `   Последние результаты: ${recentScoresStr}\n`;
+              pbotosSection += `   Последние результаты: ${recentScoresStr}\n`;
             }
-            section += `\n`;
+            pbotosSection += `\n`;
           }
 
           // Затем подразделы ПБОТОС
@@ -220,9 +228,9 @@ const App: React.FC = () => {
             if (statsByModule[subId]) {
               const stats = statsByModule[subId];
               const recentScoresStr = getRecentScoresWithDates(subId);
-              section += `🔹 <b>ПБОТОС/${subTitle}</b>\n`;
+              pbotosSection += `🔹 <b>ПБОТОС/${subTitle}</b>\n`;
               if (recentScoresStr) {
-                section += `   Последние результаты: ${recentScoresStr}\n`;
+                pbotosSection += `   Последние результаты: ${recentScoresStr}\n`;
               }
               
               // Получаем количество вопросов из последнего теста
@@ -231,17 +239,21 @@ const App: React.FC = () => {
                 const scoreParts = lastEntry.score.split('/');
                 const questionsInTest = parseInt(scoreParts[1]) || 0;
                 const totalInDb = GLOBAL_QUESTION_COUNTS[subId] || 0;
-                section += `   Пройдено вопросов с начала подготовки: ${questionsInTest} из ${totalInDb}\n`;
+                pbotosSection += `   Пройдено вопросов с начала подготовки: ${questionsInTest} из ${totalInDb}\n`;
               }
-              section += `\n`;
+              pbotosSection += `\n`;
             }
+          }
+
+          if (pbotosSection) {
+            section += pbotosSection;
           }
 
           // Добавляем раздел "Критерии матрицы ТЗ" после ПБОТОС
           if (statsByModule['matrix-tz']) {
             const stats = statsByModule['matrix-tz'];
             const recentScoresStr = getRecentScoresWithDates('matrix-tz');
-            section += `🔹 <b>Упражнение "Критерии матрицы ТЗ"</b>\n`;
+            section += `5️⃣ <b>Упражнение "Критерии матрицы ТЗ"</b>\n`;
             if (recentScoresStr) {
               section += `   Последние результаты: ${recentScoresStr}\n`;
             }
@@ -263,7 +275,12 @@ const App: React.FC = () => {
             const stats = statsByModule[modId];
             const recentScoresStr = getRecentScoresWithDates(modId);
             
-            section += `🔹 <b>${module.title}</b>\n`;
+            let emoji = '🔹';
+            if (modId === 'esp-selection-startup') emoji = '1️⃣';
+            if (modId === 'failure-investigation') emoji = '2️⃣';
+            if (modId === 'operating-factors') emoji = '3️⃣';
+            
+            section += `${emoji} <b>${module.title}</b>\n`;
             if (recentScoresStr) {
               section += `   Последние результаты: ${recentScoresStr}\n`;
             }
