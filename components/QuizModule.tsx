@@ -606,11 +606,8 @@ const QuizModule: React.FC<QuizModuleProps> = ({
                     <div className={`absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-3xl -mr-8 -mt-8 transition-opacity group-hover:opacity-100 opacity-0`}></div>
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex flex-col gap-1 flex-1 min-w-0">
-                        <div className="flex items-baseline justify-between gap-2">
+                        <div className="flex items-center justify-between gap-2">
                           <span className={`text-sm font-bold leading-tight ${isDark ? 'text-white/90' : 'text-slate-800'}`}>{sub.title}</span>
-                          <span className={`text-[10px] font-medium whitespace-nowrap shrink-0 ${isDark ? 'text-white/30' : 'text-slate-400'}`}>
-                            ({sub.questionCount} {sub.questionCount % 10 === 1 && sub.questionCount % 100 !== 11 ? 'вопрос' : (sub.questionCount % 10 >= 2 && sub.questionCount % 10 <= 4 && (sub.questionCount % 100 < 10 || sub.questionCount % 100 >= 20) ? 'вопроса' : 'вопросов')})
-                          </span>
                         </div>
                         {recentScores.length > 0 && (
                           <div className="flex flex-col gap-0.5 items-start mt-1">
@@ -623,7 +620,10 @@ const QuizModule: React.FC<QuizModuleProps> = ({
                           </div>
                         )}
                       </div>
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-colors
+                      <span className={`text-[10px] font-medium whitespace-nowrap shrink-0 ${isDark ? 'text-white/30' : 'text-slate-400'}`}>
+                        ({sub.questionCount} {sub.questionCount % 10 === 1 && sub.questionCount % 100 !== 11 ? 'вопрос' : (sub.questionCount % 10 >= 2 && sub.questionCount % 10 <= 4 && (sub.questionCount % 100 < 10 || sub.questionCount % 100 >= 20) ? 'вопроса' : 'вопросов')})
+                      </span>
+                      <div className={`w-8 h-8 shrink-0 rounded-lg flex items-center justify-center border transition-colors
                         ${isDark ? 'bg-white/5 border-white/10 text-white/20' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>
                         <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="3">
                           <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
@@ -1000,7 +1000,20 @@ const QuizModule: React.FC<QuizModuleProps> = ({
             </motion.button>
           </AnimatedContent>
           <AnimatedContent distance={30} delay={0.6} direction="vertical">
-            <button onClick={() => onExitToApp ? onExitToApp() : onClose()} className={`w-full py-4 rounded-2xl font-bold active:scale-[0.98] transition-all opacity-60 border ${isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-white border-slate-200 text-slate-400'}`}>В главное меню</button>
+            <button 
+              onClick={() => {
+                if (activeSubModuleId) {
+                  setActiveSubModuleId(null);
+                  setScreen('menu');
+                } else {
+                  if (onExitToApp) onExitToApp();
+                  else onClose();
+                }
+              }} 
+              className={`w-full py-4 rounded-2xl font-bold active:scale-[0.98] transition-all opacity-60 border ${isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-white border-slate-200 text-slate-400'}`}
+            >
+              {activeSubModuleId ? 'К подразделам' : 'В главное меню'}
+            </button>
           </AnimatedContent>
         </div>
       </div>
