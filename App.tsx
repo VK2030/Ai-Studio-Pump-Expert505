@@ -39,6 +39,7 @@ interface QuizHistoryEntry {
   session: number;
   score: string;
   moduleId?: string;
+  user?: string;
   incorrectAnswers: {
     question: string;
     userAnswer: string;
@@ -381,6 +382,30 @@ const App: React.FC = () => {
       setSyncStatus('error');
       const savedHistory = localStorage.getItem('quizHistory');
       if (savedHistory) history = JSON.parse(savedHistory);
+    }
+
+    // Enforce limits on loaded history
+    if (history.length > 0) {
+      if (history.length > 100) {
+        history = history.slice(0, 100);
+      }
+      
+      const userName = localStorage.getItem('app_user_name') || 'Contestant';
+      // Better to group by all users and limit each user to 50
+      const userCounts: Record<string, number> = {};
+      const newHistory: QuizHistoryEntry[] = [];
+      
+      for (const h of history) {
+        const u = h.user || 'Contestant';
+        userCounts[u] = (userCounts[u] || 0) + 1;
+        if (userCounts[u] <= 50) {
+          newHistory.push(h);
+        }
+      }
+      history = newHistory;
+      
+      // Update local storage if it was altered
+      localStorage.setItem('quizHistory', JSON.stringify(history));
     }
 
     setFullHistory(history);

@@ -66,6 +66,26 @@ export default async function handler(req: any, res: any) {
         throw error;
       }
 
+      // Cleanup: Limit per-user cloud records to 50
+      const currentUser = entry.user || "Contestant";
+      try {
+        const { data: userRecords } = await supabase
+          .from("results")
+          .select("id")
+          .eq("user", currentUser)
+          .order("created_at", { ascending: false });
+
+        if (userRecords && userRecords.length > 50) {
+          const idsToDelete = userRecords.slice(50).map((r: any) => r.id);
+          if (idsToDelete.length > 0) {
+            await supabase.from("results").delete().in("id", idsToDelete);
+            console.log(`[API] Erased ${idsToDelete.length} ancient history records for user ${currentUser} to strictly honor 50 sessions limit.`);
+          }
+        }
+      } catch (cleanupErr) {
+        console.warn("[API] Optional backend cleanup constraint iteration failed, ignoring:", cleanupErr);
+      }
+
       console.log("[API] Successfully saved result to Supabase");
       res.json(data);
     } catch (error: any) {

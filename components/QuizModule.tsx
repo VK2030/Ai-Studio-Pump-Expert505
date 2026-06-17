@@ -24,6 +24,7 @@ interface QuizHistoryEntry {
   session: number;
   score: string;
   moduleId?: string;
+  user?: string;
   incorrectAnswers: {
     question: string;
     userAnswer: string;
@@ -409,15 +410,34 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     }
 
     const targetId = activeSubModuleId || moduleId;
+    const resolvedUser = userRole === 'admin' ? 'Администратор' : (localStorage.getItem('app_user_name') || 'Contestant');
+    
     const newEntry: QuizHistoryEntry = {
       date: new Date().toISOString(),
       session: currentSession, 
       score: `${finalCount}/${sessionQuestions.length}`, 
       moduleId: targetId, 
-      incorrectAnswers: finalIncorrect
+      incorrectAnswers: finalIncorrect,
+      user: resolvedUser
     };
     
-    const updatedHistory = [newEntry, ...history];
+    let allHistory: QuizHistoryEntry[] = JSON.parse(localStorage.getItem('quizHistory') || '[]');
+    if (!Array.isArray(allHistory)) allHistory = history || [];
+    
+    let updatedHistory = [newEntry, ...allHistory];
+    
+    // 1) Ограничение по количеству записей для пользователя - 50 сессий
+    const userEntries = updatedHistory.filter(h => (h.user || 'Contestant') === resolvedUser);
+    if (userEntries.length > 50) {
+      const oldestUserEntries = userEntries.slice(50);
+      updatedHistory = updatedHistory.filter(h => !oldestUserEntries.includes(h));
+    }
+    
+    // 2) Лимит на локальное хранение - не более 100 записей
+    if (updatedHistory.length > 100) {
+      updatedHistory = updatedHistory.slice(0, 100);
+    }
+
     setHistory(updatedHistory);
     localStorage.setItem('quizHistory', JSON.stringify(updatedHistory));
     setCurrentSession(prev => prev + 1);
@@ -432,7 +452,6 @@ const QuizModule: React.FC<QuizModuleProps> = ({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...newEntry,
-            user: userRole === 'admin' ? 'Администратор' : (localStorage.getItem('app_user_name') || 'Contestant'),
             correct_answers: finalCount
           })
         });
