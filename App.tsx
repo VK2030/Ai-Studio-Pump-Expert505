@@ -15,7 +15,7 @@ import CloudStatus from './components/CloudStatus';
 
 const GLOBAL_QUESTION_COUNTS: Record<string, number> = {
   'esp-selection-startup': 110,
-  'failure-investigation': 96,
+  'failure-investigation': 100,
   'operating-factors': 96,
   'pbotos-general': 139,
   'pbotos-siz': 241,
