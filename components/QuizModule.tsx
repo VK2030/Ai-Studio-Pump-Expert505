@@ -835,8 +835,17 @@ const QuizModule: React.FC<QuizModuleProps> = ({
                         : "bg-white border-slate-200 text-slate-700 hover:border-indigo-300");
                 } else {
                   if (isHighlightEnabled) {
-                    if (isSelected) btnClass += isCorrect ? "bg-green-500 border-green-400 text-white shadow-lg" : "bg-red-500 border-red-400 text-white shadow-lg";
-                    else btnClass += (isDark ? "bg-white/5 border-white/5 text-white/20 opacity-50" : "bg-slate-50 border-slate-100 text-slate-300 opacity-50");
+                    if (isSelected) {
+                      btnClass += isCorrect ? "bg-green-500 border-green-400 text-white shadow-lg" : "bg-red-500 border-red-400 text-white shadow-lg";
+                    } else {
+                      if (isCorrect) {
+                        btnClass += isDark 
+                          ? "bg-green-950/40 border-green-500/30 text-green-300" 
+                          : "bg-green-50 border-green-200 text-green-700 shadow-sm";
+                      } else {
+                        btnClass += isDark ? "bg-white/5 border-white/5 text-white/20 opacity-50" : "bg-slate-50 border-slate-100 text-slate-300 opacity-50";
+                      }
+                    }
                   } else {
                     if (isSelected) btnClass += "bg-[#383838] border-white text-white opacity-90";
                     else btnClass += (isDark ? "bg-white/5 border-white/5 text-white/10 opacity-30" : "bg-slate-50 border-slate-50 text-slate-200 opacity-30");
