@@ -1034,7 +1034,23 @@ const App: React.FC = () => {
                                       {entry.incorrectAnswers.map((err, i) => (
                                         <div key={i} className={`text-[11px] space-y-1 p-3 rounded-xl border
                                           ${isDark ? 'bg-black/20 border-white/10' : 'bg-slate-50 border-slate-100'}`}>
-                                          <p className={`font-bold leading-tight ${isDark ? 'text-white/80' : 'text-slate-800'}`}>«{err.question}»</p>
+                                          {err.question && err.question.includes('|') ? (
+                                            <div className="w-full mb-2 overflow-hidden rounded border border-slate-600 bg-slate-500/5">
+                                              <table className="w-full text-left border-collapse">
+                                                <tbody>
+                                                  {err.question.split('|').map((row: string, rIdx: number) => (
+                                                    <tr key={rIdx} className="border-b border-slate-600 last:border-0 hover:bg-slate-500/10 transition-colors">
+                                                      <td className={`p-2 font-medium text-xs ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                                        {row}
+                                                      </td>
+                                                    </tr>
+                                                  ))}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          ) : (
+                                            <p className={`font-bold leading-tight ${isDark ? 'text-white/80' : 'text-slate-800'}`}>«{err.question}»</p>
+                                          )}
                                           <div className="flex flex-col gap-1 mt-2">
                                             <div className="flex gap-2">
                                               <span className="text-red-400/80 font-bold uppercase text-[7px] px-1 py-0.5 bg-red-500/10 rounded self-start">Ваш выбор</span>
