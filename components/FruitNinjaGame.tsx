@@ -5,8 +5,8 @@ function DecodingText({ text }: { text: string; key?: React.Key | any }) {
   const [displayText, setDisplayText] = useState(text);
 
   useEffect(() => {
-    const duration = 700;
-    const intervalTime = 35; // ~20 steps in 700ms
+    const duration = 500;
+    const intervalTime = 35; // ~14 steps in 500ms
     const steps = duration / intervalTime;
     let currentStep = 0;
 
