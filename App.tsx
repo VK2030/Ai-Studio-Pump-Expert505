@@ -9,6 +9,7 @@ import LoginOverlay from './components/LoginOverlay';
 import AnimatedContent from './components/AnimatedContent';
 import SulfateGame from './components/SulfateGame';
 import FruitNinjaGame from './components/FruitNinjaGame';
+import AspoGame from './components/AspoGame';
 import SplitText from './components/SplitText';
 
 import CloudStatus from './components/CloudStatus';
@@ -1268,6 +1269,25 @@ const App: React.FC = () => {
                         </button>
                       </div>
                     </AnimatedContent>
+
+                    <AnimatedContent distance={30} delay={0.3} direction="vertical">
+                      <div className={`p-6 rounded-[2.5rem] border flex flex-col backdrop-blur-md relative overflow-hidden group
+                        ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
+                        <h3 className={`text-xl font-black uppercase tracking-tight mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Код АСПО</h3>
+                        
+                        <p className={`text-xs mb-6 leading-relaxed ${isDark ? 'text-white/40' : 'text-slate-500'}`}>
+                        Интерактивное упражнение
+                        </p>
+                        
+                        <button 
+                          onClick={() => setActiveGame('aspo')}
+                          className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all
+                            ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 shadow-black/40' : 'bg-slate-800 hover:bg-slate-900 text-white border border-slate-700 shadow-slate-300'}`}
+                        >
+                          Запустить
+                        </button>
+                      </div>
+                    </AnimatedContent>
                   </div>
                 );
             }
@@ -1610,6 +1630,18 @@ const App: React.FC = () => {
                 setActiveGame(null);
               }}
             />
+          </motion.div>
+        )}
+        {activeGame === 'aspo' && (
+          <motion.div
+            key="aspo-game"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[70]"
+          >
+            <AspoGame isDark={isDark} onClose={() => setActiveGame(null)} />
           </motion.div>
         )}
       </AnimatePresence>
