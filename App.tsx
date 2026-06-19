@@ -1077,12 +1077,18 @@ const App: React.FC = () => {
                                           <div className="flex flex-col gap-1 mt-2">
                                             <div className="flex gap-2">
                                               <span className="text-red-400/80 font-bold uppercase text-[7px] px-1 py-0.5 bg-red-500/10 rounded self-start">Ваш выбор</span>
-                                              <span className={isDark ? 'text-white/40' : 'text-slate-500'}>{err.userAnswer || '(пусто)'}</span>
+                                              <span className={isDark ? 'text-white/40' : 'text-slate-500'}>
+                                                {(err.userAnswer || '').includes('|||') ? (err.userAnswer || '').split('|||').join(', ') : err.userAnswer || '(пусто)'}
+                                              </span>
                                             </div>
                                             {showCorrectAnswers && (
                                               <div className="flex gap-2">
-                                                <span className="text-green-500 font-bold uppercase text-[7px] px-1 py-0.5 bg-green-500/10 rounded self-start">Верно</span>
-                                                <span className={isDark ? 'text-green-300/80' : 'text-green-600'}>{err.correctAnswer}</span>
+                                                <span className="text-green-500 font-bold uppercase text-[7px] px-1 py-0.5 bg-green-500/10 rounded self-start mt-0.5">Верно</span>
+                                                <span className={`flex flex-col gap-1 ${isDark ? 'text-green-300/80' : 'text-green-600'}`}>
+                                                  {(err.correctAnswer.includes('|||') ? err.correctAnswer.split('|||') : err.correctAnswer.split(', ')).map((ans, aIdx) => (
+                                                    <div key={aIdx}>+ {ans}</div>
+                                                  ))}
+                                                </span>
                                               </div>
                                             )}
                                           </div>
