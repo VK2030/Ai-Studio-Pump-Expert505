@@ -113,7 +113,7 @@ export default function ProgressDashboard({ history, isDark }: ProgressDashboard
               {chart.title}
             </h3>
             
-            <div className="h-32 w-full mt-2 -ml-4">
+            <div className="h-24 w-full mt-2 -ml-4">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chart.data} margin={{ top: 15, right: 20, bottom: 5, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'} vertical={false} />
