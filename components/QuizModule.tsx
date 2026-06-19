@@ -227,7 +227,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
           return;
         }
         
-        finalSelected = shuffleArray(mistakesQuestions);
+        finalSelected = shuffleArray(mistakesQuestions).slice(0, 10);
       } else {
         // Умная выборка: группируем по количеству просмотров
         const groupedByViews: Record<number, any[]> = {};
@@ -691,7 +691,10 @@ const QuizModule: React.FC<QuizModuleProps> = ({
           <h2 className={`text-3xl font-black mb-2 uppercase tracking-tight leading-none drop-shadow-lg whitespace-pre-line ${isDark ? 'text-white' : 'text-slate-900'}`}>{moduleTitle}</h2>
         </AnimatedContent>
         <AnimatedContent distance={20} delay={0.4}>
-          <p className={`mb-10 text-sm leading-relaxed max-w-[280px] mx-auto ${isDark ? 'text-white/40' : 'text-slate-500'}`}>Может быть несколько вариантов ответа.</p>
+          <p className={`mb-10 text-sm leading-relaxed max-w-[280px] mx-auto ${isDark ? 'text-white/40' : 'text-slate-500'}`}>
+            Может быть несколько вариантов ответа.<br/>
+            1 сессия - 10 вопросов
+          </p>
         </AnimatedContent>
         <div className="w-full space-y-3">
           <AnimatedContent distance={30} delay={0.5} direction="vertical">
@@ -1136,7 +1139,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         </AnimatedContent>
         <AnimatedContent distance={30} delay={0.3} direction="vertical">
           <p className={`text-[15px] mb-12 max-w-[280px] mx-auto leading-relaxed font-medium ${isDark ? 'text-white/60' : 'text-slate-500'}`}>
-            Здесь собраны только вопросы с ошибками. Чтобы вопрос был исключен из тестирования, ответьте на него верно дважды.
+            Здесь собраны только вопросы с ошибками. Чтобы вопрос был исключен из тестирования, ответьте на него верно <span className="text-red-500 underline" style={{ textDecorationSkipInk: 'none' }}>дважды</span>.
           </p>
         </AnimatedContent>
         <AnimatedContent distance={30} delay={0.4} direction="vertical" className="w-full">
