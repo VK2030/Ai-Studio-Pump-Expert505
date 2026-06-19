@@ -426,16 +426,16 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     
     let updatedHistory = [newEntry, ...allHistory];
     
-    // 1) Ограничение по количеству записей для пользователя - 50 сессий
+    // 1) Ограничение по количеству записей для пользователя - 80 сессий
     const userEntries = updatedHistory.filter(h => (h.user || 'Contestant') === resolvedUser);
-    if (userEntries.length > 50) {
-      const oldestUserEntries = userEntries.slice(50);
+    if (userEntries.length > 80) {
+      const oldestUserEntries = userEntries.slice(80);
       updatedHistory = updatedHistory.filter(h => !oldestUserEntries.includes(h));
     }
     
-    // 2) Лимит на локальное хранение - не более 100 записей
-    if (updatedHistory.length > 100) {
-      updatedHistory = updatedHistory.slice(0, 100);
+    // 2) Лимит на локальное хранение - не более 250 записей
+    if (updatedHistory.length > 250) {
+      updatedHistory = updatedHistory.slice(0, 250);
     }
 
     setHistory(updatedHistory);

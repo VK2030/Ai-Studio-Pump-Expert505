@@ -1,6 +1,69 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+function DecodingText({ text }: { text: string; key?: React.Key | any }) {
+  const [displayText, setDisplayText] = useState(text);
+
+  useEffect(() => {
+    const duration = 700;
+    const intervalTime = 35; // ~20 steps in 700ms
+    const steps = duration / intervalTime;
+    let currentStep = 0;
+
+    const symbols = '№%@#$&*?+=~^<>!';
+    const cyrillicUpper = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ' + symbols;
+    const cyrillicLower = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя' + symbols;
+    const latinUpper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' + symbols;
+    const latinLower = 'abcdefghijklmnopqrstuvwxyz' + symbols;
+
+    const getScrambledChar = (char: string): string => {
+      if (/[А-ЯЁ]/.test(char)) {
+        return cyrillicUpper.charAt(Math.floor(Math.random() * cyrillicUpper.length));
+      }
+      if (/[а-яё]/.test(char)) {
+        return cyrillicLower.charAt(Math.floor(Math.random() * cyrillicLower.length));
+      }
+      if (/[A-Z]/.test(char)) {
+        return latinUpper.charAt(Math.floor(Math.random() * latinUpper.length));
+      }
+      if (/[a-z]/.test(char)) {
+        return latinLower.charAt(Math.floor(Math.random() * latinLower.length));
+      }
+      return char;
+    };
+
+    const scramble = () => {
+      const chars = text.split('');
+      for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        if (/[A-Za-zА-Яа-яЁё]/.test(char)) {
+          chars[i] = getScrambledChar(char);
+        }
+      }
+      return chars.join('');
+    };
+
+    // Scramble on start immediately
+    setDisplayText(scramble());
+
+    const interval = setInterval(() => {
+      currentStep++;
+      if (currentStep >= steps) {
+        clearInterval(interval);
+        setDisplayText(text);
+      } else {
+        setDisplayText(scramble());
+      }
+    }, intervalTime);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [text]);
+
+  return <>{displayText}</>;
+}
+
 interface FruitNinjaGameProps {
   onClose: () => void;
   isDark: boolean;
@@ -1485,13 +1548,13 @@ export default function FruitNinjaGame({ onClose, isDark, userRole, onShowHistor
               Вопрос {currentQuestionIdx + 1} из {sessionQuestions.length}
             </span>
             {sessionQuestions[currentQuestionIdx]?.text && sessionQuestions[currentQuestionIdx].text.includes('|') ? (
-              <div className="w-full mt-2 overflow-hidden rounded border border-slate-600 bg-[#334155]/20">
+              <div className="w-full mt-2 overflow-hidden rounded border border-slate-600 bg-white/20">
                 <table className="w-full text-left border-collapse">
                   <tbody>
                     {sessionQuestions[currentQuestionIdx].text.split('|').map((row: string, idx: number) => (
                       <tr key={idx} className="border-b border-slate-600 last:border-0 hover:bg-slate-500/10 transition-colors">
                         <td className={`p-2 font-medium text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                          {row}
+                          <DecodingText key={`${currentQuestionIdx}-${idx}`} text={row} />
                         </td>
                       </tr>
                     ))}
@@ -1500,7 +1563,7 @@ export default function FruitNinjaGame({ onClose, isDark, userRole, onShowHistor
               </div>
             ) : (
               <h2 className={`text-[17px] font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {sessionQuestions[currentQuestionIdx]?.text}
+                {sessionQuestions[currentQuestionIdx]?.text && <DecodingText key={currentQuestionIdx} text={sessionQuestions[currentQuestionIdx].text} />}
               </h2>
             )}
          </div>

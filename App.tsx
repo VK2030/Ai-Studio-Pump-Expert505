@@ -386,19 +386,19 @@ const App: React.FC = () => {
 
     // Enforce limits on loaded history
     if (history.length > 0) {
-      if (history.length > 100) {
-        history = history.slice(0, 100);
+      if (history.length > 250) {
+        history = history.slice(0, 250);
       }
       
       const userName = localStorage.getItem('app_user_name') || 'Contestant';
-      // Better to group by all users and limit each user to 50
+      // Better to group by all users and limit each user to 80
       const userCounts: Record<string, number> = {};
       const newHistory: QuizHistoryEntry[] = [];
       
       for (const h of history) {
         const u = h.user || 'Contestant';
         userCounts[u] = (userCounts[u] || 0) + 1;
-        if (userCounts[u] <= 50) {
+        if (userCounts[u] <= 80) {
           newHistory.push(h);
         }
       }

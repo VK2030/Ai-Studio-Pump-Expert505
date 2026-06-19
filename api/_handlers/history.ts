@@ -13,7 +13,7 @@ export default async function handler(req: any, res: any) {
         .from("results")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(300);
       
       if (error) {
         if (error.message && (error.message.includes("fetch failed") || error.code === 'ENOTFOUND')) {
@@ -66,7 +66,7 @@ export default async function handler(req: any, res: any) {
         throw error;
       }
 
-      // Cleanup: Limit per-user cloud records to 50
+      // Cleanup: Limit per-user cloud records to 80
       const currentUser = entry.user || "Contestant";
       try {
         const { data: userRecords } = await supabase
@@ -75,11 +75,11 @@ export default async function handler(req: any, res: any) {
           .eq("user", currentUser)
           .order("created_at", { ascending: false });
 
-        if (userRecords && userRecords.length > 50) {
-          const idsToDelete = userRecords.slice(50).map((r: any) => r.id);
+        if (userRecords && userRecords.length > 80) {
+          const idsToDelete = userRecords.slice(80).map((r: any) => r.id);
           if (idsToDelete.length > 0) {
             await supabase.from("results").delete().in("id", idsToDelete);
-            console.log(`[API] Erased ${idsToDelete.length} ancient history records for user ${currentUser} to strictly honor 50 sessions limit.`);
+            console.log(`[API] Erased ${idsToDelete.length} ancient history records for user ${currentUser} to strictly honor 80 sessions limit.`);
           }
         }
       } catch (cleanupErr) {
