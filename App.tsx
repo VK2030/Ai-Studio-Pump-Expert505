@@ -11,6 +11,7 @@ import SulfateGame from './components/SulfateGame';
 import FruitNinjaGame from './components/FruitNinjaGame';
 import AspoGame from './components/AspoGame';
 import SplitText from './components/SplitText';
+import ProgressDashboard from './components/ProgressDashboard';
 
 import CloudStatus from './components/CloudStatus';
 
@@ -1250,6 +1251,10 @@ const App: React.FC = () => {
                     </AnimatedContent>
                   </div>
                 );
+              case 'progress':
+                return (
+                  <ProgressDashboard history={baseHistory} isDark={isDark} />
+                );
               case 'tasks':
                  return (
                   <div className="flex flex-col px-6 py-4 flex-1 overflow-y-auto space-y-4">
@@ -1492,6 +1497,19 @@ const App: React.FC = () => {
                       textAlign="left"
                       tag="h1"
                     />
+                  ) : activeTab === 'progress' ? (
+                    <SplitText
+                      key="progress-header"
+                      text="Прогресс"
+                      className={`${isDark ? 'text-white' : 'text-slate-900'} text-2xl font-black uppercase tracking-tighter leading-tight pt-1`}
+                      delay={50}
+                      duration={1.25}
+                      ease="power3.out"
+                      from={{ opacity: 0, y: 40 }}
+                      to={{ opacity: 1, y: 0 }}
+                      textAlign="left"
+                      tag="h1"
+                    />
                   ) : activeTab === 'tasks' ? (
                     <div className="flex items-center justify-between">
                       <SplitText
@@ -1571,6 +1589,15 @@ const App: React.FC = () => {
                     <path d="M13 14v-2M15.5 14v-4M18 14v-6" />
                     <path d="M12.5 10l3.5-3.5 3 2" />
                     <path d="M6 14h3" opacity="0.5" />
+                  </svg>
+                )} 
+              />
+              <NavButton isDark={isDark} active={activeTab === 'progress'} onClick={() => setActiveTab('progress')} label="Прогресс" 
+                icon={(active) => (
+                  <svg viewBox="0 0 24 24" className={`w-5 h-5 transition-all ${active ? (isDark ? 'text-white' : 'text-slate-800') : (isDark ? 'text-white/30' : 'text-slate-400')}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
                   </svg>
                 )} 
               />

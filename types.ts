@@ -1,5 +1,5 @@
 
-export type AppSection = 'home' | 'history' | 'profile' | 'tasks';
+export type AppSection = 'home' | 'history' | 'profile' | 'tasks' | 'progress';
 
 export interface ModuleData {
   id: string;
