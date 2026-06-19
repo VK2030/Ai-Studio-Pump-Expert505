@@ -679,6 +679,7 @@ const App: React.FC = () => {
                 const getFilterLabel = (filterVal: string) => {
                   if (filterVal === 'all') return 'Все разделы';
                   if (filterVal === 'matrix-tz') return 'Матрица ТЗ';
+                  if (filterVal === 'aspo-code') return 'Код АСПО';
                   if (filterVal === 'pbotos-all' || filterVal === 'pbotos') return 'ПБОТОС';
                   const matchedModule = MODULES.find(m => m.id === filterVal);
                   if (matchedModule) {
@@ -947,6 +948,24 @@ const App: React.FC = () => {
                                   </svg>
                                 )}
                               </button>
+                              
+                              <button
+                                onClick={() => {
+                                  setHistoryFilter('aspo-code');
+                                  setIsHistoryFilterOpen(false);
+                                }}
+                                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between pl-6
+                                  ${historyFilter === 'aspo-code'
+                                    ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white')
+                                    : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
+                              >
+                                <span>Код АСПО</span>
+                                {historyFilter === 'aspo-code' && (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                )}
+                              </button>
                             </div>
                           </motion.div>
                         )}
@@ -979,6 +998,8 @@ const App: React.FC = () => {
                           let displayTitle = module?.title?.replace('\n', ' ') || entry.moduleId || 'Общий тест';
                           if (entry.moduleId === 'matrix-tz') {
                             displayTitle = 'Матрица ТЗ';
+                          } else if (entry.moduleId === 'aspo-code') {
+                            displayTitle = 'Код АСПО';
                           }
                           
                           if (entry.moduleId && PBOTOS_SUBMODULES[entry.moduleId]) {
@@ -989,8 +1010,8 @@ const App: React.FC = () => {
                             displayTitle = 'ПБОТОС';
                           }
 
-                          const [correct] = entry.score.split('/').map(Number);
-                          const isSuccess = correct >= 8;
+                          const [correct, total] = entry.score.split('/').map(Number);
+                          const isSuccess = total ? (correct / total) >= 0.8 : correct >= 8;
                           // Show answers if user is admin OR if history answers are enabled for contestants
                           const showCorrectAnswers = userRole === 'admin' || isHistoryAnswersEnabled;
                           
@@ -1235,14 +1256,14 @@ const App: React.FC = () => {
                     <AnimatedContent distance={30} delay={0.1} direction="vertical">
                       <div className={`p-6 rounded-[2.5rem] border flex flex-col backdrop-blur-md relative overflow-hidden group
                         ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                        <h3 className={`text-xl font-black uppercase tracking-tight mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Минеральные соли при эксплуатации</h3>
+                        <h3 className={`text-xl font-black uppercase tracking-tight mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Код АСПО</h3>
                         
                         <p className={`text-xs mb-6 leading-relaxed ${isDark ? 'text-white/40' : 'text-slate-500'}`}>
                         Интерактивное упражнение
                         </p>
                         
                         <button 
-                          onClick={() => setActiveGame('sulfate')}
+                          onClick={() => setActiveGame('aspo')}
                           className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all
                             ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 shadow-black/40' : 'bg-slate-800 hover:bg-slate-900 text-white border border-slate-700 shadow-slate-300'}`}
                         >
@@ -1273,14 +1294,14 @@ const App: React.FC = () => {
                     <AnimatedContent distance={30} delay={0.3} direction="vertical">
                       <div className={`p-6 rounded-[2.5rem] border flex flex-col backdrop-blur-md relative overflow-hidden group
                         ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                        <h3 className={`text-xl font-black uppercase tracking-tight mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Код АСПО</h3>
+                        <h3 className={`text-xl font-black uppercase tracking-tight mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Минеральные соли при эксплуатации</h3>
                         
                         <p className={`text-xs mb-6 leading-relaxed ${isDark ? 'text-white/40' : 'text-slate-500'}`}>
                         Интерактивное упражнение
                         </p>
                         
                         <button 
-                          onClick={() => setActiveGame('aspo')}
+                          onClick={() => setActiveGame('sulfate')}
                           className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all
                             ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 shadow-black/40' : 'bg-slate-800 hover:bg-slate-900 text-white border border-slate-700 shadow-slate-300'}`}
                         >
@@ -1641,7 +1662,16 @@ const App: React.FC = () => {
             transition={{ duration: 0.3 }}
             className="fixed inset-0 z-[70]"
           >
-            <AspoGame isDark={isDark} onClose={() => setActiveGame(null)} />
+            <AspoGame 
+              isDark={isDark} 
+              onClose={() => setActiveGame(null)} 
+              userRole={userRole}
+              onShowHistory={() => {
+                setActiveTab('history');
+                setHistoryFilter('aspo-code');
+                setActiveGame(null);
+              }}
+            />
           </motion.div>
         )}
       </AnimatePresence>
