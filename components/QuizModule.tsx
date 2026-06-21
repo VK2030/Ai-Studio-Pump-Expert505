@@ -442,6 +442,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     localStorage.setItem('quizHistory', JSON.stringify(updatedHistory));
     setCurrentSession(prev => prev + 1);
     window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new Event('sessionCompleted'));
     setScreen('results');
 
     if (userRole === 'contestant' || userRole === 'admin') {

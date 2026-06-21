@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AppSection, ModuleData, QuizQuestion } from './types';
 import { MODULES, QUIZ_QUESTIONS } from './constants';
@@ -138,11 +138,21 @@ const App: React.FC = () => {
     });
   }, [fullHistory, userRole, accountFilter]);
 
-  const sendHistoryToTelegram = async () => {
-    const contestantHistory = fullHistory.filter(h => h.user !== 'admin' && h.user !== 'Администратор');
+  const sendHistoryToTelegram = async (isAuto = false) => {
+    let currentHistory = fullHistory;
+    
+    // Always refresh history before sending
+    try {
+      const resp = await fetch('/api/history');
+      if (resp.ok) {
+        currentHistory = await resp.json();
+      }
+    } catch(e) {}
+    
+    const contestantHistory = currentHistory.filter((h: any) => h.user !== 'admin' && h.user !== 'Администратор');
 
     if (contestantHistory.length === 0) {
-      alert("История пуста. Нечего отправлять.");
+      if (!isAuto) alert("История пуста. Нечего отправлять.");
       return;
     }
 
@@ -153,7 +163,7 @@ const App: React.FC = () => {
         .replace(/>/g, '&gt;');
     };
 
-    setTelegramStatus('sending');
+    if (!isAuto) setTelegramStatus('sending');
     try {
       // Группируем результаты по модулям
       const statsByModule: Record<string, { count: number, totalScore: number, latestEntry?: QuizHistoryEntry }> = {};
@@ -172,6 +182,9 @@ const App: React.FC = () => {
       const today = new Date().toLocaleDateString('ru-RU');
       const summaries: string[] = [];
       let currentSummary = `<b>📊 Сводный отчет о результатах тестирования на ${today}</b>\n\n`;
+      if (isAuto) {
+        currentSummary = `Автоматическая отправка отчёта (каждые 20 сессий).\n` + currentSummary;
+      }
 
       const getRecentScoresWithDates = (modId: string, isPbotosAggregated = false) => {
         let entries: QuizHistoryEntry[] = [];
@@ -343,15 +356,41 @@ const App: React.FC = () => {
         await new Promise(resolve => setTimeout(resolve, 300));
       }
       
-      setTelegramStatus('success');
-      setTimeout(() => setTelegramStatus('idle'), 3000);
+      if (!isAuto) {
+        setTelegramStatus('success');
+        setTimeout(() => setTelegramStatus('idle'), 3000);
+      }
     } catch (error: any) {
       console.error(error);
-      alert(`Ошибка отправки: ${error.message}`);
-      setTelegramStatus('error');
-      setTimeout(() => setTelegramStatus('idle'), 3000);
+      if (!isAuto) {
+        alert(`Ошибка отправки: ${error.message}`);
+        setTelegramStatus('error');
+        setTimeout(() => setTelegramStatus('idle'), 3000);
+      }
     }
   };
+
+  const sendHistoryRef = useRef<((isAuto?: boolean) => Promise<void>) | null>(null);
+  useEffect(() => {
+    sendHistoryRef.current = sendHistoryToTelegram;
+  });
+
+  useEffect(() => {
+    const handleSessionCompleted = () => {
+      let count = parseInt(localStorage.getItem('telegram_auto_report_count') || '0', 10);
+      count++;
+      if (count >= 20) {
+        localStorage.setItem('telegram_auto_report_count', '0');
+        if (sendHistoryRef.current) {
+          sendHistoryRef.current(true);
+        }
+      } else {
+        localStorage.setItem('telegram_auto_report_count', String(count));
+      }
+    };
+    window.addEventListener('sessionCompleted', handleSessionCompleted);
+    return () => window.removeEventListener('sessionCompleted', handleSessionCompleted);
+  }, []);
 
   const loadData = async () => {
     setSyncStatus('syncing');
@@ -1199,7 +1238,9 @@ const App: React.FC = () => {
 
                     <AnimatedContent distance={30} delay={0.35} direction="vertical">
                       <button 
-                        onClick={sendHistoryToTelegram}
+                        onClick={() => {
+                          if (sendHistoryRef.current) sendHistoryRef.current(false);
+                        }}
                         disabled={telegramStatus === 'sending'}
                         className={`w-full p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
                           ${isDark ? 'bg-indigo-500/10 border-indigo-500/20 text-white' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}

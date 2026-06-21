@@ -350,9 +350,12 @@ const AspoGame: React.FC<AspoGameProps> = ({
   userRole = "contestant",
   onShowHistory,
 }) => {
-  const [gameState, setGameState] = useState<"playing" | "result">("playing");
+  const [gameState, setGameState] = useState<"playing" | "result" | "session_end">("playing");
   const [showLocalHistory, setShowLocalHistory] = useState(false);
-  const [taskIndex, setTaskIndex] = useState(0);
+  
+  const [sessionTasks, setSessionTasks] = useState<number[]>([]);
+  const [currentTaskInSession, setCurrentTaskInSession] = useState(0); 
+  const [sessionResults, setSessionResults] = useState<any[]>([]);
 
   const [selectedGroup, setSelectedGroup] = useState("СА");
   const [selectedAspo, setSelectedAspo] = useState("АСПО1");
@@ -361,22 +364,87 @@ const AspoGame: React.FC<AspoGameProps> = ({
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
 
   useEffect(() => {
-    setTaskIndex(Math.floor(Math.random() * ASPO_DATA.length));
+    startNewSession();
   }, []);
 
-  const currentTask = ASPO_DATA[taskIndex];
+  const startNewSession = () => {
+    let queue: number[] = [];
+    try {
+        const stored = localStorage.getItem('aspoTaskQueue');
+        if (stored) queue = JSON.parse(stored);
+    } catch(e) {}
+
+    const selected: number[] = [];
+    while (selected.length < 5) {
+        if (queue.length === 0) {
+            queue = [...Array(ASPO_DATA.length).keys()].sort(() => Math.random() - 0.5);
+        }
+        selected.push(queue.shift()!);
+    }
+    
+    localStorage.setItem('aspoTaskQueue', JSON.stringify(queue));
+    setSessionTasks(selected);
+    setCurrentTaskInSession(0);
+    setSessionResults([]);
+    
+    setGameState("playing");
+    setIsCorrect(null);
+    setSelectedGroup("СА");
+    setSelectedAspo("АСПО1");
+    setSelectedType("Тип1");
+  };
+
+  const currentTask = sessionTasks.length > 0 ? ASPO_DATA[sessionTasks[currentTaskInSession]] : null;
 
   const handleSubmit = () => {
+    if (!currentTask) return;
+
     const correct =
       selectedGroup === currentTask.ansGroup &&
       selectedAspo === currentTask.ansAspo &&
       selectedType === currentTask.ansType;
 
     setIsCorrect(correct);
-    setGameState("result");
+    
+    setSessionResults(prev => [...prev, {
+      task: currentTask,
+      selectedGroup,
+      selectedAspo,
+      selectedType,
+      correct
+    }]);
 
-    // Save to history
+    setGameState("result");
+  };
+
+  const handleNextTask = () => {
+    if (currentTaskInSession >= 4) {
+      finishSession();
+    } else {
+      setCurrentTaskInSession(prev => prev + 1);
+      setSelectedGroup("СА");
+      setSelectedAspo("АСПО1");
+      setSelectedType("Тип1");
+      setIsCorrect(null);
+      setGameState("playing");
+    }
+  };
+
+  const finishSession = () => {
+    setGameState("session_end");
     try {
+      const correctCount = sessionResults.length > 0 ? sessionResults.filter(r => r.correct).length : 0;
+      // Also add the last answer if it wasn't captured in time but wait, it's captured in handleSubmit.
+      // However, finishSession is called from handleNextTask, so sessionResults has 5 items.
+      
+      const realResults = sessionResults;
+
+      const incorrectAnswersList = realResults.filter(r => !r.correct).map(r => ({
+        question: `Задание по АСПО (Асфальтены: ${r.task.asfalten}%, Смолы: ${r.task.smoli}%, Парафины: ${r.task.parafin}%, Т пл: ${r.task.temp}°C)`,
+        userAnswer: `${r.selectedGroup} - ${r.selectedAspo} - ${r.selectedType}`,
+        correctAnswer: `${r.task.ansGroup} - ${r.task.ansAspo} - ${r.task.ansType}`,
+      }));
+
       const savedHistory = localStorage.getItem("quizHistory");
       let history: any[] = [];
       if (savedHistory) {
@@ -387,23 +455,12 @@ const AspoGame: React.FC<AspoGameProps> = ({
         }
       }
 
-      const sessionNum =
-        history.filter((h) => h.moduleId === "aspo-code").length + 1;
-
-      const incorrectAnswersList = !correct
-        ? [
-            {
-              question: `Задание по АСПО (Асфальтены: ${currentTask.asfalten}%, Смолы: ${currentTask.smoli}%, Парафины: ${currentTask.parafin}%, Т пл: ${currentTask.temp}°C)`,
-              userAnswer: `${selectedGroup} - ${selectedAspo} - ${selectedType}`,
-              correctAnswer: `${currentTask.ansGroup} - ${currentTask.ansAspo} - ${currentTask.ansType}`,
-            },
-          ]
-        : [];
+      const sessionNum = history.filter((h) => h.moduleId === "aspo-code").length + 1;
 
       const newEntry = {
         date: new Date().toISOString(),
         session: sessionNum,
-        score: correct ? "1/1" : "0/1",
+        score: `${correctCount}/5`,
         moduleId: "aspo-code",
         incorrectAnswers: incorrectAnswersList,
       };
@@ -411,6 +468,7 @@ const AspoGame: React.FC<AspoGameProps> = ({
       const updatedHistory = [newEntry, ...history];
       localStorage.setItem("quizHistory", JSON.stringify(updatedHistory));
       window.dispatchEvent(new Event("storage"));
+      window.dispatchEvent(new Event("sessionCompleted"));
 
       if (userRole === "contestant" || userRole === "admin") {
         const userName = localStorage.getItem("app_user_name") || "Contestant";
@@ -420,7 +478,7 @@ const AspoGame: React.FC<AspoGameProps> = ({
           body: JSON.stringify({
             ...newEntry,
             user: userRole === "admin" ? "Администратор" : userName,
-            correct_answers: correct ? 1 : 0,
+            correct_answers: correctCount,
           }),
         }).catch((err) =>
           console.warn("Failed to save aspo history to cloud:", err),
@@ -429,15 +487,6 @@ const AspoGame: React.FC<AspoGameProps> = ({
     } catch (e) {
       console.error("Error saving history:", e);
     }
-  };
-
-  const handleRestart = () => {
-    setTaskIndex(Math.floor(Math.random() * ASPO_DATA.length));
-    setSelectedGroup("СА");
-    setSelectedAspo("АСПО1");
-    setSelectedType("Тип1");
-    setIsCorrect(null);
-    setGameState("playing");
   };
 
   if (showLocalHistory) {
@@ -685,18 +734,11 @@ const AspoGame: React.FC<AspoGameProps> = ({
           <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
             <span className="text-blue-500 font-bold text-sm">A</span>
           </div>
-          <div>
-            <h1
-              className={`font-bold text-sm ${isDark ? "text-white" : "text-slate-900"}`}
-            >
-              Код АСПО
-            </h1>
-            <p
-              className={`text-[10px] uppercase tracking-wider ${isDark ? "text-white/40" : "text-slate-500"}`}
-            >
-              Интерактивное упражнение
-            </p>
-          </div>
+          <h1
+            className={`font-bold text-xl ${isDark ? "text-white" : "text-slate-900"}`}
+          >
+            Код АСПО
+          </h1>
         </div>
 
         <button
@@ -721,12 +763,15 @@ const AspoGame: React.FC<AspoGameProps> = ({
       </div>
 
       <div className="flex-1 w-full max-w-2xl mx-auto flex flex-col items-center justify-center p-4">
-        {gameState === "playing" ? (
+        {gameState === "playing" && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="w-full flex flex-col items-center gap-8"
           >
+            <div className={`text-xl font-bold ${isDark ? "text-slate-300" : "text-slate-700"}`}>
+              Упражнение №{currentTaskInSession + 1}
+            </div>
             <div
               className={`w-full rounded-2xl overflow-hidden shadow-xl border ${isDark ? "bg-slate-800/50 border-slate-700" : "bg-white border-slate-200"}`}
             >
@@ -850,7 +895,9 @@ const AspoGame: React.FC<AspoGameProps> = ({
               Принять ответ
             </button>
           </motion.div>
-        ) : (
+        )}
+        
+        {gameState === "result" && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -906,11 +953,40 @@ const AspoGame: React.FC<AspoGameProps> = ({
 
             <div className="flex flex-col gap-3 w-full mt-8">
               <button
-                onClick={handleRestart}
+                onClick={handleNextTask}
                 className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg active:scale-[0.98] transition-all
                   ${isDark ? "bg-slate-700 hover:bg-slate-600 text-white border border-white/10" : "bg-slate-700 hover:bg-slate-800 text-white"}`}
               >
                 Продолжить
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {gameState === "session_end" && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`w-full max-w-sm rounded-3xl p-8 flex flex-col items-center justify-center text-center shadow-2xl border
+              ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}`}
+          >
+            <h2
+              className={`text-3xl font-black mb-2 ${isDark ? "text-white" : "text-slate-900"}`}
+            >
+              Итоги сессии
+            </h2>
+            
+            <div className={`text-5xl font-black my-8 ${sessionResults.filter(r => r.correct).length >= 4 ? "text-green-500" : "text-indigo-500"}`}>
+              {sessionResults.filter(r => r.correct).length} / 5
+            </div>
+
+            <div className="flex flex-col gap-3 w-full mt-2">
+              <button
+                onClick={startNewSession}
+                className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg active:scale-[0.98] transition-all
+                  ${isDark ? "bg-slate-700 hover:bg-slate-600 text-white border border-white/10" : "bg-slate-700 hover:bg-slate-800 text-white"}`}
+              >
+                Повторить
               </button>
 
               <button
@@ -918,8 +994,8 @@ const AspoGame: React.FC<AspoGameProps> = ({
                 className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-[0.98] transition-all border shadow-sm
                   ${
                     isDark
-                      ? "bg-white text-slate-800 border-white/10 hover:bg-slate-100"
-                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-800"
+                      ? "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10"
+                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
                   }`}
               >
                 История
@@ -930,8 +1006,8 @@ const AspoGame: React.FC<AspoGameProps> = ({
                 className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-[0.98] transition-all border shadow-sm
                   ${
                     isDark
-                      ? "bg-white text-slate-800 border-white/10 hover:bg-slate-100"
-                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-800"
+                      ? "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10"
+                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
                   }`}
               >
                 В главное меню

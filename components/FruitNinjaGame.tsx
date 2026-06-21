@@ -708,6 +708,7 @@ export default function FruitNinjaGame({ onClose, isDark, userRole, onShowHistor
         const updatedHistory = [newEntry, ...history];
         localStorage.setItem('quizHistory', JSON.stringify(updatedHistory));
         window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new Event('sessionCompleted'));
         
         // Post to cloud if they are logged in as contestant or admin
         if (userRole === 'contestant' || userRole === 'admin') {
