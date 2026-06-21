@@ -1085,7 +1085,7 @@ const App: React.FC = () => {
                                               <div className="flex gap-2">
                                                 <span className="text-green-500 font-bold uppercase text-[7px] px-1 py-0.5 bg-green-500/10 rounded self-start mt-0.5">Верно</span>
                                                 <span className={`flex flex-col gap-1 ${isDark ? 'text-green-300/80' : 'text-green-600'}`}>
-                                                  {(err.correctAnswer.includes('|||') ? err.correctAnswer.split('|||') : err.correctAnswer.split(', ')).map((ans, aIdx) => (
+                                                  {(err.correctAnswer.includes('|||') ? err.correctAnswer.split('|||') : [err.correctAnswer]).map((ans, aIdx) => (
                                                     <div key={aIdx}>+ {ans}</div>
                                                   ))}
                                                 </span>
