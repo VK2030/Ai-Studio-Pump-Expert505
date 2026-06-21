@@ -1488,7 +1488,7 @@ export default function FruitNinjaGame({ onClose, isDark, userRole, onShowHistor
     return (
       <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: isDark ? '#0f172a' : '#f8fafc' }}>
         <div className="text-center w-full max-w-sm">
-          <h2 className={`text-4xl font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Итоги игры</h2>
+          <h2 className={`text-4xl font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Итоги</h2>
           
           <div className={`p-8 rounded-[2.5rem] mt-8 mb-8 border backdrop-blur-md relative overflow-hidden group
             ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>

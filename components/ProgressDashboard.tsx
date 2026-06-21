@@ -33,8 +33,8 @@ const LEGACY_MODULE_MAPPING: Record<string, string> = {
   'esp-selection-startup': 'Подбор УЭЦН и ВНР',
   'operating-factors': 'Осложняющие факторы',
   'failure-investigation': 'Расследование отказов',
-  'matrix-tz': 'Матрица ТЗ (Игра)',
-  'aspo-code': 'Код АСПО (Игра)',
+  'matrix-tz': 'Матрица ТЗ (Упражнение)',
+  'aspo-code': 'Код АСПО (Упражнение)',
 };
 
 export default function ProgressDashboard({ history, isDark }: ProgressDashboardProps) {
@@ -58,6 +58,11 @@ export default function ProgressDashboard({ history, isDark }: ProgressDashboard
         const m = MODULES.find(mod => mod.id === modId);
         if (m) title = m.title;
         else title = modId === 'unknown' ? 'Общий тест' : modId;
+      }
+
+      if (modId.startsWith('pbotos-')) {
+        const cleanTitle = modId === 'pbotos-b21' ? 'Б.2.1' : (PBOTOS_SUBMODULES[modId] || title);
+        title = `ПБОТОС / ${cleanTitle}`;
       }
 
       if (!modulesData[modId]) {
