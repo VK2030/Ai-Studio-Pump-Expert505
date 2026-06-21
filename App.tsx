@@ -1504,18 +1504,28 @@ const App: React.FC = () => {
                       tag="h1"
                     />
                   ) : activeTab === 'progress' ? (
-                    <SplitText
-                      key="progress-header"
-                      text="Прогресс"
-                      className={`${isDark ? 'text-white' : 'text-slate-900'} text-2xl font-black uppercase tracking-tighter leading-tight pt-1`}
-                      delay={50}
-                      duration={1.25}
-                      ease="power3.out"
-                      from={{ opacity: 0, y: 40 }}
-                      to={{ opacity: 1, y: 0 }}
-                      textAlign="left"
-                      tag="h1"
-                    />
+                    <div>
+                      <SplitText
+                        key="progress-header"
+                        text="Прогресс"
+                        className={`${isDark ? 'text-white' : 'text-slate-900'} text-2xl font-black uppercase tracking-tighter leading-tight pt-1`}
+                        delay={50}
+                        duration={1.25}
+                        ease="power3.out"
+                        from={{ opacity: 0, y: 40 }}
+                        to={{ opacity: 1, y: 0 }}
+                        textAlign="left"
+                        tag="h1"
+                      />
+                      <motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15, duration: 0.8 }}
+                        className={`text-xs mt-1 ${isDark ? 'text-white/50' : 'text-slate-500'}`}
+                      >
+                        Результаты последних 10 сессий
+                      </motion.p>
+                    </div>
                   ) : activeTab === 'tasks' ? (
                     <div className="flex items-center justify-between">
                       <SplitText
