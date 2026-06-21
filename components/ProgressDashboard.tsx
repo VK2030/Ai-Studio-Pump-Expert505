@@ -84,7 +84,12 @@ export default function ProgressDashboard({ history, isDark }: ProgressDashboard
       });
     });
 
-    return Object.values(modulesData).filter(m => m.data.length > 0);
+    const result = Object.values(modulesData).filter(m => m.data.length > 0);
+    // Limit to the last 10 sessions for each module
+    result.forEach(chart => {
+      chart.data = chart.data.slice(-10);
+    });
+    return result;
   }, [history]);
 
   if (chartsData.length === 0) {
@@ -159,7 +164,7 @@ export default function ProgressDashboard({ history, isDark }: ProgressDashboard
                     animationDuration={1500}
                     label={(props: any) => {
                       const { x, y, index } = props;
-                      if (chart.data.length > 0 && (index === 0 || index === chart.data.length - 1)) {
+                      if (chart.data && chart.data[index] !== undefined) {
                         return (
                           <text x={x} y={y - 10} fill="#6366f1" fontSize={10} textAnchor="middle" fontWeight="bold">
                             {chart.data[index].percentage}%
