@@ -175,7 +175,7 @@ export default function ProgressDashboard({ history, isDark }: ProgressDashboard
                             x={x}
                             initial={{ opacity: 0, y: y }}
                             animate={{ opacity: 1, y: y - 10 }}
-                            transition={{ delay: 0.5, duration: 0.5, ease: "easeOut" }}
+                            transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
                             fill="#6366f1"
                             fontSize={10}
                             textAnchor="middle"
