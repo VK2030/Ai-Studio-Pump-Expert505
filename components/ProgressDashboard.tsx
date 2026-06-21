@@ -119,7 +119,7 @@ export default function ProgressDashboard({ history, isDark }: ProgressDashboard
         <AnimatedContent key={index} distance={30} delay={index * 0.1} direction="vertical">
           <div className={`p-4 rounded-[2rem] border flex flex-col backdrop-blur-md relative overflow-hidden group h-[164px] justify-between
             ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-            <h3 className={`text-sm font-black uppercase tracking-tight truncate ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+            <h3 className={`text-sm font-black uppercase tracking-tight truncate ${isDark ? 'text-slate-300' : 'text-slate-800'}`}>
               {chart.title}
             </h3>
             
@@ -166,14 +166,23 @@ export default function ProgressDashboard({ history, isDark }: ProgressDashboard
                     strokeWidth={3}
                     dot={{ r: 4, strokeWidth: 2, fill: isDark ? '#0f172a' : '#fff' }}
                     activeDot={{ r: 6, strokeWidth: 0, fill: '#6366f1' }}
-                    animationDuration={1500}
+                    animationDuration={800}
                     label={(props: any) => {
                       const { x, y, index } = props;
                       if (chart.data && chart.data[index] !== undefined) {
                         return (
-                          <text x={x} y={y - 10} fill="#6366f1" fontSize={10} textAnchor="middle" fontWeight="bold">
+                          <motion.text
+                            x={x}
+                            initial={{ opacity: 0, y: y }}
+                            animate={{ opacity: 1, y: y - 10 }}
+                            transition={{ delay: 0.5, duration: 0.5, ease: "easeOut" }}
+                            fill="#6366f1"
+                            fontSize={10}
+                            textAnchor="middle"
+                            fontWeight="bold"
+                          >
                             {chart.data[index].percentage}%
-                          </text>
+                          </motion.text>
                         );
                       }
                       return null;
