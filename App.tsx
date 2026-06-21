@@ -375,8 +375,9 @@ const App: React.FC = () => {
       if (configResponse.ok) {
         const config = await configResponse.json();
         if (config.isHistoryAnswersEnabled !== undefined) {
-          setIsHistoryAnswersEnabled(config.isHistoryAnswersEnabled);
-          localStorage.setItem('app_history_answers_enabled', String(config.isHistoryAnswersEnabled));
+          const isEnabled = config.isHistoryAnswersEnabled === true || config.isHistoryAnswersEnabled === 'true';
+          setIsHistoryAnswersEnabled(isEnabled);
+          localStorage.setItem('app_history_answers_enabled', String(isEnabled));
         }
       }
     } catch (error) {
