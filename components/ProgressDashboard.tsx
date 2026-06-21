@@ -114,18 +114,18 @@ export default function ProgressDashboard({ history, isDark }: ProgressDashboard
   }
 
   return (
-    <div className="flex flex-col px-6 py-4 flex-1 overflow-y-auto space-y-6">
+    <div className="flex flex-col px-6 pb-4 pt-0 flex-1 overflow-y-auto space-y-3">
       {chartsData.map((chart, index) => (
         <AnimatedContent key={index} distance={30} delay={index * 0.1} direction="vertical">
-          <div className={`p-5 rounded-[2.5rem] border flex flex-col backdrop-blur-md relative overflow-hidden group
+          <div className={`p-4 rounded-[2rem] border flex flex-col backdrop-blur-md relative overflow-hidden group h-[164px] justify-between
             ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-            <h3 className={`text-sm font-black uppercase tracking-tight mb-4 truncate ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+            <h3 className={`text-sm font-black uppercase tracking-tight truncate ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
               {chart.title}
             </h3>
             
-            <div className="h-24 w-full mt-2 -ml-4">
+            <div className="h-24 w-full -ml-4 mt-1">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chart.data} margin={{ top: 15, right: 20, bottom: 5, left: 0 }}>
+                <LineChart data={chart.data} margin={{ top: 22, right: 20, bottom: 5, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'} vertical={false} />
                   <XAxis 
                     dataKey="name" 
@@ -138,7 +138,7 @@ export default function ProgressDashboard({ history, isDark }: ProgressDashboard
                   <YAxis 
                     stroke={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
                     fontSize={10}
-                    domain={[0, 100]}
+                    domain={[0, 120]}
                     ticks={[0, 100]}
                     tickFormatter={(val) => `${val}%`}
                     tickLine={false}

@@ -1467,7 +1467,7 @@ const App: React.FC = () => {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="flex flex-col h-full w-full relative"
           >
-            <header className="px-6 py-4 pt-10 flex-shrink-0">
+            <header className={`px-6 pt-10 flex-shrink-0 ${activeTab === 'progress' ? 'pb-3' : 'pb-4'}`}>
               <AnimatedContent
                 distance={20}
                 delay={0}
