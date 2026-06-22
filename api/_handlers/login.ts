@@ -56,7 +56,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const defaultPasswords: Record<string, string> = {
-      contestant: '7777',
+      contestant: '1777',
       admin: '2026'
     };
 
@@ -73,7 +73,16 @@ export default async function handler(req: any, res: any) {
         if (error) {
           console.error(`[API][${requestId}] Supabase error fetching password for ${role}:`, error.message);
         } else if (data?.value) {
-          correctPassword = data.value;
+          if (role === 'contestant' && data.value === '7777') {
+            console.log(`[API][${requestId}] Migrating contestant_password to 1777 in Supabase Database`);
+            await globalSupabase
+              .from("app_settings")
+              .update({ value: '1777' })
+              .eq("key", "contestant_password");
+            correctPassword = '1777';
+          } else {
+            correctPassword = data.value;
+          }
         }
       } catch (supabaseErr: any) {
         console.error(`[API][${requestId}] Supabase exception:`, supabaseErr.message);

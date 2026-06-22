@@ -22,7 +22,7 @@ export default async function handler(req: any, res: any) {
 
     const defaultSettings = [
       { key: 'admin_password', value: '2026' },
-      { key: 'contestant_password', value: '7777' }
+      { key: 'contestant_password', value: '1777' }
     ];
 
     for (const setting of defaultSettings) {
@@ -34,6 +34,8 @@ export default async function handler(req: any, res: any) {
       
       if (!data) {
         await supabase.from("app_settings").insert([setting]);
+      } else if (setting.key === 'contestant_password' && data.value === '7777') {
+        await supabase.from("app_settings").update({ value: '1777' }).eq("key", 'contestant_password');
       }
     }
 
