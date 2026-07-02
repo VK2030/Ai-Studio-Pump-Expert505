@@ -364,6 +364,29 @@ const App: React.FC = () => {
             matrixSection += `\n`;
             addSectionToSummary(matrixSection);
           }
+
+          // Добавляем раздел "Код АСПО" в конец уведомления
+          if (statsByModule['aspo-code']) {
+            let aspoSection = '';
+            const stats = statsByModule['aspo-code'];
+            const recentScoresStr = getRecentScoresCustom('aspo-code');
+            aspoSection += `6. <b>Упражнение "Код АСПО"</b>\n`;
+            if (recentScoresStr) {
+              aspoSection += `   Последние результаты:\n   ${recentScoresStr}\n`;
+            }
+            if (stats.latestEntry?.incorrectAnswers && stats.latestEntry.incorrectAnswers.length > 0) {
+              aspoSection += `<blockquote expandable>`;
+              aspoSection += `<b>Ошибки в последней сессии:</b>\n\n`;
+              stats.latestEntry.incorrectAnswers.forEach((ans, idx) => {
+                aspoSection += `<b>${idx + 1}. ${escapeHTML(ans.question)}</b>\n`;
+                aspoSection += `❌ Ваш ответ: ${escapeHTML(ans.userAnswer || '(нет ответа)')}\n`;
+                aspoSection += `✅ Правильный: ${escapeHTML(ans.correctAnswer)}\n\n`;
+              });
+              aspoSection += `</blockquote>`;
+            }
+            aspoSection += `\n`;
+            addSectionToSummary(aspoSection);
+          }
         } else {
           // Обычные модули
           if (statsByModule[modId]) {
