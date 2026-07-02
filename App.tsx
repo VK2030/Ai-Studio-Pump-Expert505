@@ -245,6 +245,34 @@ const App: React.FC = () => {
         return `${scores.join(', ')} (${dates.join(', ')})`;
       };
 
+      const getRecentScoresCustom = (modId: string) => {
+        const entries = contestantHistory.filter(h => h.moduleId === modId);
+        if (entries.length === 0) return '';
+        // We take the last 5 results (newest first) and reverse them so we display them chronological (oldest first).
+        const last5 = entries.slice(0, 5).reverse();
+        return last5.map(h => {
+          const [correct, total] = h.score.split('/').map(Number);
+          const pct = (isNaN(correct) || isNaN(total) || total === 0) ? 0 : Math.round((correct / total) * 100);
+          
+          const d = new Date(h.date);
+          const day = String(d.getDate()).padStart(2, '0');
+          const monthsRU = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+          const monthAbbr = monthsRU[d.getMonth()] || '';
+          const dateStr = `${day}.${monthAbbr}`;
+          
+          const numGreen = Math.min(10, Math.max(0, Math.round(pct / 10)));
+          const numWhite = 10 - numGreen;
+          // Use standard clean U+1F7E9 (🟩) and U+2B1C (⬜) without variation selectors or ZWJ.
+          // We bypass the Telegram Android 50-emoji limit by isolating each of these modules into
+          // its own Telegram message (see the splitting logic below).
+          const greenPart = Array(numGreen).fill('🟩').join('');
+          const whitePart = Array(numWhite).fill('⬜').join('');
+          const progressBar = greenPart + whitePart;
+          
+          return `${dateStr} | ${progressBar} ${pct}%`;
+        }).join('\n   ');
+      };
+
       // Проходим по модулям в заданном порядке (из constants.tsx)
       for (const module of MODULES) {
         const modId = module.id;
@@ -321,16 +349,26 @@ const App: React.FC = () => {
           // Обычные модули
           if (statsByModule[modId]) {
             const stats = statsByModule[modId];
-            const recentScoresStr = getRecentScoresWithDates(modId);
+            
+            const isCustomFormat = ['esp-selection-startup', 'failure-investigation', 'operating-factors'].includes(modId);
             
             let emoji = '🔹';
-            if (modId === 'esp-selection-startup') emoji = '1️⃣';
-            if (modId === 'failure-investigation') emoji = '2️⃣';
-            if (modId === 'operating-factors') emoji = '3️⃣';
+            if (modId === 'esp-selection-startup') emoji = '1.';
+            if (modId === 'failure-investigation') emoji = '2.';
+            if (modId === 'operating-factors') emoji = '3.';
             
             section += `${emoji} <b>${module.title}</b>\n`;
-            if (recentScoresStr) {
-              section += `   Последние результаты: ${recentScoresStr}\n`;
+            
+            if (isCustomFormat) {
+              const recentScoresStr = getRecentScoresCustom(modId);
+              if (recentScoresStr) {
+                section += `   Последние результаты:\n   ${recentScoresStr}\n`;
+              }
+            } else {
+              const recentScoresStr = getRecentScoresWithDates(modId);
+              if (recentScoresStr) {
+                section += `   Последние результаты: ${recentScoresStr}\n`;
+              }
             }
 
             // Добавляем информацию о количестве вопросов
@@ -359,9 +397,16 @@ const App: React.FC = () => {
           }
         }
 
-        // Проверяем лимит перед добавлением секции
-        if (currentSummary.length + section.length > 3900) {
-          summaries.push(currentSummary);
+        const isCustomFormat = ['esp-selection-startup', 'failure-investigation', 'operating-factors'].includes(modId);
+        
+        // ВАЖНО: Telegram Android имеет жесткий лимит в 50 кастомных (анимированных) эмодзи на одно сообщение.
+        // Модули с прогресс-баром используют ровно 50 эмодзи (5 строк по 10 кубиков).
+        // Поэтому КАЖДЫЙ такой модуль должен отправляться отдельным сообщением, иначе часть эмодзи
+        // превысит лимит и отобразится некорректно (стандартным системным шрифтом).
+        if (currentSummary.length + section.length > 3900 || isCustomFormat || currentSummary.includes('🟩')) {
+          if (currentSummary.trim()) {
+            summaries.push(currentSummary);
+          }
           currentSummary = section;
         } else {
           currentSummary += section;
