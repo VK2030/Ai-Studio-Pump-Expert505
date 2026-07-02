@@ -125,7 +125,7 @@ const App: React.FC = () => {
   }, []);
 
   const baseHistory = useMemo(() => {
-    return fullHistory.filter((h) => {
+    const filtered = fullHistory.filter((h) => {
       if (userRole === 'admin') {
         if (accountFilter === 'all') return true;
         if (accountFilter === 'admin') return h.user === 'admin' || h.user === 'Администратор';
@@ -135,6 +135,28 @@ const App: React.FC = () => {
         // Contestant cannot see admin history.
         return h.user !== 'admin' && h.user !== 'Администратор';
       }
+    });
+
+    // Dynamically calculate sequential session numbers (1, 2, 3, ...) for each unique user and module
+    // to prevent any duplicates, skips, or synchronization gaps.
+    const sorted = [...filtered].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const counters: Record<string, number> = {};
+    const sessionMap = new Map<any, number>();
+
+    for (const entry of sorted) {
+      const userKey = entry.user || 'Contestant';
+      const modKey = entry.moduleId || 'unknown';
+      const key = `${userKey}::${modKey}`;
+      counters[key] = (counters[key] || 0) + 1;
+      sessionMap.set(entry, counters[key]);
+    }
+
+    return filtered.map((entry) => {
+      const dynamicSession = sessionMap.get(entry);
+      return {
+        ...entry,
+        session: dynamicSession || entry.session || 1,
+      };
     });
   }, [fullHistory, userRole, accountFilter]);
 
