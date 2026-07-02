@@ -245,8 +245,14 @@ const App: React.FC = () => {
         return `${scores.join(', ')} (${dates.join(', ')})`;
       };
 
-      const getRecentScoresCustom = (modId: string) => {
-        const entries = contestantHistory.filter(h => h.moduleId === modId);
+      const getRecentScoresCustom = (modId: string, isPbotosAggregated = false) => {
+        let entries: QuizHistoryEntry[] = [];
+        if (isPbotosAggregated) {
+          const pbotosSubIds = Object.keys(PBOTOS_SUBMODULES);
+          entries = contestantHistory.filter(h => h.moduleId === 'pbotos' || (h.moduleId && pbotosSubIds.includes(h.moduleId)));
+        } else {
+          entries = contestantHistory.filter(h => h.moduleId === modId);
+        }
         if (entries.length === 0) return '';
         // We take the last 5 results (newest first) and reverse them so we display them chronological (oldest first).
         const last5 = entries.slice(0, 5).reverse();
@@ -273,39 +279,53 @@ const App: React.FC = () => {
         }).join('\n   ');
       };
 
+      const addSectionToSummary = (sectionToAdd: string) => {
+        if (!sectionToAdd) return;
+        const hasProgressBar = sectionToAdd.includes('🟩') || sectionToAdd.includes('⬜');
+        if (currentSummary.length + sectionToAdd.length > 3900 || (hasProgressBar && currentSummary.trim().length > 0) || (currentSummary.includes('🟩') && sectionToAdd.trim().length > 0)) {
+          if (currentSummary.trim()) {
+            summaries.push(currentSummary);
+          }
+          currentSummary = sectionToAdd;
+        } else {
+          currentSummary += sectionToAdd;
+        }
+      };
+
       // Проходим по модулям в заданном порядке (из constants.tsx)
       for (const module of MODULES) {
         const modId = module.id;
-        let section = '';
         
         if (modId === 'pbotos') {
-          let pbotosSection = '';
           const hasPbotosData = statsByModule['pbotos'] || Object.keys(PBOTOS_SUBMODULES).some(subId => statsByModule[subId]);
           
           // Добавляем заголовок ПБОТОС, если есть хоть какие-то данные по нему
           if (hasPbotosData) {
-            pbotosSection += `4️⃣ <b>ПБОТОС</b>\n\n`;
+            addSectionToSummary(`4. <b>ПБОТОС</b>\n\n`);
           }
 
           // Сначала выводим основной ПБОТОС если есть
           if (statsByModule['pbotos']) {
+            let pbotosSection = '';
             const stats = statsByModule['pbotos'];
-            const recentScoresStr = getRecentScoresWithDates('pbotos', true);
-            pbotosSection += `🔹 <b>ПБОТОС</b>\n`;
+            const recentScoresStr = getRecentScoresCustom('pbotos', true);
+            pbotosSection += `- <b>ПБОТОС (Сводный)</b>\n`;
             if (recentScoresStr) {
-              pbotosSection += `   Последние результаты: ${recentScoresStr}\n`;
+              pbotosSection += `   Последние результаты:\n   ${recentScoresStr}\n`;
             }
             pbotosSection += `\n`;
+            addSectionToSummary(pbotosSection);
           }
 
           // Затем подразделы ПБОТОС
           for (const [subId, subTitle] of Object.entries(PBOTOS_SUBMODULES)) {
             if (statsByModule[subId]) {
+              let pbotosSubSection = '';
               const stats = statsByModule[subId];
-              const recentScoresStr = getRecentScoresWithDates(subId);
-              pbotosSection += `🔹 <b>ПБОТОС/${subTitle}</b>\n`;
+              const recentScoresStr = getRecentScoresCustom(subId);
+              pbotosSubSection += `- <b>ПБОТОС/${subTitle}</b>\n`;
               if (recentScoresStr) {
-                pbotosSection += `   Последние результаты: ${recentScoresStr}\n`;
+                pbotosSubSection += `   Последние результаты:\n   ${recentScoresStr}\n`;
               }
               
               // Получаем количество вопросов из последнего теста
@@ -315,39 +335,39 @@ const App: React.FC = () => {
                 const questionsInTest = parseInt(scoreParts[1]) || 0;
                 const totalInDb = GLOBAL_QUESTION_COUNTS[subId] || 0;
                 const questionsCompleted = questionViews[subId] !== undefined ? questionViews[subId] : questionsInTest;
-                pbotosSection += `   Пройдено вопросов с начала подготовки: ${questionsCompleted} из ${totalInDb}\n`;
+                pbotosSubSection += `   Пройдено вопросов с начала подготовки: ${questionsCompleted} из ${totalInDb}\n`;
               }
-              pbotosSection += `\n`;
+              pbotosSubSection += `\n`;
+              addSectionToSummary(pbotosSubSection);
             }
-          }
-
-          if (pbotosSection) {
-            section += pbotosSection;
           }
 
           // Добавляем раздел "Критерии матрицы ТЗ" после ПБОТОС
           if (statsByModule['matrix-tz']) {
+            let matrixSection = '';
             const stats = statsByModule['matrix-tz'];
-            const recentScoresStr = getRecentScoresWithDates('matrix-tz');
-            section += `5️⃣ <b>Упражнение "Критерии матрицы ТЗ"</b>\n`;
+            const recentScoresStr = getRecentScoresCustom('matrix-tz');
+            matrixSection += `5. <b>Упражнение "Критерии матрицы ТЗ"</b>\n`;
             if (recentScoresStr) {
-              section += `   Последние результаты: ${recentScoresStr}\n`;
+              matrixSection += `   Последние результаты:\n   ${recentScoresStr}\n`;
             }
             if (stats.latestEntry?.incorrectAnswers && stats.latestEntry.incorrectAnswers.length > 0) {
-              section += `<blockquote expandable>`;
-              section += `<b>Ошибки в последней сессии:</b>\n\n`;
+              matrixSection += `<blockquote expandable>`;
+              matrixSection += `<b>Ошибки в последней сессии:</b>\n\n`;
               stats.latestEntry.incorrectAnswers.forEach((ans, idx) => {
-                section += `<b>${idx + 1}. ${escapeHTML(ans.question)}</b>\n`;
-                section += `❌ Ваш ответ: ${escapeHTML(ans.userAnswer || '(нет ответа)')}\n`;
-                section += `✅ Правильный: ${escapeHTML(ans.correctAnswer)}\n\n`;
+                matrixSection += `<b>${idx + 1}. ${escapeHTML(ans.question)}</b>\n`;
+                matrixSection += `❌ Ваш ответ: ${escapeHTML(ans.userAnswer || '(нет ответа)')}\n`;
+                matrixSection += `✅ Правильный: ${escapeHTML(ans.correctAnswer)}\n\n`;
               });
-              section += `</blockquote>`;
+              matrixSection += `</blockquote>`;
             }
-            section += `\n`;
+            matrixSection += `\n`;
+            addSectionToSummary(matrixSection);
           }
         } else {
           // Обычные модули
           if (statsByModule[modId]) {
+            let section = '';
             const stats = statsByModule[modId];
             
             const isCustomFormat = ['esp-selection-startup', 'failure-investigation', 'operating-factors'].includes(modId);
@@ -394,27 +414,14 @@ const App: React.FC = () => {
               section += `</blockquote>`;
             }
             section += `\n`;
+            addSectionToSummary(section);
           }
-        }
-
-        const isCustomFormat = ['esp-selection-startup', 'failure-investigation', 'operating-factors'].includes(modId);
-        
-        // ВАЖНО: Telegram Android имеет жесткий лимит в 50 кастомных (анимированных) эмодзи на одно сообщение.
-        // Модули с прогресс-баром используют ровно 50 эмодзи (5 строк по 10 кубиков).
-        // Поэтому КАЖДЫЙ такой модуль должен отправляться отдельным сообщением, иначе часть эмодзи
-        // превысит лимит и отобразится некорректно (стандартным системным шрифтом).
-        if (currentSummary.length + section.length > 3900 || isCustomFormat || currentSummary.includes('🟩')) {
-          if (currentSummary.trim()) {
-            summaries.push(currentSummary);
-          }
-          currentSummary = section;
-        } else {
-          currentSummary += section;
         }
       }
 
-      currentSummary += `🕒 <i>Последнее обновление: ${new Date().toLocaleString()}</i>`;
-      summaries.push(currentSummary);
+      if (currentSummary.trim()) {
+        summaries.push(currentSummary);
+      }
 
       for (const summaryPart of summaries) {
         if (!summaryPart.trim()) continue;
