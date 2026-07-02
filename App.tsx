@@ -140,14 +140,23 @@ const App: React.FC = () => {
 
   const sendHistoryToTelegram = async (isAuto = false) => {
     let currentHistory = fullHistory;
+    let questionViews: Record<string, number> = {};
     
-    // Always refresh history before sending
+    // Always refresh history and question views before sending
     try {
-      const resp = await fetch('/api/history');
-      if (resp.ok) {
-        currentHistory = await resp.json();
+      const [historyResp, viewsResp] = await Promise.all([
+        fetch('/api/history'),
+        fetch('/api/question-views')
+      ]);
+      if (historyResp.ok) {
+        currentHistory = await historyResp.json();
       }
-    } catch(e) {}
+      if (viewsResp.ok) {
+        questionViews = await viewsResp.json();
+      }
+    } catch(e) {
+      console.warn("Failed to refresh history or question views:", e);
+    }
     
     const contestantHistory = currentHistory.filter((h: any) => h.user !== 'admin' && h.user !== 'Администратор');
 
@@ -255,7 +264,8 @@ const App: React.FC = () => {
                 const scoreParts = lastEntry.score.split('/');
                 const questionsInTest = parseInt(scoreParts[1]) || 0;
                 const totalInDb = GLOBAL_QUESTION_COUNTS[subId] || 0;
-                pbotosSection += `   Пройдено вопросов с начала подготовки: ${questionsInTest} из ${totalInDb}\n`;
+                const questionsCompleted = questionViews[subId] !== undefined ? questionViews[subId] : questionsInTest;
+                pbotosSection += `   Пройдено вопросов с начала подготовки: ${questionsCompleted} из ${totalInDb}\n`;
               }
               pbotosSection += `\n`;
             }
@@ -308,7 +318,8 @@ const App: React.FC = () => {
               const questionsInTest = parseInt(scoreParts[1]) || 0;
               const totalInDb = GLOBAL_QUESTION_COUNTS[modId] || 0;
               if (totalInDb > 0) {
-                section += `   Пройдено вопросов с начала подготовки: ${questionsInTest} из ${totalInDb}\n`;
+                const questionsCompleted = questionViews[modId] !== undefined ? questionViews[modId] : questionsInTest;
+                section += `   Пройдено вопросов с начала подготовки: ${questionsCompleted} из ${totalInDb}\n`;
               }
             }
 

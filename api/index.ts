@@ -10,6 +10,7 @@ import syncHandler from "./_handlers/admin-sync.js";
 import telegramHandler from "./_handlers/telegram-send-summary.js";
 import healthHandler from "./_handlers/health.js";
 import testSupabaseHandler from "./_handlers/test-supabase.js";
+import questionViewsHandler from "./_handlers/question-views.js";
 
 const app = express();
 app.use(cors());
@@ -106,6 +107,7 @@ const registerRoutes = (app: any, prefix = "") => {
   app.post(`${prefix}/quiz/views/increment`, adapt(viewsHandler));
   app.post(`${prefix}/admin/sync`, adapt(syncHandler));
   app.post(`${prefix}/telegram/send-summary`, adapt(telegramHandler));
+  app.get(`${prefix}/question-views`, adapt(questionViewsHandler));
   app.get(`${prefix}/health`, adapt(healthHandler));
   app.get(`${prefix}/test-supabase`, adapt(testSupabaseHandler));
 };
