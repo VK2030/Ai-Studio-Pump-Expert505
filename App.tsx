@@ -262,27 +262,20 @@ const App: React.FC = () => {
           
           const d = new Date(h.date);
           const day = String(d.getDate()).padStart(2, '0');
-          const monthsRU = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-          const monthAbbr = monthsRU[d.getMonth()] || '';
-          const dateStr = `${day}.${monthAbbr}`;
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const dateStr = `${day}.${month}`;
           
           const numGreen = Math.min(10, Math.max(0, Math.round(pct / 10)));
-          const numWhite = 10 - numGreen;
-          // Use standard clean U+1F7E9 (🟩) and U+2B1C (⬜) without variation selectors or ZWJ.
-          // We bypass the Telegram Android 50-emoji limit by isolating each of these modules into
-          // its own Telegram message (see the splitting logic below).
-          const greenPart = Array(numGreen).fill('🟩').join('');
-          const whitePart = Array(numWhite).fill('⬜').join('');
-          const progressBar = greenPart + whitePart;
+          const progressBar = Array(numGreen).fill('▰').join('');
           
-          return `${dateStr} | ${progressBar} ${pct}%`;
+          return `${dateStr} ${progressBar}${pct}%`;
         }).join('\n   ');
       };
 
       const addSectionToSummary = (sectionToAdd: string) => {
         if (!sectionToAdd) return;
-        const hasProgressBar = sectionToAdd.includes('🟩') || sectionToAdd.includes('⬜');
-        if (currentSummary.length + sectionToAdd.length > 3900 || (hasProgressBar && currentSummary.trim().length > 0) || (currentSummary.includes('🟩') && sectionToAdd.trim().length > 0)) {
+        const hasProgressBar = sectionToAdd.includes('▰') || sectionToAdd.includes('▱');
+        if (currentSummary.length + sectionToAdd.length > 3900 || (hasProgressBar && currentSummary.trim().length > 0) || (currentSummary.includes('▰') && sectionToAdd.trim().length > 0)) {
           if (currentSummary.trim()) {
             summaries.push(currentSummary);
           }
