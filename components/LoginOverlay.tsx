@@ -133,7 +133,7 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
                   ${isDark ? 'bg-slate-800/80 border-slate-700 shadow-black/40 text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-900 shadow-slate-300 hover:bg-slate-50'}`}
               >
                 <span className="text-[13px] font-black uppercase tracking-widest leading-none">Конкурсант</span>
-                <span className="text-[11px] font-black uppercase tracking-widest leading-none mt-1">(ЛУЧШИЙ ТЕХНОЛОГ)</span>
+                <span className="text-[11px] font-black uppercase tracking-widest leading-none mt-1">(ТЕХНОЛОГ)</span>
               </motion.button>
 
               <motion.button 
@@ -152,7 +152,7 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
                   ${isDark ? 'bg-slate-800/80 border-slate-700 shadow-black/40 text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-900 shadow-slate-300 hover:bg-slate-50'}`}
               >
                 <span className="text-[13px] font-black uppercase tracking-widest leading-none">Конкурсант</span>
-                <span className="text-[11px] font-black uppercase tracking-widest leading-none mt-1">(ЛУЧШИЙ ОПЕРАТОР)</span>
+                <span className="text-[11px] font-black uppercase tracking-widest leading-none mt-1">(ОПЕРАТОР)</span>
               </motion.button>
 
               <motion.button 
@@ -191,7 +191,7 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
 
             <h2 className={`text-lg font-bold mb-2 uppercase tracking-widest ${isDark ? 'text-white' : 'text-slate-900'}`}>Код доступа</h2>
             <p className={`text-[10px] font-medium mb-8 text-center leading-relaxed ${isDark ? 'text-blue-100/40' : 'text-slate-400'}`}>
-              Вход как {selectedAccount === 'admin' ? 'администратор' : selectedAccount === 'contestant_operator' ? 'конкурсант (лучший оператор)' : 'конкурсант (лучший технолог)'}
+              Вход как {selectedAccount === 'admin' ? 'администратор' : selectedAccount === 'contestant_operator' ? 'конкурсант (оператор)' : 'конкурсант (технолог)'}
             </p>
 
             <div className="relative flex gap-3 mb-6">
