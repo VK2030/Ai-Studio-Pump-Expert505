@@ -121,20 +121,38 @@ export default async function handler(req: any, res: any) {
         return res.status(403).json({ error: "Unauthorized" });
       }
 
-      console.log("[API] Clearing results table...");
-      // Fix: Supabase JS v2 delete syntax
-      const { count, error } = await supabase
-        .from("results")
-        .delete()
-        .neq('id', -1);
+      const targetUser = (req.query?.targetUser || req.query?.user || '').toString();
+
+      console.log(`[API] Clearing results table for targetUser: "${targetUser || 'all'}"...`);
+      let query = supabase.from("results").delete();
+
+      if (targetUser === 'contestant_operator') {
+        query = query.in('user', ['ContestantOperator', 'Конкурсант (Оператор)']);
+      } else if (targetUser === 'contestant') {
+        query = query.not('user', 'in', '("admin","Администратор","ContestantOperator","Конкурсант (Оператор)")');
+      } else if (targetUser === 'admin') {
+        query = query.in('user', ['admin', 'Администратор']);
+      } else {
+        query = query.neq('id', -1);
+      }
+
+      const { count, error } = await query;
       
       if (error) throw error;
 
       console.log("[API] Clearing question_views table...");
-      const { error: viewsError } = await supabase
-        .from("question_views")
-        .delete()
-        .neq('id', -1);
+      let viewsQuery = supabase.from("question_views").delete();
+      if (targetUser === 'contestant_operator') {
+        viewsQuery = viewsQuery.in('user', ['ContestantOperator', 'Конкурсант (Оператор)']);
+      } else if (targetUser === 'contestant') {
+        viewsQuery = viewsQuery.not('user', 'in', '("admin","Администратор","ContestantOperator","Конкурсант (Оператор)")');
+      } else if (targetUser === 'admin') {
+        viewsQuery = viewsQuery.in('user', ['admin', 'Администратор']);
+      } else {
+        viewsQuery = viewsQuery.neq('id', -1);
+      }
+
+      const { error: viewsError } = await viewsQuery;
 
       res.json({ success: true, deletedCount: count, viewsCleared: !viewsError });
     } catch (error: any) {

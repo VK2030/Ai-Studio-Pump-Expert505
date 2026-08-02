@@ -717,7 +717,8 @@ const App: React.FC = () => {
     setShowClearHistoryModal(false);
     setSyncStatus('syncing');
     try {
-      const response = await fetch('/api/history', { 
+      const targetParam = accountFilter !== 'all' ? `?targetUser=${accountFilter}` : '';
+      const response = await fetch(`/api/history${targetParam}`, { 
         method: 'DELETE',
         headers: { 'x-admin-password': adminPassword }
       });
