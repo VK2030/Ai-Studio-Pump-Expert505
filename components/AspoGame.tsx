@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { renderUserAnswerLines } from "../utils/formatAnswer";
 
 const ASPO_DATA = [
   {
@@ -666,18 +667,10 @@ const AspoGame: React.FC<AspoGameProps> = ({
                               )}
                               <div className="flex flex-col gap-1 mt-2">
                                 <div className="flex gap-2">
-                                  <span className="text-red-500/80 font-bold uppercase text-[7px] px-1 py-0.5 bg-red-500/10 rounded self-start">
+                                  <span className="text-red-500/80 font-bold uppercase text-[7px] px-1 py-0.5 bg-red-500/10 rounded self-start mt-0.5">
                                     Ваш выбор
                                   </span>
-                                  <span
-                                    className={
-                                      isDark
-                                        ? "text-white/40"
-                                        : "text-slate-500"
-                                    }
-                                  >
-                                    {err.userAnswer || "(пусто)"}
-                                  </span>
+                                  {renderUserAnswerLines(err.userAnswer, isDark)}
                                 </div>
                                 <div className="flex gap-2">
                                   <span className="text-green-500 font-bold uppercase text-[7px] px-1 py-0.5 bg-green-500/10 rounded self-start">

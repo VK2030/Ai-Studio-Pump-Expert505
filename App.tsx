@@ -12,6 +12,7 @@ import FruitNinjaGame from './components/FruitNinjaGame';
 import AspoGame from './components/AspoGame';
 import SplitText from './components/SplitText';
 import ProgressDashboard from './components/ProgressDashboard';
+import { renderUserAnswerLines, formatTelegramUserAnswer } from './utils/formatAnswer';
 
 import CloudStatus from './components/CloudStatus';
 
@@ -349,7 +350,7 @@ const App: React.FC = () => {
               matrixSection += `<b>Ошибки в последней сессии:</b>\n\n`;
               stats.latestEntry.incorrectAnswers.forEach((ans, idx) => {
                 matrixSection += `<b>${idx + 1}. ${escapeHTML(ans.question)}</b>\n`;
-                matrixSection += `❌ Ваш ответ: ${escapeHTML(ans.userAnswer || '(нет ответа)')}\n`;
+                matrixSection += `❌ Ваш ответ: ${formatTelegramUserAnswer(ans.userAnswer, escapeHTML)}\n`;
                 matrixSection += `✅ Правильный: ${escapeHTML(ans.correctAnswer)}\n\n`;
               });
               matrixSection += `</blockquote>`;
@@ -372,7 +373,7 @@ const App: React.FC = () => {
               aspoSection += `<b>Ошибки в последней сессии:</b>\n\n`;
               stats.latestEntry.incorrectAnswers.forEach((ans, idx) => {
                 aspoSection += `<b>${idx + 1}. ${escapeHTML(ans.question)}</b>\n`;
-                aspoSection += `❌ Ваш ответ: ${escapeHTML(ans.userAnswer || '(нет ответа)')}\n`;
+                aspoSection += `❌ Ваш ответ: ${formatTelegramUserAnswer(ans.userAnswer, escapeHTML)}\n`;
                 aspoSection += `✅ Правильный: ${escapeHTML(ans.correctAnswer)}\n\n`;
               });
               aspoSection += `</blockquote>`;
@@ -424,7 +425,7 @@ const App: React.FC = () => {
               section += `<b>Ошибки в последнем тесте:</b>\n\n`;
               stats.latestEntry.incorrectAnswers.forEach((ans, idx) => {
                 section += `<b>${idx + 1}. ${escapeHTML(ans.question)}</b>\n`;
-                section += `❌ Ваш ответ: ${escapeHTML(ans.userAnswer)}\n`;
+                section += `❌ Ваш ответ: ${formatTelegramUserAnswer(ans.userAnswer, escapeHTML)}\n`;
                 section += `✅ Правильный: ${escapeHTML(ans.correctAnswer)}\n\n`;
               });
               section += `</blockquote>`;
@@ -1217,10 +1218,8 @@ const App: React.FC = () => {
                                           )}
                                           <div className="flex flex-col gap-1 mt-2">
                                             <div className="flex gap-2">
-                                              <span className="text-red-400/80 font-bold uppercase text-[7px] px-1 py-0.5 bg-red-500/10 rounded self-start">Ваш выбор</span>
-                                              <span className={isDark ? 'text-white/40' : 'text-slate-500'}>
-                                                {(err.userAnswer || '').includes('|||') ? (err.userAnswer || '').split('|||').join(', ') : err.userAnswer || '(пусто)'}
-                                              </span>
+                                              <span className="text-red-400/80 font-bold uppercase text-[7px] px-1 py-0.5 bg-red-500/10 rounded self-start mt-0.5">Ваш выбор</span>
+                                              {renderUserAnswerLines(err.userAnswer, isDark)}
                                             </div>
                                             {showCorrectAnswers && (
                                               <div className="flex gap-2">

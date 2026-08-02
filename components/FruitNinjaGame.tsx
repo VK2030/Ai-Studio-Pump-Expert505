@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { renderUserAnswerLines } from '../utils/formatAnswer';
 
 function DecodingText({ text }: { text: string; key?: React.Key | any }) {
   const [displayText, setDisplayText] = useState(text);
@@ -1451,8 +1452,8 @@ export default function FruitNinjaGame({ onClose, isDark, userRole, onShowHistor
                               )}
                               <div className="flex flex-col gap-1 mt-2">
                                 <div className="flex gap-2">
-                                  <span className="text-red-500/80 font-bold uppercase text-[7px] px-1 py-0.5 bg-red-500/10 rounded self-start">Ваш выбор</span>
-                                  <span className={isDark ? 'text-white/40' : 'text-slate-500'}>{err.userAnswer || '(пусто)'}</span>
+                                  <span className="text-red-500/80 font-bold uppercase text-[7px] px-1 py-0.5 bg-red-500/10 rounded self-start mt-0.5">Ваш выбор</span>
+                                  {renderUserAnswerLines(err.userAnswer, isDark)}
                                 </div>
                                 <div className="flex gap-2">
                                   <span className="text-green-500 font-bold uppercase text-[7px] px-1 py-0.5 bg-green-500/10 rounded self-start">Верно</span>
