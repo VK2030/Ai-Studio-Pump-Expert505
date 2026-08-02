@@ -6,7 +6,7 @@ import QuizModule from './QuizModule';
 interface ModuleDetailProps {
   module: ModuleData;
   theme?: 'dark' | 'light';
-  userRole?: 'contestant' | 'admin' | null;
+  userRole?: 'contestant' | 'contestant_operator' | 'admin' | null;
   isTimerEnabled: boolean;
   isHighlightEnabled: boolean;
   isHistoryAnswersEnabled: boolean;

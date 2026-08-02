@@ -52,7 +52,7 @@ export default async function handler(req: any, res: any) {
         .from("app_settings")
         .select("value")
         .eq("key", "admin_password")
-        .single();
+        .maybeSingle();
       
       const correctPassword = authData?.value || '2026';
       if (adminPassword !== String(correctPassword)) {

@@ -471,14 +471,14 @@ const AspoGame: React.FC<AspoGameProps> = ({
       window.dispatchEvent(new Event("storage"));
       window.dispatchEvent(new Event("sessionCompleted"));
 
-      if (userRole === "contestant" || userRole === "admin") {
-        const userName = localStorage.getItem("app_user_name") || "Contestant";
+      if (userRole === "contestant" || userRole === "contestant_operator" || userRole === "admin") {
+        const userName = userRole === "admin" ? "Администратор" : (userRole === "contestant_operator" ? "ContestantOperator" : (localStorage.getItem("app_user_name") || "Contestant"));
         fetch("/api/history", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...newEntry,
-            user: userRole === "admin" ? "Администратор" : userName,
+            user: userName,
             correct_answers: correctCount,
           }),
         }).catch((err) =>
@@ -499,7 +499,16 @@ const AspoGame: React.FC<AspoGameProps> = ({
           history = JSON.parse(savedHistory);
         } catch (e) {}
       }
-      return history.filter((h) => h.moduleId === "aspo-code");
+      return history.filter((h) => {
+        if (h.moduleId !== "aspo-code") return false;
+        if (userRole === "contestant_operator") {
+          return h.user === "ContestantOperator" || h.user === "Конкурсант (Оператор)";
+        } else if (userRole === "admin") {
+          return true;
+        } else {
+          return h.user !== "admin" && h.user !== "Администратор" && h.user !== "ContestantOperator" && h.user !== "Конкурсант (Оператор)";
+        }
+      });
     })();
 
     const clearGameHistory = () => {
@@ -698,7 +707,7 @@ const AspoGame: React.FC<AspoGameProps> = ({
           </div>
 
           {/* Clear History Button */}
-          {userRole !== "contestant" && historyList.length > 0 && (
+          {userRole === "admin" && historyList.length > 0 && (
             <div className="pt-2 pb-4 mt-auto">
               <button
                 onClick={clearGameHistory}

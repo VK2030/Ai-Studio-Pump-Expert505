@@ -68,7 +68,7 @@ function DecodingText({ text }: { text: string; key?: React.Key | any }) {
 interface FruitNinjaGameProps {
   onClose: () => void;
   isDark: boolean;
-  userRole?: 'contestant' | 'admin' | null;
+  userRole?: 'contestant' | 'contestant_operator' | 'admin' | null;
   onShowHistory?: () => void;
 }
 
@@ -711,15 +711,15 @@ export default function FruitNinjaGame({ onClose, isDark, userRole, onShowHistor
         window.dispatchEvent(new Event('storage'));
         window.dispatchEvent(new Event('sessionCompleted'));
         
-        // Post to cloud if they are logged in as contestant or admin
-        if (userRole === 'contestant' || userRole === 'admin') {
+        // Post to cloud if they are logged in as contestant, contestant operator or admin
+        if (userRole === 'contestant' || userRole === 'contestant_operator' || userRole === 'admin') {
           try {
             await fetch('/api/history', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 ...newEntry,
-                user: userRole === 'admin' ? 'Администратор' : (localStorage.getItem('app_user_name') || 'Contestant'),
+                user: userRole === 'admin' ? 'Администратор' : (userRole === 'contestant_operator' ? 'ContestantOperator' : (localStorage.getItem('app_user_name') || 'Contestant')),
                 correct_answers: correctCount
               })
             });
@@ -1347,7 +1347,16 @@ export default function FruitNinjaGame({ onClose, isDark, userRole, onShowHistor
             history = JSON.parse(savedHistory);
           } catch (e) {}
         }
-        return history.filter(h => h.moduleId === 'matrix-tz');
+        return history.filter(h => {
+          if (h.moduleId !== 'matrix-tz') return false;
+          if (userRole === 'contestant_operator') {
+            return h.user === 'ContestantOperator' || h.user === 'Конкурсант (Оператор)';
+          } else if (userRole === 'admin') {
+            return true;
+          } else {
+            return h.user !== 'admin' && h.user !== 'Администратор' && h.user !== 'ContestantOperator' && h.user !== 'Конкурсант (Оператор)';
+          }
+        });
       })();
 
       const clearGameHistory = () => {
@@ -1471,7 +1480,7 @@ export default function FruitNinjaGame({ onClose, isDark, userRole, onShowHistor
             </div>
 
             {/* Clear History Button */}
-            {userRole !== 'contestant' && historyList.length > 0 && (
+            {userRole === 'admin' && historyList.length > 0 && (
               <div className="pt-2 pb-4 mt-auto">
                 <button 
                   onClick={clearGameHistory}

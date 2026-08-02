@@ -13,7 +13,7 @@ export default async function handler(req: any, res: any) {
       .from("app_settings")
       .select("value")
       .eq("key", "admin_password")
-      .single();
+      .maybeSingle();
     
     const correctPassword = authData?.value || '2026';
     if (adminPassword !== String(correctPassword)) {
@@ -22,7 +22,8 @@ export default async function handler(req: any, res: any) {
 
     const defaultSettings = [
       { key: 'admin_password', value: '2026' },
-      { key: 'contestant_password', value: '1777' }
+      { key: 'contestant_password', value: '1777' },
+      { key: 'contestant_operator_password', value: '2888' }
     ];
 
     for (const setting of defaultSettings) {
@@ -30,7 +31,7 @@ export default async function handler(req: any, res: any) {
         .from("app_settings")
         .select("value")
         .eq("key", setting.key)
-        .single();
+        .maybeSingle();
       
       if (!data) {
         await supabase.from("app_settings").insert([setting]);

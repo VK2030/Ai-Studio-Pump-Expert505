@@ -57,6 +57,7 @@ export default async function handler(req: any, res: any) {
 
     const defaultPasswords: Record<string, string> = {
       contestant: '1777',
+      contestant_operator: '2888',
       admin: '2026'
     };
 
@@ -68,7 +69,7 @@ export default async function handler(req: any, res: any) {
           .from("app_settings")
           .select("value")
           .eq("key", `${role}_password`)
-          .single();
+          .maybeSingle();
         
         if (error) {
           console.error(`[API][${requestId}] Supabase error fetching password for ${role}:`, error.message);
@@ -82,6 +83,15 @@ export default async function handler(req: any, res: any) {
             correctPassword = '1777';
           } else {
             correctPassword = data.value;
+          }
+        } else {
+          // If key is missing in Supabase, seed default password
+          try {
+            await globalSupabase
+              .from("app_settings")
+              .insert([{ key: `${role}_password`, value: defaultPasswords[role] }]);
+          } catch (seedErr) {
+            console.warn(`[API][${requestId}] Could not seed ${role}_password:`, seedErr);
           }
         }
       } catch (supabaseErr: any) {

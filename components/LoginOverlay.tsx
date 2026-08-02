@@ -6,12 +6,12 @@ import SplitText from './SplitText';
 import CloudStatus from './CloudStatus';
 
 interface LoginOverlayProps {
-  onAuthorized: (role: 'contestant' | 'admin', password?: string) => void;
+  onAuthorized: (role: 'contestant' | 'contestant_operator' | 'admin', password?: string) => void;
   theme?: 'dark' | 'light';
 }
 
 type LoginStage = 'selection' | 'pin';
-type AccountType = 'contestant' | 'admin';
+type AccountType = 'contestant' | 'contestant_operator' | 'admin';
 
 const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark' }) => {
   const [stage, setStage] = useState<LoginStage>('selection');
@@ -23,6 +23,7 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
   const isDark = theme === 'dark';
 
   const [isContestantPressed, setIsContestantPressed] = useState(false);
+  const [isOperatorPressed, setIsOperatorPressed] = useState(false);
   const [isAdminPressed, setIsAdminPressed] = useState(false);
 
   useEffect(() => {
@@ -128,10 +129,30 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
                 }}
                 animate={{ scale: isContestantPressed ? 0.92 : 1 }}
                 transition={{ duration: 0.15, ease: "easeInOut" }}
-                className={`w-full h-16 rounded-[2rem] border backdrop-blur-md flex items-center justify-center transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5
+                className={`w-full h-16 rounded-[2rem] border backdrop-blur-md flex flex-col items-center justify-center transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5
                   ${isDark ? 'bg-slate-800/80 border-slate-700 shadow-black/40 text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-900 shadow-slate-300 hover:bg-slate-50'}`}
               >
-                <span className="text-[13px] font-black uppercase tracking-widest">Конкурсант</span>
+                <span className="text-[13px] font-black uppercase tracking-widest leading-none">Конкурсант</span>
+                <span className="text-[11px] font-black uppercase tracking-widest leading-none mt-1">(ЛУЧШИЙ ТЕХНОЛОГ)</span>
+              </motion.button>
+
+              <motion.button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (isOperatorPressed) return;
+                  setIsOperatorPressed(true);
+                  setTimeout(() => {
+                    setIsOperatorPressed(false);
+                    handleAccountSelect('contestant_operator');
+                  }, 180);
+                }}
+                animate={{ scale: isOperatorPressed ? 0.92 : 1 }}
+                transition={{ duration: 0.15, ease: "easeInOut" }}
+                className={`w-full h-16 rounded-[2rem] border backdrop-blur-md flex flex-col items-center justify-center transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5
+                  ${isDark ? 'bg-slate-800/80 border-slate-700 shadow-black/40 text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-900 shadow-slate-300 hover:bg-slate-50'}`}
+              >
+                <span className="text-[13px] font-black uppercase tracking-widest leading-none">Конкурсант</span>
+                <span className="text-[11px] font-black uppercase tracking-widest leading-none mt-1">(ЛУЧШИЙ ОПЕРАТОР)</span>
               </motion.button>
 
               <motion.button 
@@ -170,7 +191,7 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({ onAuthorized, theme = 'dark
 
             <h2 className={`text-lg font-bold mb-2 uppercase tracking-widest ${isDark ? 'text-white' : 'text-slate-900'}`}>Код доступа</h2>
             <p className={`text-[10px] font-medium mb-8 text-center leading-relaxed ${isDark ? 'text-blue-100/40' : 'text-slate-400'}`}>
-              Вход как {selectedAccount === 'admin' ? 'администратор' : 'конкурсант'}
+              Вход как {selectedAccount === 'admin' ? 'администратор' : selectedAccount === 'contestant_operator' ? 'конкурсант (лучший оператор)' : 'конкурсант (лучший технолог)'}
             </p>
 
             <div className="relative flex gap-3 mb-6">

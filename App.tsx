@@ -57,7 +57,7 @@ const App: React.FC = () => {
   });
 
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
-  const [userRole, setUserRole] = useState<'contestant' | 'admin' | null>(null);
+  const [userRole, setUserRole] = useState<'contestant' | 'contestant_operator' | 'admin' | null>(null);
 
   const [activeTab, setActiveTab] = useState<AppSection>('home');
   const [isTasksPressed, setIsTasksPressed] = useState<boolean>(false);
@@ -112,7 +112,7 @@ const App: React.FC = () => {
 
   const [historyFilter, setHistoryFilter] = useState<string | 'all'>('all');
   const [isHistoryFilterOpen, setIsHistoryFilterOpen] = useState(false);
-  const [accountFilter, setAccountFilter] = useState<'all' | 'contestant' | 'admin'>('contestant');
+  const [accountFilter, setAccountFilter] = useState<'all' | 'contestant' | 'contestant_operator' | 'admin'>('contestant');
   const [isAccountFilterOpen, setIsAccountFilterOpen] = useState(false);
 
   const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
@@ -130,11 +130,14 @@ const App: React.FC = () => {
       if (userRole === 'admin') {
         if (accountFilter === 'all') return true;
         if (accountFilter === 'admin') return h.user === 'admin' || h.user === 'Администратор';
-        if (accountFilter === 'contestant') return h.user !== 'admin' && h.user !== 'Администратор';
+        if (accountFilter === 'contestant_operator') return h.user === 'ContestantOperator' || h.user === 'Конкурсант (Оператор)';
+        if (accountFilter === 'contestant') return h.user !== 'admin' && h.user !== 'Администратор' && h.user !== 'ContestantOperator' && h.user !== 'Конкурсант (Оператор)';
         return true;
+      } else if (userRole === 'contestant_operator') {
+        return h.user === 'ContestantOperator' || h.user === 'Конкурсант (Оператор)';
       } else {
-        // Contestant cannot see admin history.
-        return h.user !== 'admin' && h.user !== 'Администратор';
+        // Contestant (Technologist)
+        return h.user !== 'admin' && h.user !== 'Администратор' && h.user !== 'ContestantOperator' && h.user !== 'Конкурсант (Оператор)';
       }
     });
 
@@ -181,7 +184,7 @@ const App: React.FC = () => {
       console.warn("Failed to refresh history or question views:", e);
     }
     
-    const contestantHistory = currentHistory.filter((h: any) => h.user !== 'admin' && h.user !== 'Администратор');
+    const contestantHistory = currentHistory.filter((h: any) => h.user !== 'admin' && h.user !== 'Администратор' && h.user !== 'ContestantOperator' && h.user !== 'Конкурсант (Оператор)');
 
     if (contestantHistory.length === 0) {
       if (!isAuto) alert("История пуста. Нечего отправлять.");
@@ -479,6 +482,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleSessionCompleted = () => {
+      if (userRole === 'contestant_operator') return;
       let count = parseInt(localStorage.getItem('telegram_auto_report_count') || '0', 10);
       count++;
       if (count >= 20) {
@@ -492,7 +496,7 @@ const App: React.FC = () => {
     };
     window.addEventListener('sessionCompleted', handleSessionCompleted);
     return () => window.removeEventListener('sessionCompleted', handleSessionCompleted);
-  }, []);
+  }, [userRole]);
 
   const loadData = async () => {
     setSyncStatus('syncing');
@@ -557,16 +561,34 @@ const App: React.FC = () => {
     
     const recentScoresMap: Record<string, number[]> = {};
     
+    const userRelevantHistory = history.filter((h: QuizHistoryEntry) => {
+      if (userRole === 'contestant_operator') {
+        return h.user === 'ContestantOperator' || h.user === 'Конкурсант (Оператор)';
+      } else if (userRole === 'admin') {
+        if (accountFilter === 'contestant_operator') {
+          return h.user === 'ContestantOperator' || h.user === 'Конкурсант (Оператор)';
+        } else if (accountFilter === 'admin') {
+          return h.user === 'admin' || h.user === 'Администратор';
+        } else if (accountFilter === 'contestant') {
+          return h.user !== 'admin' && h.user !== 'Администратор' && h.user !== 'ContestantOperator' && h.user !== 'Конкурсант (Оператор)';
+        }
+        return true;
+      } else {
+        // Contestant (Technologist)
+        return h.user !== 'admin' && h.user !== 'Администратор' && h.user !== 'ContestantOperator' && h.user !== 'Конкурсант (Оператор)';
+      }
+    });
+
     MODULES.forEach(module => {
       // For pbotos, we want to consider all submodules too
       let moduleEntries: QuizHistoryEntry[] = [];
       if (module.id === 'pbotos') {
         const pbotosSubIds = Object.keys(PBOTOS_SUBMODULES);
-        moduleEntries = history.filter((h: QuizHistoryEntry) => 
+        moduleEntries = userRelevantHistory.filter((h: QuizHistoryEntry) => 
           h.moduleId === 'pbotos' || (h.moduleId && pbotosSubIds.includes(h.moduleId))
         );
       } else {
-        moduleEntries = history.filter((h: QuizHistoryEntry) => h.moduleId === module.id);
+        moduleEntries = userRelevantHistory.filter((h: QuizHistoryEntry) => h.moduleId === module.id);
       }
 
       const lastEntry = moduleEntries[0]; // history is sorted by date desc
@@ -614,11 +636,18 @@ const App: React.FC = () => {
     return Math.round(sum / MODULES.length);
   }, [moduleProgress]);
 
-  const handleAuthorize = (role: 'contestant' | 'admin', password?: string) => {
+  const handleAuthorize = (role: 'contestant' | 'contestant_operator' | 'admin', password?: string) => {
     setUserRole(role);
-    if (role === 'admin' && password) {
-      setAdminPassword(password);
-      sessionStorage.setItem('app_admin_password', password);
+    if (role === 'contestant') {
+      localStorage.setItem('app_user_name', 'Contestant');
+    } else if (role === 'contestant_operator') {
+      localStorage.setItem('app_user_name', 'ContestantOperator');
+    } else if (role === 'admin') {
+      localStorage.setItem('app_user_name', 'Администратор');
+      if (password) {
+        setAdminPassword(password);
+        sessionStorage.setItem('app_admin_password', password);
+      }
     }
     setIsAuthorized(true);
   };
@@ -846,7 +875,8 @@ const App: React.FC = () => {
 
                 const getAccountFilterLabel = () => {
                   if (accountFilter === 'all') return 'Все аккаунты';
-                  if (accountFilter === 'contestant') return 'Конкурсант';
+                  if (accountFilter === 'contestant') return 'Конкурсант (Технолог)';
+                  if (accountFilter === 'contestant_operator') return 'Конкурсант (Оператор)';
                   if (accountFilter === 'admin') return 'Администратор';
                   return 'Аккаунт';
                 };
@@ -907,8 +937,20 @@ const App: React.FC = () => {
                                     ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white') 
                                     : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
                               >
-                                Конкурсант
+                                Конкурсант (Технолог)
                                 {accountFilter === 'contestant' && (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                                )}
+                              </button>
+                              <button 
+                                onClick={() => { setAccountFilter('contestant_operator'); setIsAccountFilterOpen(false); }}
+                                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between pl-6
+                                  ${accountFilter === 'contestant_operator' 
+                                    ? (isDark ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-white') 
+                                    : (isDark ? 'hover:bg-white/5 text-slate-300' : 'hover:bg-slate-50 text-slate-700')}`}
+                              >
+                                Конкурсант (Оператор)
+                                {accountFilter === 'contestant_operator' && (
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
                                 )}
                               </button>
@@ -1284,11 +1326,10 @@ const App: React.FC = () => {
 
                     <AnimatedContent distance={30} delay={0.2} direction="vertical">
                       <div className={`p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
-                        ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}
-                        ${userRole !== 'admin' ? 'opacity-40' : ''}`}>
+                        ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                         <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Таймер ответа 30 сек.</span>
                         <button 
-                          onClick={userRole === 'admin' ? toggleTimer : handleAdminOnlyClick}
+                          onClick={toggleTimer}
                           className={`relative w-12 h-6 shrink-0 rounded-full transition-all duration-300 outline-none
                             ${isTimerEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
                         >
@@ -1302,11 +1343,10 @@ const App: React.FC = () => {
 
                     <AnimatedContent distance={30} delay={0.25} direction="vertical">
                       <div className={`p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
-                        ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}
-                        ${userRole !== 'admin' ? 'opacity-40' : ''}`}>
+                        ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                         <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Подсвечивать корректность после ответа</span>
                         <button 
-                          onClick={userRole === 'admin' ? toggleHighlight : handleAdminOnlyClick}
+                          onClick={toggleHighlight}
                           className={`relative w-12 h-6 shrink-0 rounded-full transition-all duration-300 outline-none
                             ${isHighlightEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
                         >
@@ -1320,11 +1360,10 @@ const App: React.FC = () => {
 
                     <AnimatedContent distance={30} delay={0.3} direction="vertical">
                       <div className={`p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md
-                        ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}
-                        ${userRole !== 'admin' ? 'opacity-40' : ''}`}>
+                        ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                         <span className={`text-base font-semibold ${isDark ? 'text-white/90' : 'text-slate-900'}`}>Правильный ответ в истории</span>
                         <button 
-                          onClick={userRole === 'admin' ? toggleHistoryAnswers : handleAdminOnlyClick}
+                          onClick={toggleHistoryAnswers}
                           className={`relative w-12 h-6 shrink-0 rounded-full transition-all duration-300 outline-none
                             ${isHistoryAnswersEnabled ? (isDark ? 'bg-slate-700' : 'bg-slate-800') : (isDark ? 'bg-white/10' : 'bg-slate-200')}`}
                         >
@@ -1336,49 +1375,51 @@ const App: React.FC = () => {
                       </div>
                     </AnimatedContent>
 
-                    <AnimatedContent distance={30} delay={0.35} direction="vertical">
-                      <button 
-                        onClick={() => {
-                          if (sendHistoryRef.current) sendHistoryRef.current(false);
-                        }}
-                        disabled={telegramStatus === 'sending'}
-                        className={`w-full p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
-                          ${isDark ? 'bg-indigo-500/10 border-indigo-500/20 text-white' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}
-                          ${telegramStatus === 'sending' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-2xl flex items-center justify-center
-                            ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'}`}>
-                            {telegramStatus === 'sending' ? (
-                              <svg className="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                            ) : telegramStatus === 'success' ? (
-                              <svg viewBox="0 0 24 24" className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" strokeWidth="3">
-                                <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            ) : telegramStatus === 'error' ? (
-                              <svg viewBox="0 0 24 24" className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="3">
-                                <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            ) : (
-                              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" />
-                              </svg>
-                            )}
+                    {userRole !== 'contestant_operator' && (
+                      <AnimatedContent distance={30} delay={0.35} direction="vertical">
+                        <button 
+                          onClick={() => {
+                            if (sendHistoryRef.current) sendHistoryRef.current(false);
+                          }}
+                          disabled={telegramStatus === 'sending'}
+                          className={`w-full p-4 rounded-[2rem] border flex justify-between items-center backdrop-blur-md transition-all active:scale-[0.98]
+                            ${isDark ? 'bg-indigo-500/10 border-indigo-500/20 text-white' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}
+                            ${telegramStatus === 'sending' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center
+                              ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'}`}>
+                              {telegramStatus === 'sending' ? (
+                                <svg className="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                              ) : telegramStatus === 'success' ? (
+                                <svg viewBox="0 0 24 24" className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" strokeWidth="3">
+                                  <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              ) : telegramStatus === 'error' ? (
+                                <svg viewBox="0 0 24 24" className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="3">
+                                  <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              ) : (
+                                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" />
+                                </svg>
+                              )}
+                            </div>
+                            <span className="text-base font-semibold">
+                              {telegramStatus === 'sending' ? 'Отправка...' : 
+                               telegramStatus === 'success' ? 'Отправлено!' : 
+                               telegramStatus === 'error' ? 'Ошибка!' : 'Отправить отчет в Telegram'}
+                            </span>
                           </div>
-                          <span className="text-base font-semibold">
-                            {telegramStatus === 'sending' ? 'Отправка...' : 
-                             telegramStatus === 'success' ? 'Отправлено!' : 
-                             telegramStatus === 'error' ? 'Ошибка!' : 'Отправить отчет в Telegram'}
-                          </span>
-                        </div>
-                        <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-30" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M9 18l6-6-6-6" />
-                        </svg>
-                      </button>
-                    </AnimatedContent>
+                          <svg viewBox="0 0 24 24" className="w-5 h-5 opacity-30" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M9 18l6-6-6-6" />
+                          </svg>
+                        </button>
+                      </AnimatedContent>
+                    )}
 
                     <AnimatedContent distance={30} delay={0.4} direction="vertical">
                       <button 

@@ -11,7 +11,7 @@ import CloudStatus from './CloudStatus';
 interface QuizModuleProps {
   moduleId?: string;
   theme?: 'dark' | 'light';
-  userRole?: 'contestant' | 'admin' | null;
+  userRole?: 'contestant' | 'contestant_operator' | 'admin' | null;
   isTimerEnabled: boolean;
   isHighlightEnabled: boolean;
   isHistoryAnswersEnabled: boolean;
@@ -411,7 +411,11 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     }
 
     const targetId = activeSubModuleId || moduleId;
-    const resolvedUser = userRole === 'admin' ? 'Администратор' : (localStorage.getItem('app_user_name') || 'Contestant');
+    const resolvedUser = userRole === 'admin' 
+      ? 'Администратор' 
+      : userRole === 'contestant_operator' 
+        ? 'ContestantOperator' 
+        : (localStorage.getItem('app_user_name') || 'Contestant');
     
     const newEntry: QuizHistoryEntry = {
       date: new Date().toISOString(),
@@ -446,7 +450,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
     window.dispatchEvent(new Event('sessionCompleted'));
     setScreen('results');
 
-    if (userRole === 'contestant' || userRole === 'admin') {
+    if (userRole === 'contestant' || userRole === 'contestant_operator' || userRole === 'admin') {
       setSaveStatus('saving');
       try {
         const response = await fetch('/api/history', {
@@ -499,7 +503,16 @@ const QuizModule: React.FC<QuizModuleProps> = ({
   };
 
   const targetId = activeSubModuleId || moduleId;
-  const moduleHistory = history.filter(h => h.moduleId === targetId);
+  const moduleHistory = history.filter(h => {
+    if (h.moduleId !== targetId) return false;
+    if (userRole === 'contestant_operator') {
+      return h.user === 'ContestantOperator' || h.user === 'Конкурсант (Оператор)';
+    } else if (userRole === 'admin') {
+      return true;
+    } else {
+      return h.user !== 'admin' && h.user !== 'Администратор' && h.user !== 'ContestantOperator' && h.user !== 'Конкурсант (Оператор)';
+    }
+  });
 
   const handleAbortTest = () => {
     setShowExitConfirm(false);
@@ -1110,7 +1123,7 @@ const QuizModule: React.FC<QuizModuleProps> = ({
         </div>
         <div className={`absolute bottom-0 left-0 right-0 p-6 ${isDark ? 'bg-gradient-to-t from-[#081221] via-[#081221]/90 to-transparent' : 'bg-gradient-to-t from-white via-white/90 to-transparent'}`}>
           <AnimatedContent distance={20} delay={0.5} direction="vertical">
-            {userRole !== 'contestant' && (
+            {userRole === 'admin' && (
               <button 
                 onClick={clearModuleHistory} 
                 className={`w-full py-3 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isDark ? 'bg-red-500/5 border-red-500/10 text-red-500/50 active:bg-red-500 active:text-white' : 'bg-red-50 border-red-100 text-red-500 active:bg-red-500 active:text-white'}`}
